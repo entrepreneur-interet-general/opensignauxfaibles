@@ -7,7 +7,7 @@ output: html_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-model = xgb_start
+model = model
 
 library(iml)
 h2o.no_progress()
@@ -41,7 +41,7 @@ plot(1, type = 'n', xlab = "recall", ylab = "precision", xlim = c(0,1), ylim = c
   
     cat('F1 :', max(F1$f1), '\n')
     
-    cat('AUC :', h2o.aux(perf), '\n')
+    cat('AUC :', h2o.auc(perf), '\n')
 
 
   cat(str(pr.curve(scores.class0 = as.vector(pred$default), weights.class0 = true_res)))
@@ -142,6 +142,7 @@ interact.xgb <- Interaction$new(predictor.xgb)
 toc()
 plot(interact.xgb)
 ```
+
 ```{r}
 tic()
 shap.xgb <- Shapley$new(predictor.xgb, x.interest = features[903,])

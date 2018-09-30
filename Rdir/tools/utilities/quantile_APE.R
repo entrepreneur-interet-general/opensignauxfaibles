@@ -11,7 +11,7 @@ quantile_APE <- function(data, ..., variable_names, levels = 1, noise = 0) {
 
   ## On retient join les df avec un index selon l'origine
 
-  all_data <- bind_rows(arguments, .id = 'index')
+  all_data <- as_tbl_time(bind_rows(arguments, .id = 'index'), index = periode)
 
   for (i in seq_along(levels)) {
     level = levels[i]

@@ -77,7 +77,7 @@ add_past_trends <-
       aux_past <- function(data, variable, last_n, with_zero){
         y <- data[[variable]]
         res <- sapply(1:length(y), FUN = function(x){
-          out <- unique(tail(y[1:x],last_n))
+          out <- unique(tail(y[1:x],last_n+1))
           return(mean(diff(out), na.rm = TRUE))
         })
       }

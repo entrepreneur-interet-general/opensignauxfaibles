@@ -38,7 +38,7 @@ actual_period <- as.Date("2018-08-01")
 ```
 
 ```{r}
-raw_data <- connect_to_database('Features', '1808', algo = 'algo2', min_effectif = 20)
+raw_data <- connect_to_database('Features', '1809', algo = 'algo2', min_effectif = 20)
 ```
 
 ```{r}
@@ -344,6 +344,57 @@ x_without_urssaf = c(
 
 x_distrib_less_debit <- x_distrib[-c(75,76,78,79)]
 
+x_test <- c(
+  "montant_part_patronale"                   ,
+"ratio_dette_moy12m"                       ,
+"ratio_dette"                              ,
+"effectif"                                 ,
+"taux_marge_distrib_APE1"                  ,
+"etat_proc_collective_num"                 ,
+"ratio_liquidite_reduite_distrib_APE1"     ,
+"CA"                                       ,
+"financier_court_terme"                    ,
+"frais_financier_distrib_APE1"             ,
+"TargetEncode_code_ape_niveau3"            ,
+"resultat_net_consolide"                   ,
+"nombre_etab_secondaire"                   ,
+"montant_part_patronale_variation_1"       ,
+"dette_fiscale"                            ,
+"TargetEncode_code_naf_niveau1"            ,
+"montant_part_patronale_variation_3"       ,
+"ratio_productivite_distrib_APE1"          ,
+"montant_part_patronale_variation_2"       ,
+"ratio_export_distrib_APE1"                ,
+"delai_fournisseur_distrib_APE1"           ,
+"financier_court_terme_distrib_APE1"       ,
+"ratio_delai_client"                       ,
+"effectif_diff_moy12"                      ,
+"nbr_etablissements_connus"                ,
+"ratio_rend_des_ress_durables_variation_12",
+"montant_part_patronale_variation_6"       ,
+"TargetEncode_code_ape_niveau2"            ,
+"taux_marge"                               ,
+"frais_financier_variation_12"             ,
+"frais_financier"                          ,
+"montant_part_ouvriere"                    ,
+"cotisation"                               ,
+"ratio_liquidite_reduite"                  ,
+"chiffre_affaires_net_lie_aux_exportations",
+"ratio_rend_capitaux_propres_variation_12" ,
+"ratio_rentabilite_nette_distrib_APE1"     ,
+"ratio_dette_delai"                        ,
+"ratio_CAF_variation_12"                   ,
+"ratio_rend_capitaux_propres"              ,
+"age"                                      ,
+"montant_part_patronale_variation_12"      ,
+"ratio_marge_operationnelle_distrib_APE1"  ,
+"ratio_delai_client_distrib_APE1"          ,
+"ratio_delai_client_variation_12"          ,
+"ratio_productivite_variation_12"          ,
+"poids_frng_distrib_APE1"                  ,
+"ratio_RetD_variation_12"                  ,
+"ratio_marge_operationnelle_variation_12"  ,
+"CA_variation_12")
 x_medium <- c("montant_part_patronale",                   
               "ratio_dette",                              
               "ratio_dette_moy12m",                       
@@ -395,20 +446,21 @@ y = "outcome"
 ## Logistic regression
 ```{r logistic ridge regression }
 
-# glm_ridge <- h2o.glm(
-#   model_id = 'GLM_ridge',
-#   x= x_distrib,
-#   y =y,
-#   training_frame = train.hex,
-#   validation_frame = validation.hex,
-#   family = "binomial",
-#   alpha = 0, #ridge
-#   lambda_search = TRUE,
-#   standardize = TRUE,
-#   missing_values_handling = "MeanImputation",
-#   seed = 123,
-#   score_each_iteration = TRUE
-# )
+glm_ridge <- h2o.glm(
+  model_id = 'GLM_ridge',
+  x= x_medium,
+  y =y,
+  training_frame = train.hex,
+  validation_frame = validation.hex,
+  family = "binomial",
+  alpha = 0, #ridge
+  lambda_search = TRUE,
+  standardize = TRUE,
+  missing_values_handling = "MeanImputation",
+  seed = 123,
+  score_each_iteration = TRUE
+)
+plotPR(glm_ridge)
 ```
 
 ```{r logistic lasso regression }

@@ -115,13 +115,13 @@ all['outcome'] <- h2o.relevel(x = all['outcome'], y = "non_default")
 ```{r}
 te_map <- h2o.target_encode_create(
   train, 
-  x = list(c('code_naf_niveau1'), c('code_ape')), 
+  x = list(c('code_naf_niveau1'), c('code_ape_niveau2'), c('code_ape_niveau3'), c('code_ape_niveau4'), c('code_ape')),
   y = 'outcome')
 
 
 train <- h2o.target_encode_apply(
   train, 
-  x = list(c('code_naf_niveau1'), c('code_ape')), 
+  x = list(c('code_naf_niveau1'), c('code_ape_niveau2'), c('code_ape_niveau3'), c('code_ape_niveau4'), c('code_ape')),
   y = 'outcome',
   target_encode_map = te_map,
   holdout_type = 'LeaveOneOut',
@@ -130,7 +130,7 @@ train <- h2o.target_encode_apply(
 
 all <- h2o.target_encode_apply(
   all,
-  x = list(c('code_naf_niveau1'), c('code_ape')),
+  x = list(c('code_naf_niveau1'), c('code_ape_niveau2'), c('code_ape_niveau3'), c('code_ape_niveau4'), c('code_ape')),
   y = 'outcome',
   target_encode_map = te_map, 
   holdout_type = 'None',
@@ -209,6 +209,50 @@ x_distrib = c(
   variations,
   distrib)
 
+x_medium <- c("montant_part_patronale",                   
+              "ratio_dette",                              
+              "ratio_dette_moy12m",                       
+              "etat_proc_collective_num",                 
+              "TargetEncode_code_ape_niveau3",            
+              "cotisation",                               
+              "frais_financier_distrib_APE1",             
+              "taux_marge_distrib_APE1",                  
+              "montant_part_patronale_variation_3",       
+              "ratio_liquidite_reduite_distrib_APE1",     
+              "dette_fiscale",                            
+              "ratio_delai_client_distrib_APE1",          
+              "montant_part_patronale_variation_1",       
+              "montant_part_patronale_variation_2",       
+              "ratio_rend_capitaux_propres",              
+              "taux_marge",                               
+              "poids_frng_distrib_APE1",                  
+              "delai_fournisseur_distrib_APE1",           
+              "taux_rotation_stocks_distrib_APE1",        
+              "effectif",                                 
+              "ratio_rentabilite_nette_distrib_APE1",     
+              "ratio_export_distrib_APE1",                
+              "TargetEncode_code_ape_niveau2",            
+              "effectif_diff_moy12",                      
+              "montant_part_ouvriere",                    
+              "financier_court_terme_distrib_APE1",       
+              #"effectif_entreprise",                      
+              "age",                                      
+              "ratio_liquidite_reduite",                  
+              "ratio_productivite_distrib_APE1",          
+              "frais_financier",                          
+              "financier_court_terme",                    
+              "ratio_delai_client",                       
+              "TargetEncode_code_naf_niveau1",            
+              "resultat_net_consolide",                   
+              "taux_rotation_stocks",                     
+              "nombre_etab_secondaire",                   
+              "nbr_etablissements_connus",                
+              "CA",                                       
+              "chiffre_affaires_net_lie_aux_exportations",
+              "ratio_dette_delai",                        
+              "ratio_marge_operationnelle_distrib_APE1",  
+              "poids_frng")  
+
 y = "outcome"
 ```
 
@@ -216,7 +260,7 @@ y = "outcome"
 ```{r}
 model <- h2o.xgboost(
                     model_id = 'Model_train',
-                    x= x_distrib, 
+                    x= x_medium, 
                     y =y,
                     training_frame = train,
                     tree_method = "hist",
@@ -241,6 +285,11 @@ model <- h2o.xgboost(
 
 prediction <- as.tibble(h2o.cbind(all,h2o.predict(model,all)))
 
+prediction <- prediction %>% mutate(
+  periode =  as.Date(structure(periode / 1000, 
+                               class = c('POSIXct','POSIXt')))
+)
+
 pred_data <- all_data %>%
   left_join(prediction %>% rename(prob = default0) %>% select(predict, prob,siret, periode), by=c('siret', 'periode')) %>% 
   group_by(siret) %>%
@@ -255,5 +304,35 @@ pred_data %>%
   filter(periode == actual_period) %>% 
   prepare_for_export(additional_names = c('diff', 'connu', 'interressant_urssaf')) %>%
   export(batch = '1809')
+```
+
+```{r}
+features  <- prediction[,x_medium]
+response <- 2-as.numeric(as.factor(as.vector(all$outcome)))
+pred <- function(model, newdata)  {
+  results <- as.data.frame(h2o.predict(model, as.h2o(newdata)))
+  return(results[[3L]])
+}
+```
+
+```{r}
+predictor.xgb <- Predictor$new(
+  model = model,
+  data = features,
+  y = response,
+  predict.fun = pred,
+  class = "classification"
+)
+```
+
+```{r}
+shap.xgb <- Shapley$new(predictor.xgb, x.interest = features[1,])
+
+
+shap_plot <- shap.xgb %>% plot()
+thresh <- 10e-5 
+to_remove <- abs(shap_plot$data[,"phi"]) < thresh
+shap_plot$data <- shap_plot$data[!to_remove,]
+shap_plot
 ```
 

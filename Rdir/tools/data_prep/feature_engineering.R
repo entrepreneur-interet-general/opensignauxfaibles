@@ -55,7 +55,7 @@ feature_engineering <- function(train_set,
     }
     if (is.null(past_trend_lookbacks)) {
       past_trend_lookbacks <-  c(1, 2, 3, 6, 12)
-      past_trend_lookbacks_years <- c(3)
+      past_trend_lookbacks_years <- c(1)
       cat("Taking default value for past trends lookbacks", '\n')
     }
     past_trend_lookbacks_ym <- past_trend_lookbacks_years * 12

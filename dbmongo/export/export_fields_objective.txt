@@ -1,0 +1,45 @@
+OK :montant_part_patronale                   
+OK :ratio_dette                              
+OK :ratio_dette_moy12m                       
+NOK:etat_proc_collective_num                 
+NOK:TargetEncode_code_ape_niveau3            
+OK :cotisation                               
+NOK:frais_financier_distrib_APE1             
+NOK:taux_marge_distrib_APE1                  
+NOK:montant_part_patronale_variation_3       
+NOK:ratio_liquidite_reduite_distrib_APE1     
+OK :dette_fiscale                            
+NOK:ratio_delai_client_distrib_APE1          
+NOK:montant_part_patronale_variation_1       
+NOK:montant_part_patronale_variation_2       
+NOK:ratio_rend_capitaux_propres              
+OK :taux_marge                               
+NOK:poids_frng_distrib_APE1                  
+NOK:delai_fournisseur_distrib_APE1           
+NOK:taux_rotation_stocks_distrib_APE1        
+OK :effectif                                 
+NOK:ratio_rentabilite_nette_distrib_APE1     
+NOK:ratio_export_distrib_APE1                
+NOK:TargetEncode_code_ape_niveau2            
+NOK:effectif_diff_moy12                      
+OK :montant_part_ouvriere                    
+NOK:financier_court_terme_distrib_APE1       
+NOK:age                                      
+NOK:ratio_liquidite_reduite                  
+NOK:ratio_productivite_distrib_APE1          
+OK :frais_financier                          
+OK :financier_court_terme                    
+NOK:ratio_delai_client                       
+NOK:TargetEncode_code_naf_niveau1            
+OK :resultat_net_consolide                   
+NOK:taux_rotation_stocks                     
+OK :nombre_etab_secondaire                   
+OK :nbr_etablissements_connus                
+OK :CA                                       
+NOK:chiffre_affaires_net_lie_aux_exportations
+NOK:ratio_dette_delai                        
+NOK:ratio_marge_operationnelle_distrib_APE1  
+OK :poids_frng  
+--------------------------------------------
+NOK:reproduire filtrage R
+NOK: codes APE de différents niveaux
