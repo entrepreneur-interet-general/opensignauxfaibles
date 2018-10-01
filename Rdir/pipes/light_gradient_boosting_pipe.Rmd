@@ -302,7 +302,7 @@ pred_data <- all_data %>%
 # Export
 pred_data %>% 
   filter(periode == actual_period) %>% 
-  prepare_for_export(additional_names = c('diff', 'connu', 'interressant_urssaf')) %>%
+  prepare_for_export() %>% #additional_names = c('diff', 'connu', 'interressant_urssaf')) %>%
   export(batch = '1809')
 ```
 

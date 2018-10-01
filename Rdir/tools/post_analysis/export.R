@@ -22,7 +22,7 @@ export <- function(data,
 
     write.table(data,
                 row.names = F,
-                dec = '.',
+                dec = ',',
                 sep = ';',
                 file = fullpath,
                 quote = T,
