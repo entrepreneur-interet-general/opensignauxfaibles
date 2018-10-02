@@ -3,7 +3,7 @@ mark_known_sirets <- function(df, name){
   sirens <- substr(sirets,1,9)
 
   df <- df %>%
-    mutate(connu = as.numeric(siren %in% sirens))
+    mutate(connu = as.numeric(substr(siret,1,9) %in% sirens))
 
   return(df)
 }
