@@ -307,7 +307,6 @@ function finalize(k, v) {
 				return(v.cotisation[h].numero_compte)
 		})))
 		
-		print(numeros_compte)
 		Object.keys(output_indexed).forEach(function (time) {
 				output_indexed[time].numero_compte_urssaf = numeros_compte
 				if (time in value_cotisation){
@@ -324,12 +323,13 @@ function finalize(k, v) {
 				val.montant_dette = val.debit_array.reduce(function (m, dette) {
 						m.part_ouvriere += dette.part_ouvriere
 						m.part_patronale += dette.part_patronale
+						m.montant_majorations += dette.montant_majorations
 						return m
-				}, { "part_ouvriere": 0, "part_patronale": 0 })
+				}, {"part_ouvriere": 0, "part_patronale": 0, "montant_majorations": 0})
 
 				val.montant_part_ouvriere = val.montant_dette.part_ouvriere
 				val.montant_part_patronale = val.montant_dette.part_patronale
-
+				val.montant_majorations = val.montant_majorations
 				delete val.montant_dette
 				delete val.debit_array
 

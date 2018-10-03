@@ -27,6 +27,7 @@ type Debit struct {
 	CodeOperationEcartNegatif    string    `json:"code_operation_ecart_negatif" bson:"code_operation_ecart_negatif"`
 	CodeMotifEcartNegatif        string    `json:"code_motif_ecart_negatif" bson:"code_motif_ecart_negatif"`
 	DebitSuivant                 string    `json:"debit_suivant,omitempty" bson:"debit_suivant,omitempty"`
+	MontantMajorations			 float64   `json:"montant_majorations" bson:"montant_majorations"`
 }
 
 func parseDebit(paths []string) chan *Debit {
@@ -55,7 +56,7 @@ func parseDebit(paths []string) chan *Debit {
 			codeProcedureCollectiveIndex := sliceIndex(len(fields), func(i int) bool { return fields[i] == "Cd_pro_col" })
 			codeOperationEcartNegatifIndex := sliceIndex(len(fields), func(i int) bool { return fields[i] == "Cd_op_ecn" })
 			codeMotifEcartNegatifIndex := sliceIndex(len(fields), func(i int) bool { return fields[i] == "Motif_ecn" })
-
+			montantMajorationsIndex := sliceIndex(len(fields), func(i int) bool { return fields[i] ==  "Montant majorations de retard en centimes"})
 			for {
 				row, error := reader.Read()
 				if error == io.EOF {
@@ -79,6 +80,8 @@ func parseDebit(paths []string) chan *Debit {
 				debit.NumeroHistoriqueEcartNegatif, err = strconv.Atoi(row[numeroHistoriqueEcartNegatifIndex])
 				debit.EtatCompte, err = strconv.Atoi(row[etatCompteIndex])
 				debit.Periode, err = UrssafToPeriod(row[periodeIndex])
+				debit.MontantMajorations, err =  strconv.ParseFloat(row[montantMajorationsIndex], 64)
+				debit.MontantMajorations = debit.MontantMajorations / 100
 
 				outputChannel <- &debit
 			}
@@ -105,9 +108,9 @@ func importDebit(batch *AdminBatch) error {
 							Debit: map[string]*Debit{
 								hash: debit,
 							}}}}}
-			batch.ChanEtablissement <- &value
-		}
-	}
-	batch.ChanEtablissement <- &ValueEtablissement{}
-	return nil
-}
+							batch.ChanEtablissement <- &value
+						}
+					}
+					batch.ChanEtablissement <- &ValueEtablissement{}
+					return nil
+				}
