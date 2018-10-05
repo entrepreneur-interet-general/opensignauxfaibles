@@ -300,11 +300,15 @@ pred_data %>%
 ```
 
 ```{r}
+prediction_2 <-pred_data %>% 
+  filter(periode == actual_period) %>% 
+  prepare_for_export()
 
 prediction <- prediction %>%
   rename(prob = default0) %>%
   left_join(prediction_2 %>% 
-              select(siret, connu), by = 'siret')
+              select(siret, connu), by = 'siret') %>% 
+  filter(periode = "2018-08-01")
 
 prediction <- prediction %>%
   arrange(desc(prob)) %>% 
