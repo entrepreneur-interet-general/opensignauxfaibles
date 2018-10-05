@@ -281,10 +281,11 @@ prediction <- as.tibble(h2o.cbind(all,h2o.predict(model,all)))
 prediction <- prediction %>% mutate(
   periode =  as.Date(structure(periode / 1000, 
                                class = c('POSIXct','POSIXt')))
-)
+)%>%
+  rename(prob = default0) 
 
 pred_data <- all_data %>%
-  left_join(prediction %>% rename(prob = default0) %>% select(predict, prob,siret, periode), by=c('siret', 'periode')) %>% 
+  left_join(prediction  %>% select(predict, prob,siret, periode), by=c('siret', 'periode')) %>% 
   group_by(siret) %>%
   arrange(siret,periode) %>% 
   mutate(last_prob = lag(prob),
@@ -305,7 +306,6 @@ prediction_2 <-pred_data %>%
   prepare_for_export()
 
 prediction <- prediction %>%
-  rename(prob = default0) %>%
   left_join(prediction_2 %>% 
               select(siret, connu), by = 'siret') %>% 
   filter(periode = "2018-08-01")

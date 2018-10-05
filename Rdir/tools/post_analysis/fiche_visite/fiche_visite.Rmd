@@ -1,90 +1,129 @@
 ---
-title: "Fiche visite"
-params:
-  siret: '82190497600015'
+title: "`r params$raison_sociale` "
+author: "Fiche entreprise"
+date: "`r lubridate::today()`"
 output:
+  html_document: default
+  word_document: default
   pdf_document: default
+params:
+  siret: '42118530700079'
+  raison_sociale: 'AXON NANOTEC'
 ---
 
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE)
 
-```{r setup, echo=FALSE, message=FALSE}
-library("opensignauxfaibles")
-library("lubridate")
-#library("knitr")
-#opts_knit$set(progress = TRUE, verbose = FALSE, echo = FALSE, message = FALSE)
-database_signauxfaibles <- database_connect()
-sirene <- get_sirene(db = database_signauxfaibles, .siret = params$siret)
+library(tidyverse)
+library(tibbletime)
+library(lubridate)
+library(plotly)
+
+load("/home/pierre/Documents/opensignauxfaibles/Rdir/RData/donnees.RData")
+my_data <- donnees
+
+mon_siret <- params$siret
+
+last_periode <- max(my_data$periode)
+
+etablissement <- my_data %>% filter(siret == mon_siret)
+etablissement_one_period <- etablissement %>% filter(periode == last_periode)
+
 ```
 
-## Informations principales
+**Raison sociale**: `r first(etablissement$raison_sociale)`  
+**Siret**: `r first(etablissement$siret)`  
+**Departement**: `r first(etablissement$departement)` (`r first(etablissement$region)`)  
+**APE**: `r first(etablissement$code_ape)` -> `r first(etablissement$libelle_naf_niveau5)`  
+**Effectif**: `r etablissement_one_period$effectif`  
+**Âge**: `r etablissement_one_period$age`
 
-- Raison sociale : `r get_raisonsociale(db = database_signauxfaibles, .siret = params$siret)`
-- SIRET : `r params$siret`
-- SIREN : `r sirene$siren`
-- Numero URSSAF : `r get_accountnumber(db = database_signauxfaibles, .siret = params$siret)`
-- Date de création : `r format(ymd(paste0(sirene$date_creation_etablissement, "-01")), "%m-%Y")` (source SIRENE)
-- Secteur d'activité : `r sirene$libelle_naf_niveau1`
 
-## Effectif
+**CA**: `r etablissement_one_period$CA` en 2016 (`r etablissement_one_period$CA_N_moins_1` en 2015)  
+**Resultat net**: `r etablissement_one_period$resultat_net_consolide` en 2016 (`r etablissement_one_period$resultat_net_consolide_N_moins_1` en 2015)  
+**Resultat d'exploitation**: `r etablissement_one_period$resultat_expl` en 2016 (`r etablissement_one_period$resultat_expl_N_moins_1` en 2015)
 
-```{r echo=FALSE}
-get_effectif(db = database_signauxfaibles, .siret = params$siret)
+```{r echo=FALSE,include = FALSE}
+autres_etab <- my_data %>% filter(periode == last_periode, siren == etablissement$siren[1], siret != etablissement$siret[1])
 ```
 
-```{r plot-effectif, echo=FALSE}
-plot_effectif(db = database_signauxfaibles, .siret = params$siret)
+```{r include = (nrow(autres_etab) > 1)}
+cat("Autres établissements de l'entreprise")
+for (i in seq_along(autres_etab$siret)){
+    cat(paste(autres_etab$siret[i], autres_etab$raison_sociale[i]))
+}
+```
+```{r include = (nrow(autres_etab) == 0)}
+cat("Pas d'autre établissement connu pour cette entreprise")
 ```
 
-## Plan CCSF
-
-```{r plan-ccsf, echo=FALSE}
-is_ccsf(db = database_signauxfaibles, siret = params$siret)
+```{r echo=FALSE,include = FALSE}
+memeAPE <- my_data %>% filter(code_ape_niveau3 == first(etablissement$code_ape_niveau3))
+#my_data[my_data$siret == mon_siret,2]
 ```
 
-## Cotisations
+**Nombre d'etablissements connus avec le même code APE niveau 3**: `r length(unique(memeAPE$siret))`
 
-```{r, echo=FALSE}
-get_meancotisation(db = database_signauxfaibles, siret = params$siret)
+**Prédiction**: `r etablissement %>% filter(periode == last_periode) %>% .$prob`  
+**Rang prédiction**: `r my_data %>% filter(periode == last_periode) %>% arrange(desc(prob)) %>% mutate(rank = 1:length(prob)) %>% filter(siret ==mon_siret) %>% .[['rank']]`/ `r n_distinct(my_data$siret)` etablissements  
+**Rang parmi les mêmes APE**: `r my_data %>% filter(periode == last_periode) %>% semi_join(memeAPE,by='siret') %>% arrange(desc(prob)) %>% mutate(rank = 1:length(prob)) %>% filter(siret == mon_siret) %>% .[['rank']]`/ `r n_distinct(memeAPE$siret)` etablissements avec le même APE
+
+
+
+
+## Évolution de l'effectif et activité partielle
+
+```{r echo = FALSE}
+  g <- ggplot(etablissement %>% mutate(activite_partielle_approx = effectif * ratio_apart 
+                                       /100), aes(x=periode, y=effectif)) +
+    geom_line() + 
+  expand_limits(y=0) +
+  geom_area(aes(y=activite_partielle_approx,fill="activite partielle"))
+
+ggplotly(g)
+  
 ```
 
-## Evolution des cotisations moyennes
-
-```{r, echo=FALSE}
-plot_meancotisation(db = database_signauxfaibles, siret = params$siret)
+## Débits URSSAF
+```{r include = FALSE}
+aux <- etablissement %>% filter(periode >= last_periode %m-% months(12))
+any_debit_urssaf <- any(aux$montant_part_ouvriere + aux$montant_part_patronale > 0)
 ```
 
-## Evolution des cotisations moyennes par salarié
-
-```{r}
-plot_ratio_cotisation_effectif(db = database_signauxfaibles, siret = params$siret)
+```{r echo=FALSE,include = !any_debit_urssaf}
+cat("Pas de débit URSSAF récent")
 ```
 
-## Evolution de la part ouvriere cumulée
+```{r echo=FALSE,include = any_debit_urssaf}
+  g <- ggplot(etablissement %>% gather(c('montant_part_ouvriere','montant_part_patronale'),key = 'type_debit',value = 'debit'),aes(x=periode,y=debit,fill=type_debit)) +
+    geom_area(position = 'stack') +
+  geom_line(aes(y=cotisation_moy12m, color='cotisation_moyenne')) 
+g
 
-```{r, echo=FALSE}
-plot_dettecumulee(db = database_signauxfaibles, siret = params$siret, variable = "montant_part_ouvriere")
 ```
 
-## Evolution de la dette patronale cumulée
+## Ratios financiers
 
-```{r, echo=FALSE}
-plot_dettecumulee(db = database_signauxfaibles, siret = params$siret, variable = "montant_part_patronale")
-```
+```{r echo = FALSE}
 
-## Evolution de la dette cumulée
+ratios <- c('CA', 'resultat_net_consolide', 'resultat_expl','poids_frng','taux_marge','delai_fournisseur','dette_fiscale','financier_court_terme','frais_financier')
 
-```{r, echo=FALSE}
-plot_dettecumulee(db = database_signauxfaibles, siret = params$siret, variable = "dettecumulee")
-```
-
-## Evolution du ratio de dette cumulée sur les cotisations
-
-```{r, echo=FALSE}
-plot_ratio_dettecumulee_cotisation(db = database_signauxfaibles, siret = params$siret)
-```
-
-## Délais
-
-```{r getdelais, echo=FALSE}
-get_delais(database_signauxfaibles, siret = params$siret)
-```
+ to_plot <-  memeAPE %>%
+   gather(ratios, key='type_ratio',value='ratio') %>%
+   arrange(periode) %>%
+  mutate(type_ratio = factor(type_ratio,levels = ratios)) %>%
+  as_tbl_time(periode) %>% 
+   collapse_by('1 y') %>%
+  group_by(siret, periode, type_ratio) %>% 
+  summarize(ratio = last(ratio))
+ 
+g <- ggplot(
+  as.data.frame(to_plot) %>% filter(siret != mon_siret),
+  aes(x = periode, y = ratio)) +
+  geom_step(color = 'grey', alpha = 0.5) + 
+  geom_step(data = to_plot %>% filter(siret == mon_siret), aes(x=periode, y=ratio, color=type_ratio, group=type_ratio)) +
+    geom_point(data = to_plot %>% filter(siret == mon_siret), aes(x=periode, y=ratio, color=type_ratio, group=type_ratio)) +
+    geom_hline(yintercept = 0) +
+    facet_wrap(vars(type_ratio), scales = 'free_y') +
+  theme(legend.position = 'none')
+ggplotly(g)
