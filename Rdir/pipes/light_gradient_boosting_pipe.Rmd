@@ -276,13 +276,6 @@ model <- h2o.xgboost(
 ## Prediction
 ```{r}
 
-#provisoire: retrait NA et inf
-# tw_complete_long <- imputed_data_long %>%
-#  filter(.imp != 0) %>% 
-#  filter(!is.infinite(log_cotisationdue_effectif)) %>%
-#  filter(!is.na(log_cotisationdue_effectif))
-
-
 prediction <- as.tibble(h2o.cbind(all,h2o.predict(model,all)))
 
 prediction <- prediction %>% mutate(
@@ -307,8 +300,21 @@ pred_data %>%
 ```
 
 ```{r}
+
+prediction <- prediction %>%
+  rename(prob = default0) %>%
+  left_join(prediction_2 %>% 
+              select(siret, connu), by = 'siret')
+
+prediction <- prediction %>%
+  arrange(desc(prob)) %>% 
+  filter(libelle_naf_niveau1 == "Industrie manufacturière", 
+         connu == 0, 
+         etat_proc_collective == "in_bonis",
+         is.na(date_ccsf)) 
+  
 features  <- prediction[,x_medium]
-response <- 2-as.numeric(as.factor(as.vector(all$outcome)))
+response <- 2-as.numeric(as.factor(as.vector(prediction$outcome)))
 pred <- function(model, newdata)  {
   results <- as.data.frame(h2o.predict(model, as.h2o(newdata)))
   return(results[[3L]])
@@ -316,6 +322,7 @@ pred <- function(model, newdata)  {
 ```
 
 ```{r}
+library(iml)
 predictor.xgb <- Predictor$new(
   model = model,
   data = features,
@@ -326,13 +333,20 @@ predictor.xgb <- Predictor$new(
 ```
 
 ```{r}
-shap.xgb <- Shapley$new(predictor.xgb, x.interest = features[1,])
 
+for (i in 1:30){
+  company_name <- as.character(prediction$raison_sociale[i])
+  shap.xgb <- Shapley$new(predictor.xgb, x.interest = features[i,])
 
-shap_plot <- shap.xgb %>% plot()
-thresh <- 10e-5 
-to_remove <- abs(shap_plot$data[,"phi"]) < thresh
-shap_plot$data <- shap_plot$data[!to_remove,]
-shap_plot
+  shap_plot <- shap.xgb %>% plot()
+  thresh <- 10e-5 
+  to_remove <- abs(shap_plot$data[,"phi"]) < thresh
+  shap_plot$data <- shap_plot$data[!to_remove,]
+  
+
+  shap_plot + theme(title = element_text(company_name))
+ggsave(paste0("~/Documents/opensignauxfaibles/output/misc/shapley_", i, "_", company_name, ".png"))
+    dev.off()
+}
 ```
 
