@@ -7,8 +7,8 @@ output:
   word_document: default
   pdf_document: default
 params:
-  siret: '42118530700079'
-  raison_sociale: 'AXON NANOTEC'
+  siret: '39466610100024'
+  raison_sociale: 'FORMINOV'
 ---
 
 ```{r setup, include=FALSE}
@@ -18,11 +18,15 @@ library(tidyverse)
 library(tibbletime)
 library(lubridate)
 library(plotly)
+library(rprojroot)
+library(mongolite)
+source(find_rstudio_root_file('tools','interface','connect_to_database.R'))
 
 load("/home/pierre/Documents/opensignauxfaibles/Rdir/RData/donnees.RData")
 my_data <- donnees
-
 mon_siret <- params$siret
+
+ratios <- c('CA', 'resultat_net_consolide', 'resultat_expl','poids_frng','taux_marge','delai_fournisseur','dette_fiscale','financier_court_terme','frais_financier')
 
 last_periode <- max(my_data$periode)
 
@@ -34,37 +38,61 @@ etablissement_one_period <- etablissement %>% filter(periode == last_periode)
 **Raison sociale**: `r first(etablissement$raison_sociale)`  
 **Siret**: `r first(etablissement$siret)`  
 **Departement**: `r first(etablissement$departement)` (`r first(etablissement$region)`)  
-**APE**: `r first(etablissement$code_ape)` -> `r first(etablissement$libelle_naf_niveau5)`  
-**Effectif**: `r etablissement_one_period$effectif`  
-**Âge**: `r etablissement_one_period$age`
+**APE**: `r first(etablissement$code_ape)` `r first(etablissement$libelle_naf_niveau5)`  
+**Effectif**: `r etablissement_one_period$effectif` salariés   
+**Âge**: `r etablissement_one_period$age` ans  
 
 
-**CA**: `r etablissement_one_period$CA` en 2016 (`r etablissement_one_period$CA_N_moins_1` en 2015)  
-**Resultat net**: `r etablissement_one_period$resultat_net_consolide` en 2016 (`r etablissement_one_period$resultat_net_consolide_N_moins_1` en 2015)  
-**Resultat d'exploitation**: `r etablissement_one_period$resultat_expl` en 2016 (`r etablissement_one_period$resultat_expl_N_moins_1` en 2015)
+**CA**: `r etablissement_one_period$CA` k€ en 2016 (`r etablissement_one_period$CA_N_moins_1` k€ en 2015)  
+**Resultat net**: `r etablissement_one_period$resultat_net_consolide` k€ en 2016 (`r etablissement_one_period$resultat_net_consolide_N_moins_1` k€ en 2015)  
+**Resultat d'exploitation**: `r etablissement_one_period$resultat_expl` k€ en 2016 (`r etablissement_one_period$resultat_expl_N_moins_1` k€ en 2015)
 
 ```{r echo=FALSE,include = FALSE}
 autres_etab <- my_data %>% filter(periode == last_periode, siren == etablissement$siren[1], siret != etablissement$siret[1])
 ```
 
-```{r include = (nrow(autres_etab) > 1)}
-cat("Autres établissements de l'entreprise")
-for (i in seq_along(autres_etab$siret)){
-    cat(paste(autres_etab$siret[i], autres_etab$raison_sociale[i]))
+
+```{r echo = FALSE}
+if (nrow(autres_etab) > 1){
+  text <- "Autres établissements de l'enterprise: \n"
+  
+  for (i in seq_along(autres_etab$siret)){
+    paste(text,autres_etab$siret[i], autres_etab$raison_sociale[i], '\n') 
+  }
+  
+  
+} else {
+  text <- "Pas d'autre établissement connu pour cette entreprise"
 }
 ```
-```{r include = (nrow(autres_etab) == 0)}
-cat("Pas d'autre établissement connu pour cette entreprise")
-```
+
+`r text`
 
 ```{r echo=FALSE,include = FALSE}
 memeAPE <- my_data %>% filter(code_ape_niveau3 == first(etablissement$code_ape_niveau3))
 #my_data[my_data$siret == mon_siret,2]
+
+cat('FIX ME ...','\n')
+cat('algo et batch écrits en dur', '\n')
+ajout_export <- connect_to_database(
+  'Features', 
+  '1809', 
+  algo = 'algo2',
+  siren = unique(memeAPE$siren) 
+  ) %>% 
+  filter(siret %in% unique(memeAPE$siret)) %>% 
+  select(c('siret', 'periode', 'effectif', ratios))
+
+memeAPE <- memeAPE %>%
+  full_join(
+    ajout_export,
+    by = c('siret', 'periode', 'effectif', ratios)
+    )
 ```
 
 **Nombre d'etablissements connus avec le même code APE niveau 3**: `r length(unique(memeAPE$siret))`
 
-**Prédiction**: `r etablissement %>% filter(periode == last_periode) %>% .$prob`  
+**Prédiction**: `r etablissement %>% filter(periode == last_periode) %>% .$prob %>% round(2)`  
 **Rang prédiction**: `r my_data %>% filter(periode == last_periode) %>% arrange(desc(prob)) %>% mutate(rank = 1:length(prob)) %>% filter(siret ==mon_siret) %>% .[['rank']]`/ `r n_distinct(my_data$siret)` etablissements  
 **Rang parmi les mêmes APE**: `r my_data %>% filter(periode == last_periode) %>% semi_join(memeAPE,by='siret') %>% arrange(desc(prob)) %>% mutate(rank = 1:length(prob)) %>% filter(siret == mon_siret) %>% .[['rank']]`/ `r n_distinct(memeAPE$siret)` etablissements avec le même APE
 
@@ -74,13 +102,21 @@ memeAPE <- my_data %>% filter(code_ape_niveau3 == first(etablissement$code_ape_n
 ## Évolution de l'effectif et activité partielle
 
 ```{r echo = FALSE}
-  g <- ggplot(etablissement %>% mutate(activite_partielle_approx = effectif * ratio_apart 
-                                       /100), aes(x=periode, y=effectif)) +
-    geom_line() + 
-  expand_limits(y=0) +
-  geom_area(aes(y=activite_partielle_approx,fill="activite partielle"))
 
-ggplotly(g)
+
+etablissement_with_past <- etablissement %>%
+full_join(ajout_export %>% filter(siret == mon_siret))
+
+g <- ggplot(
+etablissement_with_past %>% mutate(activite_partielle_approx = effectif * ratio_apart
+/ 100),
+aes(x = periode, y = effectif)
+) +
+geom_line() +
+expand_limits(y = 0) +
+geom_area(aes(y = activite_partielle_approx, fill = "activite partielle"))
+
+g
   
 ```
 
@@ -90,14 +126,12 @@ aux <- etablissement %>% filter(periode >= last_periode %m-% months(12))
 any_debit_urssaf <- any(aux$montant_part_ouvriere + aux$montant_part_patronale > 0)
 ```
 
-```{r echo=FALSE,include = !any_debit_urssaf}
-cat("Pas de débit URSSAF récent")
-```
+`r ifelse(!any_debit_urssaf, "Pas de débit URSSAF récent","")`
 
 ```{r echo=FALSE,include = any_debit_urssaf}
   g <- ggplot(etablissement %>% gather(c('montant_part_ouvriere','montant_part_patronale'),key = 'type_debit',value = 'debit'),aes(x=periode,y=debit,fill=type_debit)) +
     geom_area(position = 'stack') +
-  geom_line(aes(y=cotisation_moy12m, color='cotisation_moyenne')) 
+  geom_line(aes(y=cotisation_moy12m, color = 'cotisation_moyenne'))
 g
 
 ```
@@ -112,18 +146,25 @@ ratios <- c('CA', 'resultat_net_consolide', 'resultat_expl','poids_frng','taux_m
    gather(ratios, key='type_ratio',value='ratio') %>%
    arrange(periode) %>%
   mutate(type_ratio = factor(type_ratio,levels = ratios)) %>%
+   mutate(periode = periode %m-% months(12)) %>% 
   as_tbl_time(periode) %>% 
-   collapse_by('1 y') %>%
+   collapse_by('1 y', side = 'start') %>%
   group_by(siret, periode, type_ratio) %>% 
   summarize(ratio = last(ratio))
  
 g <- ggplot(
   as.data.frame(to_plot) %>% filter(siret != mon_siret),
-  aes(x = periode, y = ratio)) +
-  geom_step(color = 'grey', alpha = 0.5) + 
+  aes(x = periode, y = ratio, group = siret)) +
+  geom_step(color = 'grey', alpha = 1) + 
   geom_step(data = to_plot %>% filter(siret == mon_siret), aes(x=periode, y=ratio, color=type_ratio, group=type_ratio)) +
     geom_point(data = to_plot %>% filter(siret == mon_siret), aes(x=periode, y=ratio, color=type_ratio, group=type_ratio)) +
     geom_hline(yintercept = 0) +
     facet_wrap(vars(type_ratio), scales = 'free_y') +
   theme(legend.position = 'none')
-ggplotly(g)
+g
+#ggplotly(g)
+```
+
+
+Description des ratios financiers: 
+Poids frng: poids net ...
