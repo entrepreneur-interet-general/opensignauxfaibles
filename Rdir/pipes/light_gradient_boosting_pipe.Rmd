@@ -300,6 +300,8 @@ pred_data %>%
   export(batch = '1809')
 ```
 
+
+## Export graphiques Shapley
 ```{r}
 prediction_2 <-pred_data %>% 
   filter(periode == actual_period) %>% 

@@ -1,14 +1,14 @@
 ---
-title: "`r params$raison_sociale` "
-author: "Fiche entreprise"
+title: "`r params$raison_sociale`"
+author: "CONFIDENTIEL - Fiche entreprise"
 date: "`r lubridate::today()`"
 output:
-  html_document: default
-  word_document: default
   pdf_document: default
+  word_document: default
+  html_document: default
 params:
-  siret: '39466610100024'
-  raison_sociale: 'FORMINOV'
+  siret: '48137217500028'
+  raison_sociale: 'DECOMETAL'
 ---
 
 ```{r setup, include=FALSE}
@@ -19,8 +19,13 @@ library(tibbletime)
 library(lubridate)
 library(plotly)
 library(rprojroot)
+#library(viridis)
 library(mongolite)
+library(cowplot)
+library(h2o)
+library(iml)
 source(find_rstudio_root_file('tools','interface','connect_to_database.R'))
+source(find_rstudio_root_file('tools','post_analysis','shapley_plot.R'))
 
 load("/home/pierre/Documents/opensignauxfaibles/Rdir/RData/donnees.RData")
 my_data <- donnees
@@ -38,19 +43,43 @@ etablissement_one_period <- etablissement %>% filter(periode == last_periode)
 **Raison sociale**: `r first(etablissement$raison_sociale)`  
 **Siret**: `r first(etablissement$siret)`  
 **Departement**: `r first(etablissement$departement)` (`r first(etablissement$region)`)  
-**APE**: `r first(etablissement$code_ape)` `r first(etablissement$libelle_naf_niveau5)`  
-**Effectif**: `r etablissement_one_period$effectif` salariés   
-**Âge**: `r etablissement_one_period$age` ans  
-
-
-**CA**: `r etablissement_one_period$CA` k€ en 2016 (`r etablissement_one_period$CA_N_moins_1` k€ en 2015)  
-**Resultat net**: `r etablissement_one_period$resultat_net_consolide` k€ en 2016 (`r etablissement_one_period$resultat_net_consolide_N_moins_1` k€ en 2015)  
-**Resultat d'exploitation**: `r etablissement_one_period$resultat_expl` k€ en 2016 (`r etablissement_one_period$resultat_expl_N_moins_1` k€ en 2015)
+**Effectif salarié**: `r etablissement_one_period$effectif` salariés   
+**Âge de l'établissement**: `r etablissement_one_period$age` ans  
 
 ```{r echo=FALSE,include = FALSE}
 autres_etab <- my_data %>% filter(periode == last_periode, siren == etablissement$siren[1], siret != etablissement$siret[1])
 ```
 
+
+```{r echo=FALSE,include = FALSE}
+memeAPE <- my_data %>% filter(code_ape_niveau3 == first(etablissement$code_ape_niveau3))
+#my_data[my_data$siret == mon_siret,2]
+
+cat('FIX ME ...','\n')
+cat('algo et batch écrits en dur', '\n')
+ajout_export <- connect_to_database(
+  'Features', 
+  '1809', 
+  algo = 'algo2',
+  siren = unique(memeAPE$siren) 
+  ) %>% 
+  filter(siret %in% unique(memeAPE$siret)) %>% 
+  select(c('siret', 'periode', 'effectif', ratios)
+)
+
+memeAPE <- memeAPE %>%
+  full_join(
+    ajout_export,
+    by = c('siret', 'periode', 'effectif', ratios)
+    )
+```
+**APE niveau 3**: 261  Fabrication de composants et cartes électroniques
+**APE niveau 5**: `r first(etablissement$code_ape)` `r first(etablissement$libelle_naf_niveau5)`  
+**Nombre d'etablissements connus avec le même code APE niveau 3**: `r length(unique(memeAPE$siret))`
+
+**CA**: `r etablissement_one_period$CA` k€ en 2016 (`r etablissement_one_period$CA_N_moins_1` k€ en 2015)  
+**Resultat net**: `r etablissement_one_period$resultat_net_consolide` k€ en 2016 (`r etablissement_one_period$resultat_net_consolide_N_moins_1` k€ en 2015)  
+**Resultat d'exploitation**: `r etablissement_one_period$resultat_expl` k€ en 2016 (`r etablissement_one_period$resultat_expl_N_moins_1` k€ en 2015)
 
 ```{r echo = FALSE}
 if (nrow(autres_etab) > 1){
@@ -68,79 +97,124 @@ if (nrow(autres_etab) > 1){
 
 `r text`
 
-```{r echo=FALSE,include = FALSE}
-memeAPE <- my_data %>% filter(code_ape_niveau3 == first(etablissement$code_ape_niveau3))
-#my_data[my_data$siret == mon_siret,2]
+**Score signaux faibles**: `r etablissement %>% filter(periode == last_periode) %>% .$prob %>% round(2)` (0 entreprise solide → 1 entreprise fragile)  
+**Rang dans le secteur d'activité**: `r my_data %>% filter(periode == last_periode) %>% semi_join(memeAPE,by='siret') %>% arrange(desc(prob)) %>% mutate(rank = 1:length(prob)) %>% filter(siret == mon_siret) %>% .[['rank']]`/ `r n_distinct(memeAPE$siret)` établissements avec le même APE niveau 3 (de plus de 20 salariés)
 
-cat('FIX ME ...','\n')
-cat('algo et batch écrits en dur', '\n')
-ajout_export <- connect_to_database(
-  'Features', 
-  '1809', 
-  algo = 'algo2',
-  siren = unique(memeAPE$siren) 
-  ) %>% 
-  filter(siret %in% unique(memeAPE$siret)) %>% 
-  select(c('siret', 'periode', 'effectif', ratios))
+\  
+\  
+\  
 
-memeAPE <- memeAPE %>%
-  full_join(
-    ajout_export,
-    by = c('siret', 'periode', 'effectif', ratios)
-    )
-```
-
-**Nombre d'etablissements connus avec le même code APE niveau 3**: `r length(unique(memeAPE$siret))`
-
-**Prédiction**: `r etablissement %>% filter(periode == last_periode) %>% .$prob %>% round(2)`  
-**Rang prédiction**: `r my_data %>% filter(periode == last_periode) %>% arrange(desc(prob)) %>% mutate(rank = 1:length(prob)) %>% filter(siret ==mon_siret) %>% .[['rank']]`/ `r n_distinct(my_data$siret)` etablissements  
-**Rang parmi les mêmes APE**: `r my_data %>% filter(periode == last_periode) %>% semi_join(memeAPE,by='siret') %>% arrange(desc(prob)) %>% mutate(rank = 1:length(prob)) %>% filter(siret == mon_siret) %>% .[['rank']]`/ `r n_distinct(memeAPE$siret)` etablissements avec le même APE
-
-
-
-
-## Évolution de l'effectif et activité partielle
-
-```{r echo = FALSE}
-
-
+```{r echo = FALSE, fig.show='hold', fig.align = 'center'}
 etablissement_with_past <- etablissement %>%
-full_join(ajout_export %>% filter(siret == mon_siret))
-
-g <- ggplot(
-etablissement_with_past %>% mutate(activite_partielle_approx = effectif * ratio_apart
-/ 100),
-aes(x = periode, y = effectif)
-) +
-geom_line() +
-expand_limits(y = 0) +
-geom_area(aes(y = activite_partielle_approx, fill = "activite partielle"))
-
-g
+  full_join(
+  ajout_export %>% filter(siret == mon_siret),
+  by = c('siret', 'periode', 'effectif', ratios)
+  )
   
+  to_plot <- etablissement_with_past %>%
+  mutate(activite_partielle_approx = effectif * ratio_apart / 100) %>%
+  gather(c('activite_partielle_approx'),
+  key = 'conso_ou_demande',
+  value = 'nombre_heures')
+  
+  to_plot <- rbind(to_plot, to_plot[nrow(to_plot), ])
+  to_plot[nrow(to_plot), 'conso_ou_demande'] <- 'demande'
+  
+  
+  
+  g1 <- ggplot(to_plot,
+  aes(x = periode)) +
+  geom_area(aes(y = nombre_heures, fill = conso_ou_demande)) +
+  geom_line(aes(y = effectif, color = 'line_effectif')) +
+  scale_color_manual(
+    name = NULL,
+    labels = c("Effectif salarié"),
+    values = c("line_effectif" = "black")
+  ) +
+  scale_fill_discrete(
+    name = NULL,
+    labels = c(
+      "Consommation d'activité partielle",
+      "Demande d'activité partielle"
+    )
+  ) +
+  expand_limits(y = 0) +
+  ggtitle('Effectif et activité partielle') +
+  ylab('Nombre de salariés') +
+  theme(
+  legend.position = 'bottom',
+  legend.direction = 'vertical',
+  legend.box = 'vertical',
+  legend.justification = 'left',
+  legend.text.align = 0,
+  legend.spacing.y = unit(-0.4, "char"),
+  legend.box.just = 'left',
+  legend.key = element_blank(),
+  legend.box.margin = margin(-10,-10,-10,-10),
+  text = element_text(size = 12),
+  axis.text.x = element_text(size = 12, angle = 30, hjust = 1),
+  axis.title.x = element_blank()
+  ) +
+    guides(color = guide_legend(order = 1),
+            fill = guide_legend(order = 2))
+  
+
+  g2 <- ggplot(
+      etablissement %>%
+        gather(
+        c('montant_part_ouvriere', 'montant_part_patronale'),
+        key = 'type_debit',
+        value = 'debit'
+      ),
+      aes(x = periode)
+    ) +
+    geom_area(aes(y = debit, fill = type_debit), position = 'stack') +
+    geom_line(aes(y = cotisation_moy12m, color = 'cotisation_moyenne')) +
+    scale_color_manual(
+      name = NULL,
+      labels = c('Cotisations moyennes sur 12 mois'),
+      values = c("cotisation_moyenne" = "black")
+    ) +
+    scale_fill_discrete(name = NULL,
+    labels = c('Part ouvrière', 'Part patronale')) +
+    xlab('Période') +
+    ylab('Montant (EUR)') +
+    ggtitle('Dettes sur les \ncotisations sociales') +
+    theme(
+      axis.ticks.y = element_blank(),
+      axis.text.y  = element_blank(),
+      legend.position = 'bottom',
+      legend.direction = 'vertical',
+      legend.box = 'vertical',
+      legend.justification = 'left',
+      legend.box.just = 'left',
+      legend.text.align = 0,
+      legend.spacing.y = unit(-0.4, "char"),
+      legend.key = element_blank(),
+      legend.box.margin = margin(-10,-10,-10,-10),
+      text = element_text(size = 12),
+      axis.text.x = element_text(size = 12, angle = 30, hjust = 1),
+      axis.title.x = element_blank(),
+      axis.title.y = element_text(margin = margin(r = -20))
+    ) +
+    guides(color = guide_legend(order=1),
+            fill = guide_legend(order=2))
+    
+    cowplot::plot_grid(g1, g2, align = 'hv')
+
 ```
 
-## Débits URSSAF
-```{r include = FALSE}
-aux <- etablissement %>% filter(periode >= last_periode %m-% months(12))
-any_debit_urssaf <- any(aux$montant_part_ouvriere + aux$montant_part_patronale > 0)
-```
 
-`r ifelse(!any_debit_urssaf, "Pas de débit URSSAF récent","")`
+# Ratios financiers comparés aux autres établissements du secteur d'activité (APE niveau 3)
 
-```{r echo=FALSE,include = any_debit_urssaf}
-  g <- ggplot(etablissement %>% gather(c('montant_part_ouvriere','montant_part_patronale'),key = 'type_debit',value = 'debit'),aes(x=periode,y=debit,fill=type_debit)) +
-    geom_area(position = 'stack') +
-  geom_line(aes(y=cotisation_moy12m, color = 'cotisation_moyenne'))
-g
-
-```
-
-## Ratios financiers
+L'établissement est en couleur dans les graphiques, les établissements de même code APE niveau 3 sont en gris. Les valeurs extrêmes sont filtrées.  
 
 ```{r echo = FALSE}
 
-ratios <- c('CA', 'resultat_net_consolide', 'resultat_expl','poids_frng','taux_marge','delai_fournisseur','dette_fiscale','financier_court_terme','frais_financier')
+ratios <- c('CA', 'resultat_net_consolide', 'resultat_expl','poids_frng','taux_marge','delai_fournisseur','financier_court_terme','frais_financier')
+
+ratio_labels <- c("CA (kEUR)", "Résultat net \nconsolidé (kEUR)", "Résultat \nd'exploitation (kEUR)", "Poids du frng (%)", "Taux de marge (%)", "Délai fournisseur \n(jours)", "Frais financiers (%)", "Frais financiers \ncourt terme (%)")
+names(ratio_labels) <- ratios
 
  to_plot <-  memeAPE %>%
    gather(ratios, key='type_ratio',value='ratio') %>%
@@ -152,19 +226,58 @@ ratios <- c('CA', 'resultat_net_consolide', 'resultat_expl','poids_frng','taux_m
   group_by(siret, periode, type_ratio) %>% 
   summarize(ratio = last(ratio))
  
+ auxiliary_filter_function <- function(vect1, vect2){
+   mu <- mean(vect1, na.rm = TRUE)
+   sigma <- sd(vect1, na.rm = TRUE)
+   res <- abs((vect1-mu)/sigma) <= 1 | as.character(vect2) == mon_siret
+   return(res)
+ }
+ 
+ to_plot <- to_plot %>% 
+   group_by(type_ratio) %>% 
+   filter(auxiliary_filter_function(ratio, siret)) %>% 
+   ungroup()
+ 
 g <- ggplot(
   as.data.frame(to_plot) %>% filter(siret != mon_siret),
   aes(x = periode, y = ratio, group = siret)) +
-  geom_step(color = 'grey', alpha = 1) + 
+  geom_step(color = 'grey', alpha = 0.5) + 
   geom_step(data = to_plot %>% filter(siret == mon_siret), aes(x=periode, y=ratio, color=type_ratio, group=type_ratio)) +
     geom_point(data = to_plot %>% filter(siret == mon_siret), aes(x=periode, y=ratio, color=type_ratio, group=type_ratio)) +
     geom_hline(yintercept = 0) +
-    facet_wrap(vars(type_ratio), scales = 'free_y') +
-  theme(legend.position = 'none')
+    facet_wrap(vars(type_ratio), scales = 'free_y', labeller = as_labeller(ratio_labels)) + theme(legend.position = 'none',
+        text = element_text(size = 12),
+        axis.title = element_blank(), 
+        axis.text.x = element_text(size = 12, angle = 30, hjust = 1)) 
 g
 #ggplotly(g)
 ```
 
+### Description des ratios financiers: 
+**CA**: Chiffre d'affaires  
 
-Description des ratios financiers: 
-Poids frng: poids net ...
+**Poids du frng**: 100 * fonds de roulement net global / CA HT  
+Le fonds de roulement mesure les ressources dont l’entreprise dispose à moyen et long terme (hors chiffre d’affaires) pour financer son exploitation courante.  
+
+**Taux de marge**: 100 * excédent brut d'exploitation / valeur ajoutée  
+Le taux de marge mesure le pourcentage de la valeur ajoutée conservé par les entreprises après versement du coût du travail et des impôts liés à la production; il permet donc de suivre le partage de la valeur ajoutée entre les salariés et l'entreprise.  
+
+**Délai fournisseur**: 365 * dettes fournisseurs / achats HT  
+
+**Frais financiers court terme**: 100 * concours bancaires courants / CA HT  
+
+**Frais financiers**: 100 * frais_financiers / (excédent brut d'exploitation + produits hors expl. - charges hors exploitation)  
+
+
+```{r, cache = TRUE}
+# h2o.no_progress()
+# capture.output(h2o.init(), file = '/dev/null');
+# model <- h2o.loadModel(path = "/home/pierre/Documents/opensignauxfaibles/output/model/Model_train")
+# g <- shapley_plot(mon_siret, my_data, model) 
+# g + theme(legend.position = 'none',
+#         text = element_text(size = 8),
+#         axis.text = element_text(size = 8),
+#         axis.title = element_blank()) 
+```
+
+

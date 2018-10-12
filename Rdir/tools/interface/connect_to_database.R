@@ -56,7 +56,7 @@ connect_to_database <- function(
   }
 
   cat(" Fini.", "\n")
-  assertthat::assert_that(nrow(data)>0)
+  assertthat::assert_that(nrow(data)>0, msg = "La requête retourne aucun résultat")
   assertthat::assert_that(all(c("periode", "siret", "effectif", "code_ape") %in% names(data)))
   assertthat::assert_that(anyDuplicated(data %>% select(siret, periode)) == 0)
 
