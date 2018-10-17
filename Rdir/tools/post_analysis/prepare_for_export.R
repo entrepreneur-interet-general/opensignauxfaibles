@@ -33,7 +33,9 @@ prepare_for_export <- function(data, additional_names = NULL){
   'dette_fiscale',
   'apart_heures_consommees',
   'ratio_apart',
-  'cotisation_moy12m'
+  'cotisation_moy12m',
+  'montant_majorations',
+  'numero_compte_urssaf'
   #indicatrice_dettecumulee_12m,
   #indicatrice_croissance_dettecumulee,
   #apart_effectif_moyen,

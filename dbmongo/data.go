@@ -83,7 +83,7 @@ func reduce(c *gin.Context) {
 	db, _ := c.Keys["DB"].(*mgo.Database)
 
 	dateDebut, _ := time.Parse("2006-01-02", "2014-01-01")
-	dateFin, _ := time.Parse("2006-01-02", "2018-09-01")
+	dateFin, _ := time.Parse("2006-01-02", "2018-10-01")
 	dateFinEffectif, _ := time.Parse("2006-01-02", "2018-06-01")
 
 	// Détermination scope traitement

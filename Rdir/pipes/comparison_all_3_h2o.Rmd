@@ -34,11 +34,11 @@ sourceDirectory(find_rstudio_root_file('tools'))
 
 
 ```{r}
-actual_period <- as.Date("2018-08-01")
+actual_period <- as.Date("2018-09-01")
 ```
 
 ```{r}
-raw_data <- connect_to_database('Features', '1809', algo = 'algo2', min_effectif = 20)
+raw_data <- connect_to_database('Features', '1810', algo = 'algo2', min_effectif = 10)
 ```
 
 ```{r}

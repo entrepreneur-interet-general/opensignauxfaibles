@@ -32,15 +32,15 @@ sourceDirectory(find_rstudio_root_file('tools'))
 
 ## Script parameters
 ```{r}
-actual_period <- as.Date("2018-08-01")
-last_batch = '1809'
+actual_period <- as.Date("2018-09-01")
+last_batch = '1810'
 algorithm = 'algo2'
 ```
 
 
 ## Recuperation des données dans MongoDB
 ```{r}
-raw_data <- connect_to_database('Features', last_batch, algo = algorithm, min_effectif = 20)
+raw_data <- connect_to_database('Features', last_batch, algo = algorithm, min_effectif = 15)
 ```
 
 ```{r}
@@ -102,6 +102,10 @@ all_data <- all_data %>%
 ```{r}
 gc()
 h2o.init(ip = "localhost", port = 4444)
+
+raw_data$numero_compte_urssaf <- as.factor(paste(raw_data$numero_compte_urssaf))
+all_data$numero_compte_urssaf <- as.factor(paste(all_data$numero_compte_urssaf))
+
 train <- as.h2o(raw_data) 
 all <- as.h2o(all_data)
 
@@ -297,7 +301,7 @@ pred_data <- all_data %>%
 pred_data %>% 
   filter(periode == actual_period) %>% 
   prepare_for_export() %>% #additional_names = c('diff', 'connu', 'interressant_urssaf')) %>%
-  export(batch = '1809')
+  export(batch = '1810')
 ```
 
 
@@ -310,7 +314,7 @@ prediction_2 <-pred_data %>%
 prediction <- prediction %>%
   left_join(prediction_2 %>% 
               select(siret, connu), by = 'siret') %>% 
-  filter(periode = "2018-08-01")
+  filter(periode == "2018-09-01")
 
 prediction <- prediction %>%
   arrange(desc(prob)) %>% 
