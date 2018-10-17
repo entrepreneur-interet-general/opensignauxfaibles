@@ -91,7 +91,7 @@ func reduce(c *gin.Context) {
 	batch := c.Params.ByName("batch")
 	siret := c.Params.ByName("siret")
 
-	db.C("Features").RemoveAll(bson.M{"_id.batch": batch, "_id.algo": algo})
+	// db.C("Features").RemoveAll(bson.M{"_id.batch": batch, "_id.algo": algo})
 
 	var queryEtablissement interface{}
 	var queryEntreprise interface{}
