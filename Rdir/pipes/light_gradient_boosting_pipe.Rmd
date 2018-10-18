@@ -40,7 +40,59 @@ algorithm = 'algo2'
 
 ## Recuperation des données dans MongoDB
 ```{r}
-raw_data <- connect_to_database('Features', last_batch, algo = algorithm, min_effectif = 15)
+fields <- c(
+  "siret",
+  "siren",
+  "periode",
+  # URSSAF
+  "cotisation",
+  "montant_part_patronale",
+  "montant_part_ouvriere",
+  "effectif",
+  "effectif_entreprise",
+  "effectif_consolide",
+  "montant_echeancier",
+  "delai",
+  "duree_delai",
+  # ALTARES
+  "etat_proc_collective",
+  # DIANE
+  "CA",
+  "resultat_net_consolide",
+  "resultat_expl",
+  "taux_marge",
+  "delai_fournisseur",
+  "poids_frng",
+  "frais_financier",
+  "financier_court_terme",
+  "capacite_autofinanc_avant_repartition",
+  "ratio_marge_operationnelle",
+  "taux_rotation_stocks",
+  "ratio_productivite",
+  "ratio_export",
+  "ratio_delai_client",
+  "liquidite_reduite",
+  "rentabilite_nette_pourcent",
+  "endettement_pourcent",
+  "rend_des_capitaux_propres_nets_pourcent",
+  "rend_des_ress_durables_nettes_pourcent",
+  "clients_et_cptes_ratt",
+  "frais_de_RetD",
+  "produits_intermed_et_finis",
+  "marchandises",
+  "en_cours_de_prod_de_biens",
+  "matières_prem_approv",
+  "chiffre_affaires_net_lie_aux_exportations",
+  # APART 
+  "apart_heures_consommees",
+  # SIRENE
+  "code_ape",
+  "libelle_naf",
+  "debut_activite",
+  "activite_saisonniere",
+  "productif"
+  )
+raw_data <- connect_to_database('Features', last_batch, algo = algorithm, min_effectif = 30, fields = fields)
 ```
 
 ```{r}
@@ -48,7 +100,7 @@ raw_data <- connect_to_database('Features', last_batch, algo = algorithm, min_ef
 # Cotisations avec un mois de décalage.
 cat('FIX ME: offset with cotisation')
 
-raw_data[ raw_data$periode == actual_period, "cotisation"] <- NA
+raw_data[raw_data$periode == actual_period, "cotisation"] <- NA
 raw_data <- raw_data %>% 
   arrange(siret,periode) %>% 
   fill(cotisation)
