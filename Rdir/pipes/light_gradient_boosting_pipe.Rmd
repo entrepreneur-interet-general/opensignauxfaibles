@@ -98,12 +98,12 @@ raw_data <- connect_to_database('Features', last_batch, algo = algorithm, min_ef
 ```{r}
 # FIX ME
 # Cotisations avec un mois de décalage.
-cat('FIX ME: offset with cotisation')
-
-raw_data[raw_data$periode == actual_period, "cotisation"] <- NA
-raw_data <- raw_data %>% 
-  arrange(siret,periode) %>% 
-  fill(cotisation)
+# cat('FIX ME: offset with cotisation')
+# 
+# raw_data[raw_data$periode == actual_period, "cotisation"] <- NA
+# raw_data <- raw_data %>% 
+#   arrange(siret,periode) %>% 
+#   fill(cotisation)
 ```
 
 ## Definition de l'objectif

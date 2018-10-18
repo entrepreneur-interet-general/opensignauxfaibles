@@ -1,5 +1,7 @@
 function finalize(k, v) {
   var offset_effectif = (date_fin_effectif.getUTCFullYear() - date_fin.getUTCFullYear()) * 12 + date_fin_effectif.getUTCMonth() - date_fin.getUTCMonth()
+  var offset_cotisation = 1
+  
   liste_periodes = generatePeriodSerie(date_debut, date_fin)
 
   v = Object.keys((v.batch || {})).sort().filter(batch => batch <= actual_batch).reduce((m, batch) => {
@@ -286,8 +288,9 @@ function finalize(k, v) {
   Object.keys(v.cotisation).forEach(function (h) {
     var cotisation = v.cotisation[h]
     var periode_cotisation = generatePeriodSerie(cotisation.periode.start, cotisation.periode.end)
-    periode_cotisation.forEach(function (date_cotisation) {
-      value_cotisation[date_cotisation.getTime()] = (value_cotisation[date_cotisation.getTime()] || []).concat(cotisation.du / periode_cotisation.length)
+    periode_cotisation.forEach(date_cotisation => {
+      date_offset = DateAddMonth(date_cotisation, offset_cotisation)
+      value_cotisation[date_offset.getTime()] = (value_cotisation[date_cotisation.getTime()] || []).concat(cotisation.du / periode_cotisation.length)
     })
   })
 
