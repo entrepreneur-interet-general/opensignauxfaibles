@@ -21,6 +21,8 @@ feature_engineering <- function(train_set,
   ratios_financiers = c(
     "CA",
     "taux_marge",
+    "resultat_net_consolide",
+    "resultat_expl",
     "delai_fournisseur",
     "poids_frng",
     "frais_financier",
@@ -76,7 +78,7 @@ feature_engineering <- function(train_set,
   ##
   ###
   ############################################
-  ## Auxiliary function applied to all sets ## ##########################################################################
+  ## Auxiliary function applied to all sets ##
   ############################################
   ###
   ##
@@ -278,7 +280,7 @@ feature_engineering <- function(train_set,
       # Stocks
       data <- data %>%
         mutate(
-          stocks = produits_intermed_et_finis + marchandises + en_cours_de_prod_de_biens + matières_prem_approv + marchandises,
+          stocks = produits_intermed_et_finis + marchandises + en_cours_de_prod_de_biens + matières_prem_approv ,
           taux_rotation_stocks =  CA / stocks
         )
 
