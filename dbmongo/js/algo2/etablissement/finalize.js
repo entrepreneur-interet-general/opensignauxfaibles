@@ -153,7 +153,7 @@ function finalize(k, v) {
     series.forEach( date => {
       time = date.getTime()
       if (time in output_indexed){
-        output_indexed[time] = v.apdemande[hash].hta
+        output_indexed[time].apart_heures_autorisees = v.apdemande[hash].hta
       }  
     })
   })
