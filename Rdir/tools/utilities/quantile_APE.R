@@ -1,6 +1,6 @@
 quantile_APE <- function(data, ..., variable_names, levels = 1, noise = 0) {
 
-  assertthat::assert_that(all(c('code_naf_niveau1', 'code_ape') %in% names(data)))
+  assertthat::assert_that(all(c('code_naf', 'code_ape') %in% names(data)))
   assertthat::assert_that(all(levels >= 1 & levels <= 5))
 
   arguments <- c(list(data),list(...))
@@ -19,7 +19,7 @@ quantile_APE <- function(data, ..., variable_names, levels = 1, noise = 0) {
 
     if (level == 1) {
       all_data <- all_data %>%
-        mutate(.target = as.factor(code_naf_niveau1))
+        mutate(.target = as.factor(code_naf))
     } else {
       all_data <- all_data %>%
         mutate(.target = as.factor(substr(code_ape, 1, levels)))

@@ -200,17 +200,17 @@ feature_engineering <- function(train_set,
     data <- replace_na_by("cotisation", data, 0)
 
     # SIMPLIFIED NAF
-    assertthat::assert_that("libelle_naf_niveau1" %in% names(data))
-    libelle_naf_simplifie <- data$libelle_naf_niveau1
-    libelle_naf_simplifie[libelle_naf_simplifie %in% c(
-      'Enseignement',
-      'Activités extra-territoriales',
-      'Administration publique',
-      'Agriculture, sylviculture et pêche'
-    )] <-
-      'autre'
-    data <- data %>%
-      mutate(libelle_naf_simplifie = libelle_naf_simplifie)
+   # assertthat::assert_that("libelle_naf_niveau1" %in% names(data))
+   # libelle_naf_simplifie <- data$libelle_naf_niveau1
+   # libelle_naf_simplifie[libelle_naf_simplifie %in% c(
+   #   'Enseignement',
+   #   'Activités extra-territoriales',
+   #   'Administration publique',
+   #   'Agriculture, sylviculture et pêche'
+   # )] <-
+   #   'autre'
+   # data <- data %>%
+   #   mutate(libelle_naf_simplifie = libelle_naf_simplifie)
 
     # Ratios URSSAF
 
@@ -315,14 +315,15 @@ feature_engineering <- function(train_set,
     ##################
 
     if (past_trend) {
+
       assertthat::assert_that(all(past_trend_vars %in% names(data)))
       data <- data %>% add_past_trends(past_trend_vars,
                                        past_trend_lookbacks,
                                        type = 'lag')
 
-      data <- data %>% add_past_trends(past_trend_vars_years,
-                                       past_trend_lookbacks_ym,
-                                       type = 'mean_unique')
+      # data <- data %>% add_past_trends(past_trend_vars_years,
+      #                                  past_trend_lookbacks_ym,
+      #                                  type = 'mean_unique')
 
       names_with_na <- names(data %>% select(contains('variation')))
       for (name in names_with_na)
@@ -373,7 +374,7 @@ feature_engineering <- function(train_set,
   ##
   ###
   #######################
-  ## Apply to all sets ## #######################################################################################
+  ## Apply to all sets ##
   #######################
   ###
   ##

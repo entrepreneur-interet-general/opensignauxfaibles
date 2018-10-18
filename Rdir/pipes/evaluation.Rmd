@@ -84,7 +84,7 @@ ggplot(to_plot, aes(x = anticipation, color = right_pred)) +
 to_plot <- cbind(test.df,pred.df) %>% 
   mutate(ok = pred == outcome)
 
-ggplot(to_plot, aes(x = code_naf_niveau1, color = ok)) +
+ggplot(to_plot, aes(x = code_naf, color = ok)) +
   geom_bar(position = 'fill') + 
   geom_abline(slope = 0, intercept = mean(to_plot$ok))
 ```

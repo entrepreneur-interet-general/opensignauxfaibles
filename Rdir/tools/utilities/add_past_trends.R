@@ -3,13 +3,13 @@ add_past_trends <-
 
     assertthat::assert_that(type %in% c('lag','slope','rate','mean_unique'))
 
-    check_zeros <- function(var, data) {
-      return(sum(data[var] == 0, na.rm = TRUE) > 0)
-    }
+   #  check_zeros <- function(var, data) {
+   #    return(sum(data[var] == 0, na.rm = TRUE) > 0)
+   #  }
 
-    with_zeros <-
-      map_int(.x = variables, .f = check_zeros, data = data)
-    names(with_zeros) <- variables
+   #  with_zeros <-
+   #    map_int(.x = variables, .f = check_zeros, data = data)
+   #  names(with_zeros) <- variables
 
 
     assertthat::assert_that(all(c('siret', 'periode', variables) %in% names(data)))
@@ -29,44 +29,44 @@ add_past_trends <-
       nest()
 
     if (type == 'slope') {
-      aux_slope <- function(x, y) {
-        n <- length(x)
-        sdx <- sqrt((n ^ 2 - 1) / 12) * sqrt(n / (n - 1))
-        slope <- cor(x, y) * sd(y) / sdx
-        return(slope)
-      }
-      #### Coefficient de variation de la régression ####
-      aux_past <- function(data, variable, last_n, with_zero) {
-        y <- data[[variable]]
-        slopes <- array(dim = length(y))
-        if (last_n <= length(y))
-          for (i in last_n:length(y)) {
-            sub_y <- tail(y[1:i], n = last_n)
-            x <- 1:length(sub_y)
-            slopes[i] <- aux_slope(x, sub_y)
-          }
+    #   aux_slope <- function(x, y) {
+    #     n <- length(x)
+    #     sdx <- sqrt((n ^ 2 - 1) / 12) * sqrt(n / (n - 1))
+    #     slope <- cor(x, y) * sd(y) / sdx
+    #     return(slope)
+    #   }
+    #   #### Coefficient de variation de la régression ####
+    #   aux_past <- function(data, variable, last_n, with_zero) {
+    #     y <- data[[variable]]
+    #     slopes <- array(dim = length(y))
+    #     if (last_n <= length(y))
+    #       for (i in last_n:length(y)) {
+    #         sub_y <- tail(y[1:i], n = last_n)
+    #         x <- 1:length(sub_y)
+    #         slopes[i] <- aux_slope(x, sub_y)
+    #       }
 
-        assertthat::assert_that(length(slopes) == length(y))
+    #     assertthat::assert_that(length(slopes) == length(y))
 
-        return(slopes)
+    #     return(slopes)
       }
 
     } else if (type == 'rate') {
       #### Taux de variation ####
-      aux_past <-  function(data, variable, last_n, with_zero) {
-        y <- data[[variable]]
-        y_lag <- lag(y, last_n)
-        if (with_zero) {
-          tv <- sign(y - y_lag[1:length(y)])
-        } else {
-          tv <- (y - y_lag[1:length(y)]) / y
-        }
-        return(tv)
-      }
+     # aux_past <-  function(data, variable, last_n, with_zero) {
+     #   y <- data[[variable]]
+     #   y_lag <- lag(y, last_n)
+     #   if (with_zero) {
+     #     tv <- sign(y - y_lag[1:length(y)])
+     #   } else {
+     #     tv <- (y - y_lag[1:length(y)]) / y
+     #   }
+     #   return(tv)
+     # }
 
     } else if (type == 'lag'){
       #### Valeur reportee ####
-      aux_past <- function(data, variable, last_n, with_zero){
+      aux_past <- function(data, variable, last_n){
         y <- data[[variable]]
         y_lag <- lag(y,last_n)
         return(y_lag[1:length(y)])
@@ -74,7 +74,7 @@ add_past_trends <-
 
     } else if(type == 'mean_unique'){
       ### Moyenne de la difference après suppression de doublons ##
-      aux_past <- function(data, variable, last_n, with_zero){
+      aux_past <- function(data, variable, last_n){
         y <- data[[variable]]
         res <- sapply(1:length(y), FUN = function(x){
           out <- unique(tail(y[1:x],last_n+1))
@@ -92,8 +92,7 @@ add_past_trends <-
           data_nested$data,
           aux_past,
           variable = variables[i],
-          last_n = lookback_months[i],
-          with_zero = with_zeros[variables[i]]
+          last_n = lookback_months[i]
         )
     }
 

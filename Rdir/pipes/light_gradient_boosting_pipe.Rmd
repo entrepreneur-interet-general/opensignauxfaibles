@@ -87,6 +87,7 @@ fields <- c(
   "apart_heures_consommees",
   # SIRENE
   "code_ape",
+  "code_naf",
   "libelle_naf",
   "debut_activite",
   "activite_saisonniere",
@@ -135,7 +136,6 @@ raw_data <- raw_data %>%
 ```
 
 ```{r}
-
 aux_features <- feature_engineering(raw_data, all_data)
 
 raw_data <- aux_features[[1]]
@@ -171,13 +171,13 @@ all['outcome'] <- h2o.relevel(x = all['outcome'], y = "non_default")
 ```{r}
 te_map <- h2o.target_encode_create(
   train, 
-  x = list(c('code_naf_niveau1'), c('code_ape_niveau2'), c('code_ape_niveau3'), c('code_ape_niveau4'), c('code_ape')),
+  x = list(c('code_naf'), c('code_ape_niveau2'), c('code_ape_niveau3'), c('code_ape_niveau4'), c('code_ape')),
   y = 'outcome')
 
 
 train <- h2o.target_encode_apply(
   train, 
-  x = list(c('code_naf_niveau1'), c('code_ape_niveau2'), c('code_ape_niveau3'), c('code_ape_niveau4'), c('code_ape')),
+  x = list(c('code_naf'), c('code_ape_niveau2'), c('code_ape_niveau3'), c('code_ape_niveau4'), c('code_ape')),
   y = 'outcome',
   target_encode_map = te_map,
   holdout_type = 'LeaveOneOut',
@@ -186,7 +186,7 @@ train <- h2o.target_encode_apply(
 
 all <- h2o.target_encode_apply(
   all,
-  x = list(c('code_naf_niveau1'), c('code_ape_niveau2'), c('code_ape_niveau3'), c('code_ape_niveau4'), c('code_ape')),
+  x = list(c('code_naf'), c('code_ape_niveau2'), c('code_ape_niveau3'), c('code_ape_niveau4'), c('code_ape')),
   y = 'outcome',
   target_encode_map = te_map, 
   holdout_type = 'None',
@@ -250,13 +250,13 @@ new_variables = c(
   "resultat_net_consolide",
   "nombre_etab_secondaire")
 #,
-# "code_naf_niveau1")
+# "code_naf")
 
 variations = c(grep('variation',names(raw_data), value = TRUE),
                grep('diff_moy12',names(raw_data), value = TRUE))
 
 distrib = c(grep('distrib',names(raw_data), value = TRUE),
-            'TargetEncode_code_naf_niveau1')
+            'TargetEncode_code_naf')
 
 x_distrib = c(
   x_minimal,
@@ -298,7 +298,7 @@ x_medium <- c("montant_part_patronale",
               "frais_financier",                          
               "financier_court_terme",                    
               "ratio_delai_client",                       
-              "TargetEncode_code_naf_niveau1",            
+              "TargetEncode_code_naf",            
               "resultat_net_consolide",                   
               "taux_rotation_stocks",                     
               "nombre_etab_secondaire",                   

@@ -38,7 +38,7 @@ shapley_plot <- function(siret, my_data, model) {
                 "frais_financier",
                 "financier_court_terme",
                 "ratio_delai_client",
-                "TargetEncode_code_naf_niveau1",
+                "TargetEncode_code_naf",
                 "resultat_net_consolide",
                 "taux_rotation_stocks",
                 "nombre_etab_secondaire",
