@@ -120,12 +120,20 @@ func reduce(c *gin.Context) {
 		return
 	}
 
+	naf, errNaf := loadNAF()
+
+	if errNaf != nil {
+		c.JSON(500, "Problème d'accès aux fichiers NAF")
+		return
+	}
+
 	scope := bson.M{"date_debut": dateDebut,
 		"date_fin":               dateFin,
 		"date_fin_effectif":      dateFinEffectif,
 		"serie_periode":          genereSeriePeriode(dateDebut, dateFin),
 		"serie_periode_annuelle": genereSeriePeriodeAnnuelle(dateDebut, dateFin),
 		"actual_batch":           batch,
+		"naf":                    naf,
 	}
 
 	jobEtablissement := &mgo.MapReduce{
