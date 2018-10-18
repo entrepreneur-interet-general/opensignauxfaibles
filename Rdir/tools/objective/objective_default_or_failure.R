@@ -3,10 +3,10 @@ objective_default_or_failure <- function(data,n_months, threshold, lookback){
   proc = c('plan_redressement','liquidation','plan_sauvegarde')
   data <- data %>%
     mutate(dette_cumulee_aux = ifelse((!is.na(cotisation) & cotisation > 1e-10),
-                                     (montant_part_patronale + montant_part_ouvriere)/cotisation,0)) %>%
+                                     (montant_part_patronale + montant_part_ouvriere)/cotisation, 0)) %>%
     group_by(siret) %>%
-    arrange(siret,periode) %>%
-    mutate(default_urssaf = check_n_successive_defaults(dette_cumulee_aux,n_months,threshold),
+    arrange(siret, periode) %>%
+    mutate(default_urssaf = check_n_successive_defaults(dette_cumulee_aux, n_months, threshold),
            failure_aux = etat_proc_collective %in% proc,
            default_any = any(default_urssaf | failure_aux),
            failure = with_lookback(failure_aux, lookback),
@@ -20,17 +20,17 @@ objective_default_or_failure <- function(data,n_months, threshold, lookback){
 
 }
 
-check_n_successive_defaults <- function(data, n_months,threshold) {
+check_n_successive_defaults <- function(data, n_months, threshold) {
 
   exceedance <- data >= threshold;
   max_consecutive <- sequence(rle(exceedance)$lengths) * exceedance
   return(max_consecutive >= n_months)
 }
 
-with_lookback <-  function(data,lookback) {
+with_lookback <-  function(data, lookback) {
   output <- sapply(1:length(data),
                    FUN= function(x)
-                     any(data[x:min(x+lookback,length(data))]))
+                     any(data[x:min(x+lookback, length(data))]))
   return(output)
 }
 
