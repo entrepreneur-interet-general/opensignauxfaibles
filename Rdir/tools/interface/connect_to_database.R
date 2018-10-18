@@ -96,45 +96,45 @@ connect_to_database <- function(
 
   cat(" Fini.", "\n")
 
-  cat("Import des libellé NAF niveaux 1 et 5 ...")
-
-  libelle_naf <- readxl::read_excel(
-    path = rprojroot::find_rstudio_root_file(file.path("..", "data-raw", "naf", "naf2008_5_niveaux.xls")),
-    sheet = "naf2008_5_niveaux",
-    skip = 1,
-    col_names = c("code_naf_niveau5", "code_naf_niveau4", "code_naf_niveau3", "code_naf_niveau2", "code_naf_niveau1")
-    ) %>%
-  dplyr::select(code_naf_niveau5, code_naf_niveau1) %>%
-  dplyr::left_join(
-    y = readxl::read_excel(
-      path = rprojroot::find_rstudio_root_file(file.path("..", "data-raw", "naf", "naf2008_liste_n5.xls")),
-      sheet = "Feuil1",
-      skip = 3,
-      col_names = c("code_naf_niveau5", "libelle_naf_niveau5")
-      ),
-    by = "code_naf_niveau5"
-    ) %>%
-  dplyr::left_join(
-    y = readxl::read_excel(
-      path = rprojroot::find_rstudio_root_file(file.path("..", "data-raw", "naf", "naf2008_liste_n1.xls")),
-      sheet = "Feuil1",
-      skip = 3,
-      col_names = c("code_naf_niveau1", "libelle_naf_niveau1")
-      ),
-    by = "code_naf_niveau1"
-    )  %>%
-  dplyr::mutate(
-    code_naf_niveau5 = stringr::str_replace(
-      string = code_naf_niveau5,
-      pattern = "([[:digit:]]{2})\\.([[:digit:]]{2}[[:upper:]]{1})",
-      replacement = "\\1\\2")
-    )
-
-  table_wholesample <- table_wholesample %>%
-    left_join(libelle_naf, by = c("code_ape" = "code_naf_niveau5")) %>%
-    mutate(code_ape = as.factor(code_ape))
-
-  cat(" Fini.", "\n")
+#  cat("Import des libellé NAF niveaux 1 et 5 ...")
+#
+#  libelle_naf <- readxl::read_excel(
+#    path = rprojroot::find_rstudio_root_file(file.path("..", "data-raw", "naf", "naf2008_5_niveaux.xls")),
+#    sheet = "naf2008_5_niveaux",
+#    skip = 1,
+#    col_names = c("code_naf_niveau5", "code_naf_niveau4", "code_naf_niveau3", "code_naf_niveau2", "code_naf_niveau1")
+#    ) %>%
+#  dplyr::select(code_naf_niveau5, code_naf_niveau1) %>%
+#  dplyr::left_join(
+#    y = readxl::read_excel(
+#      path = rprojroot::find_rstudio_root_file(file.path("..", "data-raw", "naf", "naf2008_liste_n5.xls")),
+#      sheet = "Feuil1",
+#      skip = 3,
+#      col_names = c("code_naf_niveau5", "libelle_naf_niveau5")
+#      ),
+#    by = "code_naf_niveau5"
+#    ) %>%
+#  dplyr::left_join(
+#    y = readxl::read_excel(
+#      path = rprojroot::find_rstudio_root_file(file.path("..", "data-raw", "naf", "naf2008_liste_n1.xls")),
+#      sheet = "Feuil1",
+#      skip = 3,
+#      col_names = c("code_naf_niveau1", "libelle_naf_niveau1")
+#      ),
+#    by = "code_naf_niveau1"
+#    )  %>%
+#  dplyr::mutate(
+#    code_naf_niveau5 = stringr::str_replace(
+#      string = code_naf_niveau5,
+#      pattern = "([[:digit:]]{2})\\.([[:digit:]]{2}[[:upper:]]{1})",
+#      replacement = "\\1\\2")
+#    )
+#
+#  table_wholesample <- table_wholesample %>%
+#    left_join(libelle_naf, by = c("code_ape" = "code_naf_niveau5")) %>%
+#    mutate(code_ape = as.factor(code_ape))
+#
+#  cat(" Fini.", "\n")
 
   return(table_wholesample)
 }
