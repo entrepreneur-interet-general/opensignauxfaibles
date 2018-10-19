@@ -357,8 +357,6 @@ function finalize(k, v) {
       variable_name_majorations = "montant_majorations_past_" + offset
       if (time_offset.getTime() in output_indexed){
         val_offset = output_indexed[time_offset.getTime()]
-        print(JSON.stringify(val_offset, null, 2))
-        print("hello")
         val_offset[variable_name_part_ouvriere] = val.montant_part_ouvriere
         val_offset[variable_name_part_patronale] = val.montant_part_patronale
         val_offset[variable_name_majorations] = val.montant_majorations
