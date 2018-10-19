@@ -105,6 +105,17 @@ function finalize(k, v) {
       output_indexed[time_offset.getTime()].effectif = map_effectif[time]
       output_indexed[time_offset.getTime()].date_effectif = time_d
     }
+
+    let past_month_offsets = [6,12,18,24]
+    past_month_offsets.forEach( offset =>{
+      time_past_offset = DateAddMonth(time_offset, offset)
+      variable_name_effectif = 'effectif_past_' + offset
+      if (time_past_offset.getTime() in output_indexed){
+        let val_offset = output_indexed[time_past_offset.getTime()]
+        val_offset[variable_name_effectif] = map_effectif[time]
+      }
+    }
+    )
   }
   )
 
@@ -115,19 +126,6 @@ function finalize(k, v) {
     }
   })
 
-
-  // inscription des effectifs dans les périodes
-  // value_array.map(function (val) {
-  //     var effectifDate = DateAddMonth(val.periode, offset_effectif)
-  //     var historyDate = DateAddMonth(val.periode, offset_effectif - 12)
-  //     var historyPeriods = generatePeriodSerie(historyDate, effectifDate)
-  //     val.effectif_date = effectifDate
-  //     val.effectif = map_effectif[effectifDate.getTime()]
-  //     val.lag_effectif = map_effectif[historyDate.getTime()]
-  //     historyPeriods.map(function (p) {
-  //         val.effectif_history[p.getTime()] = map_effectif[p.getTime()]
-  //     })
-  // })
 
   //
   ///
@@ -336,7 +334,9 @@ function finalize(k, v) {
     }
   })
 
-  output_array.forEach(function (val) {
+  Object.keys(output_indexed).forEach(time => {
+    time_d = new Date(parseInt(time))
+    val = output_indexed[time]
 
     val.montant_dette = val.debit_array.reduce(function (m, dette) {
       m.part_ouvriere += dette.part_ouvriere
@@ -348,38 +348,54 @@ function finalize(k, v) {
     val.montant_part_ouvriere = val.montant_dette.part_ouvriere
     val.montant_part_patronale = val.montant_dette.part_patronale
     val.montant_majorations = val.montant_dette.montant_majorations
-    delete val.montant_dette
-    delete val.debit_array
 
-  })
+    let past_month_offsets = [1,2,3,6,12]
+    past_month_offsets.forEach(offset => {
+      time_offset = DateAddMonth(time_d, offset)      
+      variable_name_part_ouvriere = "montant_part_ouvriere_past_" + offset
+      variable_name_part_patronale = "montant_part_patronale_past_" + offset
+      variable_name_majorations = "montant_majorations_past_" + offset
+      if (time_offset.getTime() in output_indexed){
+        val_offset = output_indexed[time_offset.getTime()]
+        print(JSON.stringify(val_offset, null, 2))
+        print("hello")
+        val_offset[variable_name_part_ouvriere] = val.montant_part_ouvriere
+        val_offset[variable_name_part_patronale] = val.montant_part_patronale
+        val_offset[variable_name_majorations] = val.montant_majorations
+      }
+    })
+      delete val.montant_dette
+      delete val.debit_array
+    }
+  )
 
-  //
-  ///
-  /////////
-  // CCSF// 
-  /////////
-  ///
-  //
-  var ccsfHashes = Object.keys(v.ccsf || {}) 
+    //
+    ///
+    /////////
+    // CCSF// 
+    /////////
+    ///
+    //
+    var ccsfHashes = Object.keys(v.ccsf || {}) 
 
-  output_array.forEach(val => {        
-    var optccsf = ccsfHashes.reduce( 
-      function (accu, hash) { 
-        ccsf = v.ccsf[hash] 
-        if (ccsf.date_traitement.getTime() < val.periode.getTime() && ccsf.date_traitement.getTime() > accu.date_traitement.getTime()) { 
-          accu = ccsf 
+    output_array.forEach(val => {        
+      var optccsf = ccsfHashes.reduce( 
+        function (accu, hash) { 
+          ccsf = v.ccsf[hash] 
+          if (ccsf.date_traitement.getTime() < val.periode.getTime() && ccsf.date_traitement.getTime() > accu.date_traitement.getTime()) { 
+            accu = ccsf 
+          } 
+          return(accu)
+        }, 
+        { 
+          date_traitement: new Date(0) 
         } 
-        return(accu)
-      }, 
-      { 
-        date_traitement: new Date(0) 
-      } 
-    )         
+      )         
 
-    if (optccsf.date_traitement.getTime() != 0) { 
-      val.date_ccsf = optccsf.date_traitement 
-    } 
-  })
+      if (optccsf.date_traitement.getTime() != 0) { 
+        val.date_ccsf = optccsf.date_traitement 
+      } 
+    })
 
 
   //
