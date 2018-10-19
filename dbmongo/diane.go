@@ -14,7 +14,7 @@ import (
 
 // Diane Information financières
 type Diane struct {
-	Annee                                *int     `json:"annee" bson:"annee"`
+	Annee                                *int     `json:"exercice_diane" bson:"exercice_diane"`
 	Marquee                              *float64 `json:"marquee" bson:"marquee"`
 	NomEntreprise                        string   `json:"nom_entreprise" bson:"nom_entreprise"`
 	NumeroSiren                          string   `json:"numero_siren" bson:"numero_siren"`
