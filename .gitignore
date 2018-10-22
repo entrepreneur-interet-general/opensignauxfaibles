@@ -20,4 +20,4 @@ Rdir/pipes/RNNs/*
 dbmongo/config.toml
 dbmongo/debug
 .Rproj.user
-
+*.orig
