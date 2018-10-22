@@ -67,7 +67,7 @@ add_past_trends <-
     } else if (type == 'lag'){
       #### Valeur reportee ####
       aux_past <- function(data, variable, last_n){
-        y <- data[[variable]]
+      aux_past <- function(data, variable, last_n){
         y_lag <- lag(y,last_n)
         return(y_lag[1:length(y)])
       }
@@ -75,10 +75,10 @@ add_past_trends <-
     } else if(type == 'mean_unique'){
       ### Moyenne de la difference après suppression de doublons ##
       aux_past <- function(data, variable, last_n){
-        y <- data[[variable]]
+      aux_past <- function(data, variable, last_n){
         res <- sapply(1:length(y), FUN = function(x){
           out <- unique(tail(y[1:x],last_n+1))
-          return(mean(diff(out), na.rm = TRUE))
+          out <- unique(tail(y[1:x],last_n+1))
         })
       }
 

@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 ---
 title: "Random forest pipe"
 author: "Pierre Camilleri"
@@ -204,12 +205,19 @@ raw_data <- raw_data %>%
 ```
 
 ```{r}
-aux_features <- feature_engineering(raw_data, all_data)
 
-raw_data <- aux_features[[1]]
-all_data <- aux_features[[2]]
+out <- feature_engineering_std(raw_data, all_data)
+raw_data <- out[[1]]
+all_data <- out[[2]]
 
-rm(aux_features)
+ref_f_e <- feature_engineering_create(raw_data)
+
+out <- feature_engineering_apply(ref_f_e, raw_data, all_data)
+
+raw_data <- out[[1]]
+all_data <- out[[2]]
+
+rm(out)
 
 raw_data <- raw_data %>%
     mutate_if(is.POSIXct, as.Date)

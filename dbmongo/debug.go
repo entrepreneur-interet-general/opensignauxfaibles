@@ -2,15 +2,12 @@ package main
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/globalsign/mgo"
 )
 
 func debug(c *gin.Context) {
-	db, _ := c.Keys["DB"].(*mgo.Database)
-	batches := getBatches(db)
-	for _, b := range batches {
-		b.Open = true
-		b.Draft = true
-		b.save(db)
+	naf, err := loadNAF()
+	if err != nil {
+		c.JSON(500, err)
 	}
+	c.JSON(200, naf)
 }

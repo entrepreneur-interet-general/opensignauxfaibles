@@ -41,7 +41,7 @@ type Diane struct {
 	ProduitsIntermedEtFinis              *float64 `json:"produits_intermed_et_finis" bson:"produits_intermed_et_finis"`
 	Marchandises                         *float64 `json:"marchandises" bson:"marchandises"`
 	EnCoursDeProdDeBiens                 *float64 `json:"en_cours_de_prod_de_biens" bson:"en_cours_de_prod_de_biens"`
-	MatièresPremApprov                   *float64 `json:"matières_prem_approv" bson:"matières_prem_approv"`
+	MatieresPremApprov                   *float64 `json:"matieres_prem_approv" bson:"matieres_prem_approv"`
 	CreancesExpl                         *float64 `json:"creances_expl" bson:"creances_expl"`
 	ClientsEtCptesRatt                   *float64 `json:"clients_et_cptes_ratt" bson:"clients_et_cptes_ratt"`
 	AvEtAcSurCommandes                   *float64 `json:"av_et_ac_sur_commandes" bson:"av_et_ac_sur_commandes"`
@@ -177,7 +177,7 @@ func parseDiane(paths []string) chan *Diane {
 					diane.EnCoursDeProdDeBiens = &i
 				}
 				if i, err := strconv.ParseFloat(row[27], 64); err == nil {
-					diane.MatièresPremApprov = &i
+					diane.MatieresPremApprov = &i
 				}
 				if i, err := strconv.ParseFloat(row[28], 64); err == nil {
 					diane.CreancesExpl = &i

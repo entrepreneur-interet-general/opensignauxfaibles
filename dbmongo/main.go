@@ -22,7 +22,7 @@ func main() {
 
 	r := gin.Default()
 	r.Use(DB())
-	r.Use(Kanboard())
+	// r.Use(Kanboard())
 	// FIXME: configurer correctement CORS
 	r.Use(cors.Default())
 

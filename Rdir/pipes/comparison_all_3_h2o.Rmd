@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 ---
 title: "Untitled"
 author: "Pierre Camilleri"
@@ -29,7 +30,7 @@ library(h2o)
 library(R.utils)
 
 # Sources
-sourceDirectory(find_rstudio_root_file('tools'))
+sourceDirectory(find_rstudio_root_file('tools'), modifiedOnly = FALSE)
 ```
 
 
@@ -88,15 +89,16 @@ assert_split_consistency(sample_train, sample_validation,sample_test)
 
 ```{r}
 
-aux_features <- feature_engineering(sample_train, sample_test, sample_validation)
 
-sample_train  <- aux_features[[1]]
-
-sample_test <- aux_features[[2]]
-
+out <- feature_engineering_std(sample_train, sample_validation)
+sample_train <- out[[1]]
+# reference for feature engineering
+ref_f_e <- feature_engineering_create(sample_train)
+out <- feature_engineering_apply(ref_f_e, sample_train, sample_validation)
+sample_train <- out[[1]]
+sample_validation <- out[[2]]
 sample_validation <- aux_features[[3]]
 
-rm(aux_features)
 ```
 
 
@@ -106,7 +108,6 @@ rm(aux_features)
 gc()
 h2o.init(ip = "localhost", port = 4444)
 train.hex <- as.h2o(sample_train)
-test.hex <- as.h2o(sample_test)
 validation.hex <- as.h2o(sample_validation)
 ```
 
@@ -114,7 +115,7 @@ validation.hex <- as.h2o(sample_validation)
 Définition classe positive
 ```{r}
 train.hex['outcome'] <- h2o.relevel(x = train.hex['outcome'], y = "non_default")
-test.hex['outcome'] <- h2o.relevel(x = test.hex['outcome'], y = "non_default")
+
 validation.hex['outcome'] <- h2o.relevel(x = validation.hex['outcome'], y = "non_default")
 ```
 
@@ -147,6 +148,26 @@ validation.hex <- h2o.target_encode_apply(
   fold_column = 'fold_column',
   noise_level = 0)
 
+```
+
+```{r}
+### Validation sur les signaux faibles uniquement
+
+validation.hex <- validation.hex[(validation.hex[,'etat_proc_collective'] == 'in_bonis') && (as.numeric(validation.hex[,'default_urssaf']) == 0),]
+
+```
+
+#Only test
+```{r}
+out <- feature_engineering_std(sample_test)
+sample_test <- out[[1]]
+
+out <-feature_engineering_apply(ref_f_e, sample_test)
+
+test.hex <- as.h2o(sample_test)
+
+test.hex['outcome'] <- h2o.relevel(x = test.hex['outcome'], y = "non_default")
+
 test.hex <- h2o.target_encode_apply(
   test.hex,
   x = list(c('code_naf_niveau1'), c('code_ape_niveau2'), c('code_ape_niveau3'), c('code_ape_niveau4'), c('code_ape')),
@@ -156,15 +177,8 @@ test.hex <- h2o.target_encode_apply(
   blended_avg = FALSE, 
   fold_column = 'fold_column',
   noise_level = 0)
-```
-
-```{r}
-### Validation sur les signaux faibles uniquement
-
-validation.hex <- validation.hex[(validation.hex[,'etat_proc_collective'] == 'in_bonis') && (as.numeric(validation.hex[,'default_urssaf']) == 0),]
 
 test.hex <- test.hex[(test.hex[,'etat_proc_collective'] == 'in_bonis') && (as.numeric(test.hex[,'default_urssaf']) == 0),]
-
 ```
 
 ```{r}
@@ -344,57 +358,6 @@ x_without_urssaf = c(
 
 x_distrib_less_debit <- x_distrib[-c(75,76,78,79)]
 
-x_test <- c(
-  "montant_part_patronale"                   ,
-"ratio_dette_moy12m"                       ,
-"ratio_dette"                              ,
-"effectif"                                 ,
-"taux_marge_distrib_APE1"                  ,
-"etat_proc_collective_num"                 ,
-"ratio_liquidite_reduite_distrib_APE1"     ,
-"CA"                                       ,
-"financier_court_terme"                    ,
-"frais_financier_distrib_APE1"             ,
-"TargetEncode_code_ape_niveau3"            ,
-"resultat_net_consolide"                   ,
-"nombre_etab_secondaire"                   ,
-"montant_part_patronale_variation_1"       ,
-"dette_fiscale"                            ,
-"TargetEncode_code_naf_niveau1"            ,
-"montant_part_patronale_variation_3"       ,
-"ratio_productivite_distrib_APE1"          ,
-"montant_part_patronale_variation_2"       ,
-"ratio_export_distrib_APE1"                ,
-"delai_fournisseur_distrib_APE1"           ,
-"financier_court_terme_distrib_APE1"       ,
-"ratio_delai_client"                       ,
-"effectif_diff_moy12"                      ,
-"nbr_etablissements_connus"                ,
-"ratio_rend_des_ress_durables_variation_12",
-"montant_part_patronale_variation_6"       ,
-"TargetEncode_code_ape_niveau2"            ,
-"taux_marge"                               ,
-"frais_financier_variation_12"             ,
-"frais_financier"                          ,
-"montant_part_ouvriere"                    ,
-"cotisation"                               ,
-"ratio_liquidite_reduite"                  ,
-"chiffre_affaires_net_lie_aux_exportations",
-"ratio_rend_capitaux_propres_variation_12" ,
-"ratio_rentabilite_nette_distrib_APE1"     ,
-"ratio_dette_delai"                        ,
-"ratio_CAF_variation_12"                   ,
-"ratio_rend_capitaux_propres"              ,
-"age"                                      ,
-"montant_part_patronale_variation_12"      ,
-"ratio_marge_operationnelle_distrib_APE1"  ,
-"ratio_delai_client_distrib_APE1"          ,
-"ratio_delai_client_variation_12"          ,
-"ratio_productivite_variation_12"          ,
-"poids_frng_distrib_APE1"                  ,
-"ratio_RetD_variation_12"                  ,
-"ratio_marge_operationnelle_variation_12"  ,
-"CA_variation_12")
 x_medium <- c("montant_part_patronale",                   
               "ratio_dette",                              
               "ratio_dette_moy12m",                       
@@ -402,17 +365,21 @@ x_medium <- c("montant_part_patronale",
               "TargetEncode_code_ape_niveau3",            
               "cotisation",                               
               "frais_financier_distrib_APE1",             
-              "taux_marge_distrib_APE1",                  
+              "taux_marge_distrib_APE1",
+              "taux_marge_distrib_APE2",
               "montant_part_patronale_variation_3",       
-              "ratio_liquidite_reduite_distrib_APE1",     
+              "ratio_liquidite_reduite_distrib_APE1",
+              #"ratio_liquidite_reduite_distrib_APE2",
               "dette_fiscale",                            
               "ratio_delai_client_distrib_APE1",          
               "montant_part_patronale_variation_1",       
               "montant_part_patronale_variation_2",       
               "ratio_rend_capitaux_propres",              
               "taux_marge",                               
-              "poids_frng_distrib_APE1",                  
-              "delai_fournisseur_distrib_APE1",           
+              "poids_frng_distrib_APE1",
+              "delai_fournisseur_distrib_APE2", 
+              "delai_fournisseur_distrib_APE1",   
+              "delai_fournisseur_distrib_APE2", 
               "taux_rotation_stocks_distrib_APE1",        
               "effectif",                                 
               "ratio_rentabilite_nette_distrib_APE1",     
@@ -446,21 +413,20 @@ y = "outcome"
 ## Logistic regression
 ```{r logistic ridge regression }
 
-glm_ridge <- h2o.glm(
-  model_id = 'GLM_ridge',
-  x= x_medium,
-  y =y,
-  training_frame = train.hex,
-  validation_frame = validation.hex,
-  family = "binomial",
-  alpha = 0, #ridge
-  lambda_search = TRUE,
-  standardize = TRUE,
-  missing_values_handling = "MeanImputation",
-  seed = 123,
-  score_each_iteration = TRUE
-)
-plotPR(glm_ridge)
+# glm_ridge <- h2o.glm(
+#   model_id = 'GLM_ridge',
+#   x= x_distrib,
+#   y =y,
+#   training_frame = train.hex,
+#   validation_frame = validation.hex,
+#   family = "binomial",
+#   alpha = 0, #ridge
+#   lambda_search = TRUE,
+#   standardize = TRUE,
+#   missing_values_handling = "MeanImputation",
+#   seed = 123,
+#   score_each_iteration = TRUE
+# )
 ```
 
 ```{r logistic lasso regression }
