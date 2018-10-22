@@ -45,23 +45,23 @@ feature_engineering <- function(train_set,
   ## Default values ##
   ####################
 
-  if (past_trend) {
-    if (is.null(past_trend_vars)) {
-      past_trend_vars <- c(
-        'apart_heures_consommees',
-        'montant_part_ouvriere',
-        'montant_part_patronale'
-      )
-      past_trend_vars_years <- ratios_financiers
-      cat("Taking default value for past trends variables", '\n')
-    }
-    if (is.null(past_trend_lookbacks)) {
-      past_trend_lookbacks <-  c(1, 2, 3, 6, 12)
-      past_trend_lookbacks_years <- c(1)
-      cat("Taking default value for past trends lookbacks", '\n')
-    }
-    past_trend_lookbacks_ym <- past_trend_lookbacks_years * 12
-  }
+  # if (past_trend) {
+  #   if (is.null(past_trend_vars)) {
+  #     past_trend_vars <- c(
+  #       'apart_heures_consommees',
+  #       'montant_part_ouvriere',
+  #       'montant_part_patronale'
+  #     )
+  #     past_trend_vars_years <- ratios_financiers
+  #     cat("Taking default value for past trends variables", '\n')
+  #   }
+  #   if (is.null(past_trend_lookbacks)) {
+  #     past_trend_lookbacks <-  c(1, 2, 3, 6, 12)
+  #     past_trend_lookbacks_years <- c(1)
+  #     cat("Taking default value for past trends lookbacks", '\n')
+  #   }
+  #   past_trend_lookbacks_ym <- past_trend_lookbacks_years * 12
+  # }
 
   if (quantile) {
     if (is.null(quantile_vars)) {
@@ -314,31 +314,31 @@ feature_engineering <- function(train_set,
     ## PAST TRENDS ###
     ##################
 
-    if (past_trend) {
+    # if (past_trend) {
 
-      assertthat::assert_that(all(past_trend_vars %in% names(data)))
-      data <- data %>% add_past_trends(past_trend_vars,
-                                       past_trend_lookbacks,
-                                       type = 'lag')
+    #   assertthat::assert_that(all(past_trend_vars %in% names(data)))
+    #   data <- data %>% add_past_trends(past_trend_vars,
+    #                                    past_trend_lookbacks,
+    #                                    type = 'lag')
 
-      # data <- data %>% add_past_trends(past_trend_vars_years,
-      #                                  past_trend_lookbacks_ym,
-      #                                  type = 'mean_unique')
+    #   # data <- data %>% add_past_trends(past_trend_vars_years,
+    #   #                                  past_trend_lookbacks_ym,
+    #   #                                  type = 'mean_unique')
 
-      names_with_na <- names(data %>% select(contains('variation')))
-      for (name in names_with_na)
-        data <- replace_na_by(name, data, 0)
+    #   names_with_na <- names(data %>% select(contains('variation')))
+    #   for (name in names_with_na)
+    #     data <- replace_na_by(name, data, 0)
 
-      data <- data %>%
-        group_by(siret) %>%
-        arrange(siret, periode) %>%
-        mutate(
-          effectif_diff = c(NA, diff(effectif)),
-          effectif_diff_moy12 = average_12m(effectif_diff)
-        ) %>%
-        select(-effectif_diff) %>%
-        ungroup()
-    }
+    #   data <- data %>%
+    #     group_by(siret) %>%
+    #     arrange(siret, periode) %>%
+    #     mutate(
+    #       effectif_diff = c(NA, diff(effectif)),
+    #       effectif_diff_moy12 = average_12m(effectif_diff)
+    #     ) %>%
+    #     select(-effectif_diff) %>%
+    #     ungroup()
+    # }
 
 
 
