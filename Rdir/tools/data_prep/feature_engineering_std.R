@@ -27,20 +27,20 @@ feature_engineering_std <- function(...){
   ## Default values ##
   ####################
 
-  past_trend_vars <- c(
-    "apart_heures_consommees",
-    "montant_part_ouvriere",
-    "montant_part_patronale"
-  )
-  past_trend_vars_years <- ratios_financiers
-  cat("Taking default value for past trends variables", "\n")
-
-  past_trend_lookbacks <-  c(1, 2, 3, 6, 12)
-  past_trend_lookbacks_years <- c(1)
-
-  cat("Taking default value for past trends lookbacks", "\n")
-
-  past_trend_lookbacks_ym <- past_trend_lookbacks_years * 12
+#   past_trend_vars <- c(
+#     "apart_heures_consommees",
+#     "montant_part_ouvriere",
+#     "montant_part_patronale"
+#   )
+#   past_trend_vars_years <- ratios_financiers
+#   cat("Taking default value for past trends variables", "\n")
+# 
+#   past_trend_lookbacks <-  c(1, 2, 3, 6, 12)
+#   past_trend_lookbacks_years <- c(1)
+# 
+#   cat("Taking default value for past trends lookbacks", "\n")
+# 
+#   past_trend_lookbacks_ym <- past_trend_lookbacks_years * 12
 
   aux_fun <- function(my_data){
     assertthat::assert_that(all(c("siret", "periode") %in% names(my_data)))
@@ -247,58 +247,34 @@ feature_engineering_std <- function(...){
       ratio_delai_client = (clients_et_cptes_ratt * 360) / CA,
       ratio_RetD = frais_de_RetD / CA
     )
-  # mutate(
-  #   EBE = valeur_ajoutee - salaires_et_traitements - charges_sociales,
-  #   ratio_autonomie_financiere = capitaux_propres_du_groupe / total_actif,
-  #  #liquidites_generales = total_actif_circ_ch_const_av, #/ dettes court terme
-  #  ratio_productivite = CA / effectif,
-  #  #ratio_solvabilite = total_actif / (total_dettes_fin + total_dette_expl_et_divers),
-  #  #ratio_gearing = (total_dettes_fin + total_dette_expl_et_divers)/ capitaux_propres_du_groupe,
-  #  #ratio_independence_financiere = capitaux_propres_du_groupe / total_dettes_fin,
-  #  ratio_rendement_capitaux_propres = resultat_net_consolide / capitaux_propres_du_groupe,
-  #  ratio_rentabilite_economique = resultat_net_consolide / total_actif,
-  #  ratio_marge_net = resultat_net_consolide / CA,
-  #  #ratio_BFR = stocks + creances_expl - (total_dettes_fin + total_dette_expl_et_divers),
-  #  ratio_delai_client = (clients_et_cptes_ratt*360)/CA
-  #  #ratio_tresorerie_nette = poids_frng - ratio_BFR
-  # )
 
 
   ##################
   ## PAST TRENDS ###
   ##################
 
-  assertthat::assert_that(all(past_trend_vars %in% names(my_data)))
-  my_data <- my_data %>% add_past_trends(past_trend_vars,
-    past_trend_lookbacks,
-    type = "lag")
-
-  my_data <- my_data %>% add_past_trends(past_trend_vars_years,
-    past_trend_lookbacks_ym,
-    type = "mean_unique")
-
-  names_with_na <- names(my_data %>% select(contains("variation")))
-  for (name in names_with_na)
-    my_data <- replace_na_by(name, my_data, 0)
-
-  my_data <- my_data %>%
-    group_by(siret) %>%
-    arrange(siret, periode) %>%
-    mutate(
-      effectif_diff = c(NA, diff(effectif)),
-      effectif_diff_moy12 = average_12m(effectif_diff)
-      ) %>%
-    select(-effectif_diff) %>%
-    ungroup()
-
-
-
-
-  ###############
-  ## TRIM #######
-  ###############
-
-  # No trim for tree based methods.
+#  assertthat::assert_that(all(past_trend_vars %in% names(my_data)))
+#  my_data <- my_data %>% add_past_trends(past_trend_vars,
+#    past_trend_lookbacks,
+#    type = "lag")
+#
+#  my_data <- my_data %>% add_past_trends(past_trend_vars_years,
+#    past_trend_lookbacks_ym,
+#    type = "mean_unique")
+#
+#  names_with_na <- names(my_data %>% select(contains("variation")))
+#  for (name in names_with_na)
+#    my_data <- replace_na_by(name, my_data, 0)
+#
+#  my_data <- my_data %>%
+#    group_by(siret) %>%
+#    arrange(siret, periode) %>%
+#    mutate(
+#      effectif_diff = c(NA, diff(effectif)),
+#      effectif_diff_moy12 = average_12m(effectif_diff)
+#      ) %>%
+#    select(-effectif_diff) %>%
+#    ungroup()
 
 
   ###################
