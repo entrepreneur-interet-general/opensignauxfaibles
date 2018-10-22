@@ -54,6 +54,7 @@ fields <- c(
   "montant_echeancier",
   "delai",
   "duree_delai",
+  "numero_compte_urssaf",
   # URSSAF past
   "montant_part_patronale_past_1",
   "montant_part_ouvriere_past_1",
@@ -162,6 +163,10 @@ fields <- c(
   "productif"
   )
 raw_data <- connect_to_database('Features', last_batch, algo = algorithm, min_effectif = 30, fields = fields)
+
+connect_to_database('Features', last_batch, algo = algorithm, min_effectif = 30, fields = c('siret','periode'))
+
+
 ```
 
 ```{r}
@@ -238,10 +243,7 @@ all['outcome'] <- h2o.relevel(x = all['outcome'], y = "non_default")
 ```
 
 ```{r}
-te_map <- h2o.target_encode_create(
-  train, 
-  x = list(c('code_naf'), c('code_ape_niveau2'), c('code_ape_niveau3'), c('code_ape_niveau4'), c('code_ape')),
-  y = 'outcome')
+t
 
 
 train <- h2o.target_encode_apply(
