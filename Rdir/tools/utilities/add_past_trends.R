@@ -1,5 +1,8 @@
-add_past_trends <-
-  function(data, variables, lookback_months, type = 'lag') {
+add_past_trends <- function(
+  data,
+  variables,
+  lookback_months,
+  type = 'lag') {
 
     assertthat::assert_that(type %in% c('lag','slope','rate','mean_unique'))
 
@@ -49,7 +52,7 @@ add_past_trends <-
     #     assertthat::assert_that(length(slopes) == length(y))
 
     #     return(slopes)
-      }
+    # }
 
     } else if (type == 'rate') {
       #### Taux de variation ####
@@ -64,9 +67,8 @@ add_past_trends <-
      #   return(tv)
      # }
 
-    } else if (type == 'lag'){
+    } else if (type == 'lag')  {
       #### Valeur reportee ####
-      aux_past <- function(data, variable, last_n){
       aux_past <- function(data, variable, last_n){
         y_lag <- lag(y,last_n)
         return(y_lag[1:length(y)])
@@ -75,9 +77,7 @@ add_past_trends <-
     } else if(type == 'mean_unique'){
       ### Moyenne de la difference après suppression de doublons ##
       aux_past <- function(data, variable, last_n){
-      aux_past <- function(data, variable, last_n){
         res <- sapply(1:length(y), FUN = function(x){
-          out <- unique(tail(y[1:x],last_n+1))
           out <- unique(tail(y[1:x],last_n+1))
         })
       }

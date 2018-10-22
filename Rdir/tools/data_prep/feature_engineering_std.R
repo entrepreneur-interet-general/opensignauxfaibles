@@ -34,12 +34,12 @@ feature_engineering_std <- function(...){
 #   )
 #   past_trend_vars_years <- ratios_financiers
 #   cat("Taking default value for past trends variables", "\n")
-# 
+#
 #   past_trend_lookbacks <-  c(1, 2, 3, 6, 12)
 #   past_trend_lookbacks_years <- c(1)
-# 
+#
 #   cat("Taking default value for past trends lookbacks", "\n")
-# 
+#
 #   past_trend_lookbacks_ym <- past_trend_lookbacks_years * 12
 
   aux_fun <- function(my_data){
@@ -155,17 +155,17 @@ feature_engineering_std <- function(...){
   my_data <- replace_na_by("cotisation", my_data, 0)
 
   # SIMPLIFIED NAF
-  assertthat::assert_that("libelle_naf_niveau1" %in% names(my_data))
-  libelle_naf_simplifie <- my_data$libelle_naf_niveau1
-  libelle_naf_simplifie[libelle_naf_simplifie %in% c(
-    "Enseignement",
-    "Activités extra-territoriales",
-    "Administration publique",
-    "Agriculture, sylviculture et pêche"
-    )] <-
-      "autre"
-    my_data <- my_data %>%
-      mutate(libelle_naf_simplifie = libelle_naf_simplifie)
+  #assertthat::assert_that("libelle_naf" %in% names(my_data))
+  #libelle_naf_simplifie <- my_data$libelle_naf_niveau1
+  #libelle_naf_simplifie[libelle_naf_simplifie %in% c(
+  #  "Enseignement",
+  #  "Activités extra-territoriales",
+  #  "Administration publique",
+  #  "Agriculture, sylviculture et pêche"
+  #  )] <-
+  #    "autre"
+  #  my_data <- my_data %>%
+  #    mutate(libelle_naf_simplifie = libelle_naf_simplifie)
 
     # Ratios URSSAF
 

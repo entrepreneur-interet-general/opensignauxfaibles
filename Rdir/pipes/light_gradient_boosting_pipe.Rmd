@@ -27,7 +27,7 @@ library(rprojroot)
 library(groupdata2)
 library(R.utils)
 
-sourceDirectory(find_rstudio_root_file('tools'))
+sourceDirectory(find_rstudio_root_file('tools'), modifiedOnly = FALSE)
 ```
 
 ## Script parameters
@@ -188,13 +188,7 @@ date_inf <- as.Date("2015-01-01")
 date_sup <- as.Date("2016-12-01")
 
 all_data <- raw_data %>% 
-  group_by(siret) %>%
-  arrange(siret,periode) %>%
-  mutate(CA_N_moins_1 = first(tail(unique(CA),2)),
-         resultat_net_consolide_N_moins_1 = first(tail(unique(resultat_net_consolide),2)),
-         resultat_expl_N_moins_1 = first(tail(unique(resultat_expl),2))) %>%
-  ungroup() %>% 
-  arrange(periode) %>% 
+  arrange(periode) %>%
   filter_time(actual_period %m-% months(12) ~ actual_period) 
 
 raw_data <- raw_data %>%
