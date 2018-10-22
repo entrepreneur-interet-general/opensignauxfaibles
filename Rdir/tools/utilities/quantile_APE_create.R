@@ -4,7 +4,7 @@ quantile_APE_create <- function(
   ape_levels = 1
   ){
 
-  assertthat::assert_that(all(c("code_naf_niveau1", "code_ape") %in%
+  assertthat::assert_that(all(c("code_naf", "code_ape") %in%
       names(my_data)))
 
   assertthat::assert_that(all(ape_levels >= 1 & ape_levels <= 5))
@@ -23,7 +23,7 @@ quantile_APE_create <- function(
 
     if (level == 1) {
       my_data <- my_data %>%
-        mutate(.target = as.factor(code_naf_niveau1))
+        mutate(.target = as.factor(code_naf))
     } else {
       my_data <- my_data %>%
         mutate(.target = as.factor(substr(code_ape, 1, ape_levels)))

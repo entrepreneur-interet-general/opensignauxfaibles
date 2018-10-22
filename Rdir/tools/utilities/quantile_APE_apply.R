@@ -22,7 +22,7 @@ quantile_APE_apply <- function(
 
       if (level == 1) {
         out <- out %>%
-          mutate(.target = as.factor(code_naf_niveau1))
+          mutate(.target = as.factor(code_naf))
       } else {
         out <- out %>%
           mutate(.target = as.factor(substr(code_ape, 1, ape_levels)))
