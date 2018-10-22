@@ -3,6 +3,8 @@ connect_to_database <- function(
   batch,
   algo = "algo2",
   siren = NULL,
+  date_inf = NULL,
+  date_sup = NULL,
   min_effectif = 10,
   fields = NULL){
 
@@ -32,15 +34,17 @@ connect_to_database <- function(
   # Construction de l'unwind
   unwind_req <- '{"$unwind":{"path": "$value"}}'
 
-  # Filtrage effectif
+  # Filtrage effectif et date
   if (!is.null(siren)){
     eff_req <- ""
   } else {
     eff_req <- paste0(
-      '{"$match":{"value.effectif":{"$gte":',
+      '{"$match":{', '"value.effectif":{"$gte":',
       min_effectif,
-      '}}}')
+      '},"value.periode":{"$gte": {"$date":"', date_inf, 'T00:00:00Z"}, "$lt": {"$date":"', date_sup, 'T00:00:00Z"}}}}')
   }
+
+  cat(eff_req, "\n")
 
   # Construction de la projection
   if (is.null(fields)){

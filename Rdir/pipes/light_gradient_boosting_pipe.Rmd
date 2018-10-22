@@ -162,7 +162,11 @@ fields <- c(
   "activite_saisonniere",
   "productif"
   )
-raw_data <- connect_to_database('Features', last_batch, algo = algorithm, min_effectif = 30, fields = fields)
+
+date_inf <- as.Date("2015-01-01")
+date_sup <- as.Date("2017-01-01")
+
+raw_data <- connect_to_database('Features', last_batch, date_inf = date_inf, date_sup = date_sup, algo = algorithm, min_effectif = 30, fields = fields)
 
 connect_to_database('Features', last_batch, algo = algorithm, min_effectif = 30, fields = c('siret','periode'))
 
@@ -189,8 +193,7 @@ raw_data <- raw_data %>%
 
 ## Filter for training sample
 ```{r}
-date_inf <- as.Date("2015-01-01")
-date_sup <- as.Date("2016-12-01")
+
 
 all_data <- raw_data %>% 
   arrange(periode) %>%
