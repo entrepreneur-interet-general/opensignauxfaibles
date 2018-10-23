@@ -81,6 +81,7 @@ fields <- c(
   "poids_frng",
   "frais_financier",
   "financier_court_terme",
+  "dette_fiscale",
   "capacite_autofinanc_avant_repartition",
   "ratio_marge_operationnelle",
   "taux_rotation_stocks",
@@ -108,6 +109,7 @@ fields <- c(
   "poids_frng_past_1",
   "frais_financier_past_1",
   "financier_court_terme_past_1",
+  "dette_fiscale_past_1",
   "capacite_autofinanc_avant_repartition_past_1",
   "ratio_marge_operationnelle_past_1",
   "taux_rotation_stocks_past_1",
@@ -134,6 +136,7 @@ fields <- c(
   "poids_frng_past_2",
   "frais_financier_past_2",
   "financier_court_terme_past_2",
+  "dette_fiscale_past_2",
   "capacite_autofinanc_avant_repartition_past_2",
   "ratio_marge_operationnelle_past_2",
   "taux_rotation_stocks_past_2",
@@ -152,12 +155,13 @@ fields <- c(
   "en_cours_de_prod_de_biens_past_2",
   "matières_prem_approv_past_2",
   "chiffre_affaires_net_lie_aux_exportations_past_2",
+  "nombre_etab_secondaire",
+  "nbr_etablissements_connus",
   # APART 
   "apart_heures_consommees",
   # SIRENE
   "code_ape",
   "code_naf",
-  "libelle_naf",
   "debut_activite",
   "activite_saisonniere",
   "productif"
@@ -166,24 +170,25 @@ fields <- c(
 date_inf <- as.Date("2015-01-01")
 date_sup <- as.Date("2017-01-01")
 
-raw_data <- connect_to_database('Features', last_batch, date_inf = date_inf, date_sup = date_sup, algo = algorithm, min_effectif = 30, fields = fields)
+raw_data <- connect_to_database(
+  'Features',
+  last_batch, 
+  date_inf = date_inf,
+  date_sup = date_sup,
+  algo = algorithm, 
+  min_effectif = 30,
+  fields = fields)
 
-connect_to_database('Features', last_batch, algo = algorithm, min_effectif = 30, fields = c('siret','periode'))
-
+all_data <- connect_to_database(
+  'Features',
+  last_batch, 
+  date_inf = actual_period %m-% months(2),
+  date_sup = actual_period,
+  algo = algorithm,
+  min_effectif = 30, 
+  fields = fields)
 
 ```
-
-```{r}
-# FIX ME
-# Cotisations avec un mois de décalage.
-# cat('FIX ME: offset with cotisation')
-# 
-# raw_data[raw_data$periode == actual_period, "cotisation"] <- NA
-# raw_data <- raw_data %>% 
-#   arrange(siret,periode) %>% 
-#   fill(cotisation)
-```
-
 ## Definition de l'objectif
 ```{r}
 raw_data <- raw_data %>%
@@ -191,22 +196,7 @@ raw_data <- raw_data %>%
   set_objective('default')
 ```
 
-## Filter for training sample
 ```{r}
-
-
-all_data <- raw_data %>% 
-  arrange(periode) %>%
-  filter_time(actual_period %m-% months(12) ~ actual_period) 
-
-raw_data <- raw_data %>%
-  arrange(periode) %>%
-  filter_time( date_inf ~ date_sup) 
-
-```
-
-```{r}
-
 out <- feature_engineering_std(raw_data, all_data)
 raw_data <- out[[1]]
 all_data <- out[[2]]
@@ -219,21 +209,11 @@ raw_data <- out[[1]]
 all_data <- out[[2]]
 
 rm(out)
-
-raw_data <- raw_data %>%
-    mutate_if(is.POSIXct, as.Date)
-
-all_data <- all_data %>%
-    mutate_if(is.POSIXct, as.Date)
-
 ```
 
 ```{r}
 gc()
 h2o.init(ip = "localhost", port = 4444)
-
-raw_data$numero_compte_urssaf <- as.factor(paste(raw_data$numero_compte_urssaf))
-all_data$numero_compte_urssaf <- as.factor(paste(all_data$numero_compte_urssaf))
 
 train <- as.h2o(raw_data) 
 all <- as.h2o(all_data)
@@ -242,12 +222,13 @@ all <- as.h2o(all_data)
 
 ```{r}
 train['outcome'] <- h2o.relevel(x = train['outcome'], y = "non_default")
-all['outcome'] <- h2o.relevel(x = all['outcome'], y = "non_default")
 ```
 
 ```{r}
-t
-
+te_map <- h2o.target_encode_create(
+  train, 
+  x = list(c('code_naf'), c('code_ape_niveau2'), c('code_ape_niveau3'), c('code_ape_niveau4'), c('code_ape')),
+  y = 'outcome')
 
 train <- h2o.target_encode_apply(
   train, 
@@ -272,73 +253,6 @@ all <- h2o.target_encode_apply(
 ## Model
 
 ```{r}
-x_minimal = c(    
-  "effectif",
-  "effectif_diff_moy12",
-  "apart_heures_consommees",
-  "ratio_apart",
-  "cotisation",                                
-  "montant_part_ouvriere",                    
-  "montant_part_patronale",
-  "ratio_dette_moy12m",
-  "dette_any_12m",
-  "ratio_dette",
-  "poids_frng",                               
-  "taux_marge",                                
-  "delai_fournisseur",                         
-  "dette_fiscale",                            
-  "financier_court_terme",                     
-  "frais_financier")
-
-ratios_diane =c(
-  "CA",
-  "chiffre_affaires_net_lie_aux_exportations",
-  "resultat_net_consolide",
-  "ratio_CAF",
-  "ratio_marge_operationnelle",
-  "taux_rotation_stocks",
-  "ratio_productivite",
-  "ratio_export",
-  "ratio_delai_client",
-  "ratio_liquidite_reduite",
-  "ratio_endettement",
-  "ratio_rend_capitaux_propres",
-  "ratio_rend_des_ress_durables",
-  "ratio_RetD", 
-  "taux_marge_neg",
-  "taux_marge_extr_neg",
-  "taux_marge_extr_pos")
-
-new_variables = c(
-  "etat_proc_collective_num",   
-  "delai",
-  "montant_echeancier",
-  "ratio_dette_delai",
-  "duree_delai",
-  "age",
-  "productif",
-  "indice_monoactivite",
-  "effectif_entreprise",
-  "apart_entreprise",
-  "nbr_etablissements_connus",
-  "resultat_net_consolide",
-  "nombre_etab_secondaire")
-#,
-# "code_naf")
-
-variations = c(grep('variation',names(raw_data), value = TRUE),
-               grep('diff_moy12',names(raw_data), value = TRUE))
-
-distrib = c(grep('distrib',names(raw_data), value = TRUE),
-            'TargetEncode_code_naf')
-
-x_distrib = c(
-  x_minimal,
-  ratios_diane,
-  new_variables,
-  variations,
-  distrib)
-
 x_medium <- c("montant_part_patronale",                   
               "ratio_dette",                              
               "ratio_dette_moy12m",                       
@@ -347,12 +261,12 @@ x_medium <- c("montant_part_patronale",
               "cotisation",                               
               "frais_financier_distrib_APE1",             
               "taux_marge_distrib_APE1",                  
-              "montant_part_patronale_variation_3",       
+              "montant_part_patronale_past_3",       
               "ratio_liquidite_reduite_distrib_APE1",     
               "dette_fiscale",                            
               "ratio_delai_client_distrib_APE1",          
-              "montant_part_patronale_variation_1",       
-              "montant_part_patronale_variation_2",       
+              "montant_part_patronale_past_1",       
+              "montant_part_patronale_past_2",       
               "ratio_rend_capitaux_propres",              
               "taux_marge",                               
               "poids_frng_distrib_APE1",                  
@@ -362,7 +276,7 @@ x_medium <- c("montant_part_patronale",
               "ratio_rentabilite_nette_distrib_APE1",     
               "ratio_export_distrib_APE1",                
               "TargetEncode_code_ape_niveau2",            
-              "effectif_diff_moy12",                      
+              "effectif_past_12",                      
               "montant_part_ouvriere",                    
               "financier_court_terme_distrib_APE1",       
               #"effectif_entreprise",                      
@@ -444,7 +358,7 @@ prediction <- prediction %>%
 
 prediction <- prediction %>%
   arrange(desc(prob)) %>% 
-  filter(libelle_naf_niveau1 == "Industrie manufacturière", 
+  filter(code_naf == "C", 
          connu == 0, 
          etat_proc_collective == "in_bonis",
          is.na(date_ccsf)) 

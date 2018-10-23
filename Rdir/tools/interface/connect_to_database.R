@@ -44,8 +44,6 @@ connect_to_database <- function(
       '},"value.periode":{"$gte": {"$date":"', date_inf, 'T00:00:00Z"}, "$lt": {"$date":"', date_sup, 'T00:00:00Z"}}}}')
   }
 
-  cat(eff_req, "\n")
-
   # Construction de la projection
   if (is.null(fields)){
     projection_req  <- ""

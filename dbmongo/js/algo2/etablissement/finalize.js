@@ -1,7 +1,7 @@
 function finalize(k, v) {
   var offset_effectif = (date_fin_effectif.getUTCFullYear() - date_fin.getUTCFullYear()) * 12 + date_fin_effectif.getUTCMonth() - date_fin.getUTCMonth()
   var offset_cotisation = 1
-  
+
   liste_periodes = generatePeriodSerie(date_debut, date_fin)
 
   v = Object.keys((v.batch || {})).sort().filter(batch => batch <= actual_batch).reduce((m, batch) => {
@@ -142,7 +142,6 @@ function finalize(k, v) {
     }
     return apart
   }, {})
-
 
   Object.keys(v.apdemande).forEach(hash => {
     periode_deb = v.apdemande[hash].periode.start
@@ -354,46 +353,44 @@ function finalize(k, v) {
       time_offset = DateAddMonth(time_d, offset)      
       variable_name_part_ouvriere = "montant_part_ouvriere_past_" + offset
       variable_name_part_patronale = "montant_part_patronale_past_" + offset
-      variable_name_majorations = "montant_majorations_past_" + offset
       if (time_offset.getTime() in output_indexed){
         val_offset = output_indexed[time_offset.getTime()]
         val_offset[variable_name_part_ouvriere] = val.montant_part_ouvriere
         val_offset[variable_name_part_patronale] = val.montant_part_patronale
-        val_offset[variable_name_majorations] = val.montant_majorations
       }
     })
-      delete val.montant_dette
-      delete val.debit_array
-    }
+    delete val.montant_dette
+    delete val.debit_array
+  }
   )
 
-    //
-    ///
-    /////////
-    // CCSF// 
-    /////////
-    ///
-    //
-    var ccsfHashes = Object.keys(v.ccsf || {}) 
+  //
+  ///
+  /////////
+  // CCSF// 
+  /////////
+  ///
+  //
+  var ccsfHashes = Object.keys(v.ccsf || {}) 
 
-    output_array.forEach(val => {        
-      var optccsf = ccsfHashes.reduce( 
-        function (accu, hash) { 
-          ccsf = v.ccsf[hash] 
-          if (ccsf.date_traitement.getTime() < val.periode.getTime() && ccsf.date_traitement.getTime() > accu.date_traitement.getTime()) { 
-            accu = ccsf 
-          } 
-          return(accu)
-        }, 
-        { 
-          date_traitement: new Date(0) 
+  output_array.forEach(val => {        
+    var optccsf = ccsfHashes.reduce( 
+      function (accu, hash) { 
+        ccsf = v.ccsf[hash] 
+        if (ccsf.date_traitement.getTime() < val.periode.getTime() && ccsf.date_traitement.getTime() > accu.date_traitement.getTime()) { 
+          accu = ccsf 
         } 
-      )         
-
-      if (optccsf.date_traitement.getTime() != 0) { 
-        val.date_ccsf = optccsf.date_traitement 
+        return(accu)
+      }, 
+      { 
+        date_traitement: new Date(0) 
       } 
-    })
+    )         
+
+    if (optccsf.date_traitement.getTime() != 0) { 
+      val.date_ccsf = optccsf.date_traitement 
+    } 
+  })
 
 
   //
@@ -445,7 +442,7 @@ function finalize(k, v) {
   }
   )
 
-  return_value = { "siren": k.substring(0, 9)}
+  return_value = {"siren": k.substring(0, 9)}
   return_value[k] = output_array
   return return_value
 }

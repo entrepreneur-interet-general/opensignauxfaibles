@@ -38,7 +38,7 @@ quantile_APE_apply <- function(
             select(code, moy, std),
           by = c(".target" = "code")) %>%
         mutate(!!new_var := (!!rlang::sym(variable_names[i]) - moy) / std) %>%
-        select(-c("moy", "std"))
+        select(-c("moy", "std"))#, ".target"))
       }
     }
     return(out)
