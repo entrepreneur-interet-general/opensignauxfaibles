@@ -38,21 +38,21 @@ func (mr *MapReduceJS) load(routine string, scope string) error {
 	mr.Finalize = ""
 
 	for _, f := range file {
-		if match, _ := regexp.MatchString("^map.*js", f.Name()); match {
+		if match, _ := regexp.MatchString("^map.*js$", f.Name()); match {
 			fp, err := ioutil.ReadFile("js/" + routine + "/" + scope + "/" + f.Name())
 			if err != nil {
 				return errors.New("Lecture impossible: js/" + routine + "/" + scope + "/" + f.Name())
 			}
 			mr.Map = mr.Map + string(fp)
 		}
-		if match, _ := regexp.MatchString("^reduce.*js", f.Name()); match {
+		if match, _ := regexp.MatchString("^reduce.*js$", f.Name()); match {
 			fp, err := ioutil.ReadFile("js/" + routine + "/" + scope + "/" + f.Name())
 			if err != nil {
 				return errors.New("Lecture impossible: js/" + routine + "/" + scope + "/" + f.Name())
 			}
 			mr.Reduce = mr.Reduce + string(fp)
 		}
-		if match, _ := regexp.MatchString("^finalize.*js", f.Name()); match {
+		if match, _ := regexp.MatchString("^finalize.*js$", f.Name()); match {
 			fp, err := ioutil.ReadFile("js/" + routine + "/" + scope + "/" + f.Name())
 			if err != nil {
 				return errors.New("Lecture impossible: js/" + routine + "/" + scope + "/" + f.Name())
