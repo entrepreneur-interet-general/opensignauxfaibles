@@ -67,7 +67,8 @@ function finalize(k, v) {
       //"date_defaillance": null,
       //"cotisation_due_periode": {},
       "debit_array": [],
-      "etat_proc_collective": "in_bonis"
+      "etat_proc_collective": "in_bonis",
+      "interessante_urssaf": true
     }
   });
 
@@ -359,6 +360,17 @@ function finalize(k, v) {
         val_offset[variable_name_part_patronale] = val.montant_part_patronale
       }
     })
+    
+    let future_month_offsets = [1, 2, 3, 4, 5, 6]
+    if (val.montant_part_ouvriere + val.montant_part_patronale > 0){
+      future_month_offsets.forEach(offset => {
+        time_offset = DateAddMonth(time_d, offset)
+        val_offset = output_indexed[time_offset.getTime()]
+        if (time_offset.getTime() in output_indexed){
+          val_offset.interessante_urssaf = false    
+        }
+      })
+    }
     delete val.montant_dette
     delete val.debit_array
   }
