@@ -1,5 +1,5 @@
 ---
-title: "Random forest pipe"
+title: "Light gradient boosting pipe"
 author: "Pierre Camilleri"
 date: "1 juin 2018"
 output: html_document
@@ -182,8 +182,8 @@ raw_data <- connect_to_database(
 all_data <- connect_to_database(
   'Features',
   last_batch, 
-  date_inf = actual_period %m-% months(2),
-  date_sup = actual_period,
+  date_inf = actual_period %m-% months(1),
+  date_sup = actual_period %m+% months(1),
   algo = algorithm,
   min_effectif = 30, 
   fields = fields)
@@ -323,24 +323,66 @@ model <- h2o.xgboost(
 prediction <- as.tibble(h2o.cbind(all,h2o.predict(model,all)))
 
 prediction <- prediction %>% mutate(
+  # H2O bug ??
   periode =  as.Date(structure(periode / 1000, 
                                class = c('POSIXct','POSIXt')))
 )%>%
-  rename(prob = default0) 
+  rename(prob = default) %>% 
+  select(predict, prob, siret, periode)
 
-pred_data <- all_data %>%
-  left_join(prediction  %>% select(predict, prob,siret, periode), by=c('siret', 'periode')) %>% 
+pred_data <- prediction %>% 
   group_by(siret) %>%
   arrange(siret,periode) %>% 
-  mutate(last_prob = lag(prob),
-         interressant_urssaf = all(tail(montant_part_ouvriere + montant_part_patronale, 6) < 2)) %>% 
+  mutate(last_prob = lag(prob)) %>% 
   ungroup() %>% 
   mutate(diff = prob - last_prob) 
+
+
+export_fields <-  c(
+  "siret",
+  "periode",
+  "raison_sociale",
+  "departement",
+  "region",
+  "prob",
+  "diff",
+  "date_ccsf",
+  "etat_proc_collective",
+  "date_proc_collective",
+  "connu",
+  "interessante_urssaf",
+  #"default_urssaf",
+  "effectif",
+  "libelle_naf",
+  "libelle_ape5",
+  "code_ape",
+  "montant_part_ouvriere",
+  "montant_part_patronale",
+  "CA",
+  "CA_past_1",
+  "resultat_net_consolide",
+  "resultat_net_consolide_past_1",
+  "resultat_expl",
+  "resultat_expl_past_1",
+  "poids_frng",
+  "taux_marge",
+  "frais_financier",
+  "financier_court_terme",
+  "delai_fournisseur",
+  "dette_fiscale",
+  "apart_heures_consommees",
+  "apart_heures_demandees",
+  "cotisation",
+  "montant_majorations",
+  "numero_compte_urssaf",
+  "arrete_bilan_diane",
+  "arrete_bilan_bdf"
+)
 
 # Export
 pred_data %>% 
   filter(periode == actual_period) %>% 
-  prepare_for_export() %>% #additional_names = c('diff', 'connu', 'interressant_urssaf')) %>%
+  prepare_for_export(export_fields = export_fields, last_batch = last_batch, algorithm = algorithm) %>%
   export(batch = '1810')
 ```
 
@@ -383,7 +425,6 @@ predictor.xgb <- Predictor$new(
 ```
 
 ```{r}
-
 for (i in 1:30){
   company_name <- as.character(prediction$raison_sociale[i])
   shap.xgb <- Shapley$new(predictor.xgb, x.interest = features[i,])
@@ -399,4 +440,3 @@ ggsave(paste0("~/Documents/opensignauxfaibles/output/misc/shapley_", i, "_", com
     dev.off()
 }
 ```
-

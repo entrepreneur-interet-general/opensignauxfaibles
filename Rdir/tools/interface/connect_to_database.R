@@ -8,7 +8,16 @@ connect_to_database <- function(
   min_effectif = 10,
   fields = NULL){
 
+
+  assert_that(
+    !is.null(date_inf) &&
+      !is.null(date_sup) &&
+      !is.na(date_inf) &&
+      !is.na(date_sup),
+    msg = "Les dates spécifiés sont invalides")
+
   cat("Connexion à la collection mongodb ...")
+
   dbconnection <- mongo(
     collection = collection,
     db = "opensignauxfaibles",

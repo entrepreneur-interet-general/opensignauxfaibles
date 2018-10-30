@@ -31,9 +31,10 @@ function finalize(k, v) {
 
   Object.keys(v.bdf).forEach(hash => {
     let periode_arrete_bilan = new Date(Date.UTC(v.bdf[hash].arrete_bilan_bdf.getUTCFullYear(), v.bdf[hash].arrete_bilan_bdf.getUTCMonth() +1, 1, 0, 0, 0, 0));
+    let periode_dispo = DateAddMonth(periode_arrete_bilan, 9)
     let series = generatePeriodSerie(
-      periode_arrete_bilan,
-      DateAddMonth(periode_arrete_bilan, 12)
+      periode_dispo,
+      DateAddMonth(periode_dispo, 12)
     )
 
     series.forEach(periode => {
@@ -62,12 +63,12 @@ function finalize(k, v) {
   Object.keys(v.diane).forEach(hash => {
 
     // Tant que la date exacte du bilan n'est pas exportee, on part sur le 31 decembre de l'exercice courant. 
-    v.diane[hash].arrete_bilan_diane = new Date(Date.UTC(v.diane[hash].exercice_diane, 12, 31, 0, 0, 0, 0))
+    v.diane[hash].arrete_bilan_diane = new Date(Date.UTC(v.diane[hash].exercice_diane, 11, 31, 0, 0, 0, 0))
     let periode_arrete_bilan = new Date(Date.UTC(v.diane[hash].arrete_bilan_diane.getUTCFullYear(), v.diane[hash].arrete_bilan_diane.getUTCMonth() +1, 1, 0, 0, 0, 0));
-
+    let periode_dispo = DateAddMonth(periode_arrete_bilan, 9)
     let series = generatePeriodSerie(
-      periode_arrete_bilan,
-      DateAddMonth(periode_arrete_bilan, 12)
+      periode_dispo,
+      DateAddMonth(periode_dispo, 12)
     )
 
     series.forEach(periode => {
@@ -81,7 +82,7 @@ function finalize(k, v) {
         }
         let past_year_offset = [1,2]
         past_year_offset.forEach(offset =>{
-          let periode_offset = DateAddMonth(periode, 12* offset)
+          let periode_offset = DateAddMonth(periode, 12 * offset)
           let variable_name =  k + "_past_" + offset
 
           if (periode_offset.getTime() in output_indexed && 
