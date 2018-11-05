@@ -1,6 +1,6 @@
 shapley_plot <- function(siret, my_data, model) {
   pred <- function(model, newdata)  {
-    results <- as.data.frame(h2o.predict(model, as.h2o(newdata)))
+    results <- as.data.frame(h2o::h2o.predict(model, h2o::as.h2o(newdata)))
     return(results[[3L]])
   }
 
@@ -95,12 +95,13 @@ shapley_plot <- function(siret, my_data, model) {
     "Comparaison de la marge opérationnelle par code NAF",
     "Poids du frng"
   )
+
   names(x_medium_names) <- x_medium
 
 
   features  <- my_data[, x_medium]
 
-  response <- 2-as.numeric(as.factor(as.vector(my_data$outcome)))
+  response <- 2 - as.numeric(as.factor(as.vector(my_data$outcome)))
 
   predictor.xgb <- Predictor$new(
     model = model,
@@ -109,18 +110,24 @@ shapley_plot <- function(siret, my_data, model) {
     predict.fun = pred,
     class = "classification"
   )
-  etablissement <- my_data %>% filter(siret == mon_siret) %>% filter(periode == max(periode))
+  etablissement <- my_data %>%
+    filter(siret == mon_siret) %>%
+    filter(periode == max(periode))
   etablissement <- etablissement[, x_medium]
-  shap.xgb <- Shapley$new(predictor.xgb, x.interest = etablissement)
+  shap.xgb <- iml::Shapley$new(predictor.xgb, x.interest = etablissement)
 
-  shap_plot <- shap.xgb %>% plot()
+  shap_plot <- shap.xgb %>%
+    plot()
   thresh <- 5e-3
-  to_remove <- abs(shap_plot$data[,"phi"]) < thresh
-  shap_plot$data <- shap_plot$data[!to_remove,]
+  to_remove <- abs(shap_plot$data[, "phi"]) < thresh
+  shap_plot$data <- shap_plot$data[!to_remove, ]
 
   # Changing for more informative names
   current_names <- levels(shap_plot$data$feature.value)
-  chopped_names <- sapply(str_split(current_names, pattern = "="), FUN = function(x) x[1])
+  chopped_names <- sapply(
+    stringr::str_split(current_names, pattern = "="),
+    FUN = function(x) x[1]
+    )
   new_levels <- x_medium_names[chopped_names]
 
   levels(shap_plot$data$feature.value) <- new_levels
