@@ -6,4 +6,4 @@ batch=$1
 algo=$2
 cd /home/pierre/Documents/opensignauxfaibles/dbmongo/export/
 mongo --eval "var batch = \"$batch\", algo = \"$algo\"" export_aggregate.js
-mongoexport --db opensignauxfaibles --collection to_export --out ../output/features/features.csv --type=csv --fieldFile export_fields.txt
+mongoexport --db opensignauxfaibles --collection to_export --out ../../output/features/features.csv --type=csv --fieldFile export_fields.txt
