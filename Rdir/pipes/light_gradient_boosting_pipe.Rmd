@@ -37,6 +37,10 @@ last_batch = '1810'
 algorithm = 'algo2'
 ```
 
+```{r}
+light_gradient_boosting(actual_period, last_batch, algorithm)
+```
+
 
 ## Recuperation des données dans MongoDB
 ```{r}
@@ -98,7 +102,7 @@ fields <- c(
   "produits_intermed_et_finis",
   "marchandises",
   "en_cours_de_prod_de_biens",
-  "matières_prem_approv",
+  "matieres_prem_approv",
   "chiffre_affaires_net_lie_aux_exportations",
   # DIANE_past
   "CA_past_1",  
@@ -159,6 +163,7 @@ fields <- c(
   "nbr_etablissements_connus",
   # APART 
   "apart_heures_consommees",
+  "apart_heures_demandees",
   # SIRENE
   "code_ape",
   "code_naf",
@@ -375,8 +380,8 @@ export_fields <-  c(
   "cotisation",
   "montant_majorations",
   "numero_compte_urssaf",
-  "arrete_bilan_diane",
-  "arrete_bilan_bdf"
+  "exercice_bdf",
+  "exercice_diane"
 )
 
 # Export

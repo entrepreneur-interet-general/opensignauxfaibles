@@ -44,13 +44,6 @@ feature_engineering_std <- function(...){
 
   aux_fun <- function(my_data){
 
-    my_data <- my_data %>%
-      mutate_if(is.POSIXct, as.Date)
-
-    my_data$numero_compte_urssaf <- as.factor(paste(my_data$numero_compte_urssaf))
-
-
-
     assertthat::assert_that(all(c("siret", "periode") %in% names(my_data)))
 
     ##################
@@ -244,7 +237,7 @@ feature_engineering_std <- function(...){
   my_data <- my_data %>%
     mutate(
       stocks = produits_intermed_et_finis + marchandises +
-        en_cours_de_prod_de_biens + matières_prem_approv + marchandises,
+        en_cours_de_prod_de_biens + matieres_prem_approv + marchandises,
       taux_rotation_stocks =  CA / stocks
     )
 

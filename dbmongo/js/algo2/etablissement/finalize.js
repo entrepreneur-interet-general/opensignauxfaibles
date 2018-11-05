@@ -253,8 +253,12 @@ function finalize(k, v) {
       })
     }
   )
-
-
+  
+  output_array.forEach(periode => {
+    if ((periode.date_proc_collective || new Date(0)).getTime() == 0){
+      delete periode.date_proc_collective
+    }
+  })
   // Object.keys(v.altares).forEach(
   //     function (hash) {
   //         var altares = v.altares[hash]

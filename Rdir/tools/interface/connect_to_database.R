@@ -105,6 +105,12 @@ connect_to_database <- function(
     n_distinct()
   cat("Import de", n_eta, "etablissements issus de", n_ent, "entreprises", "\n")
 
+  # Typage
+  table_wholesample <- table_wholesample %>%
+    mutate_if(is.POSIXct, as.Date)
+
+  table_wholesample$numero_compte_urssaf <- as.factor(paste(table_wholesample$numero_compte_urssaf))
+
   cat(" Fini.", "\n")
   return(table_wholesample)
 }

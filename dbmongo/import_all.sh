@@ -1,4 +1,5 @@
 #!/bin/bash
+
 http :3000/api/purge
 http :3000/api/import/1802
 http :3000/api/import/1803

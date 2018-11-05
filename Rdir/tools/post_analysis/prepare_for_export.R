@@ -19,10 +19,6 @@ prepare_for_export <- function(donnees, export_fields, last_batch, algorithm){
     dplyr::mutate(CCSF = date_ccsf) %>%
     dplyr::arrange(dplyr::desc(prob))
 
-  # correction numero_compte_urssaf multiples
-  cat("TODO, pourquoi ne fonctionne pas dans feature_engineering_std ?")
-  donnees$numero_compte_urssaf <- as.factor(paste(donnees$numero_compte_urssaf))
-
   # Report des dernières infos financieres connues
 
   donnees <- donnees %>%

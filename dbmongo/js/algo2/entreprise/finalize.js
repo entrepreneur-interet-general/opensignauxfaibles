@@ -31,10 +31,10 @@ function finalize(k, v) {
 
   Object.keys(v.bdf).forEach(hash => {
     let periode_arrete_bilan = new Date(Date.UTC(v.bdf[hash].arrete_bilan_bdf.getUTCFullYear(), v.bdf[hash].arrete_bilan_bdf.getUTCMonth() +1, 1, 0, 0, 0, 0));
-    let periode_dispo = DateAddMonth(periode_arrete_bilan, 9)
+    let periode_dispo = DateAddMonth(periode_arrete_bilan, 8)
     let series = generatePeriodSerie(
       periode_dispo,
-      DateAddMonth(periode_dispo, 12)
+      DateAddMonth(periode_dispo, 13)
     )
 
     series.forEach(periode => {
@@ -65,10 +65,10 @@ function finalize(k, v) {
     // Tant que la date exacte du bilan n'est pas exportee, on part sur le 31 decembre de l'exercice courant. 
     v.diane[hash].arrete_bilan_diane = new Date(Date.UTC(v.diane[hash].exercice_diane, 11, 31, 0, 0, 0, 0))
     let periode_arrete_bilan = new Date(Date.UTC(v.diane[hash].arrete_bilan_diane.getUTCFullYear(), v.diane[hash].arrete_bilan_diane.getUTCMonth() +1, 1, 0, 0, 0, 0));
-    let periode_dispo = DateAddMonth(periode_arrete_bilan, 9)
+    let periode_dispo = DateAddMonth(periode_arrete_bilan, 8)
     let series = generatePeriodSerie(
       periode_dispo,
-      DateAddMonth(periode_dispo, 12)
+      DateAddMonth(periode_dispo, 13)
     )
 
     series.forEach(periode => {
@@ -100,6 +100,12 @@ function finalize(k, v) {
   output_array.forEach((periode, index) => {
     if ((periode.arrete_bilan_bdf||new Date(0)).getTime() == 0 && (periode.arrete_bilan_diane || new Date(0)).getTime() == 0) {
       delete output_array[index]
+    }
+    if ((periode.arrete_bilan_bdf||new Date(0)).getTime() == 0){
+      delete periode.arrete_bilan_bdf
+    }
+    if ((periode.arrete_bilan_diane||new Date(0)).getTime() == 0){
+      delete periode.arrete_bilan_diane
     }
   })
 
