@@ -292,7 +292,7 @@ function finalize(k, v) {
     var periode_cotisation = generatePeriodSerie(cotisation.periode.start, cotisation.periode.end)
     periode_cotisation.forEach(date_cotisation => {
       date_offset = DateAddMonth(date_cotisation, offset_cotisation)
-      value_cotisation[date_offset.getTime()] = (value_cotisation[date_cotisation.getTime()] || []).concat(cotisation.du / periode_cotisation.length)
+      value_cotisation[date_offset.getTime()] = (value_cotisation[date_offset.getTime()] || []).concat(cotisation.du / periode_cotisation.length)
     })
   })
 
@@ -425,7 +425,7 @@ function finalize(k, v) {
     if (sireneHashes.length != 0) {
       sirene = v.sirene[sireneHashes[0]]
     }
-
+    val.siren = val.siret.substring(0, 9)
     val.lattitude = (sirene || { "lattitude": null }).lattitude
     val.longitude = (sirene || { "longitude": null }).longitude
     val.region = (sirene || {"region": null}).region
