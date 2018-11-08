@@ -14,7 +14,6 @@ light_gradient_boosting <- function(actual_period, last_batch, algorithm){
     "montant_echeancier",
     "delai",
     "duree_delai",
-    "numero_compte_urssaf",
     # URSSAF past
     "montant_part_patronale_past_1",
     "montant_part_ouvriere_past_1",
@@ -319,4 +318,5 @@ pred_data %>%
   filter(periode == actual_period) %>%
   prepare_for_export(export_fields = export_fields, last_batch = last_batch, algorithm = algorithm) %>%
   export(batch = "1810")
+return(list(data = train, model = model))
 }

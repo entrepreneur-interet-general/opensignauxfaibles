@@ -38,7 +38,14 @@ algorithm = 'algo2'
 ```
 
 ```{r}
-light_gradient_boosting(actual_period, last_batch, algorithm)
+res <- light_gradient_boosting(actual_period, last_batch, algorithm)
+my_data <- res[["data"]]
+my_model <- res[["model"]]
+```
+
+```{r}
+my_data <- as.data.frame(my_data)
+shapley_plot("44829364700013", my_data, my_model)
 ```
 
 
@@ -394,7 +401,7 @@ pred_data %>%
 
 ## Export graphiques Shapley
 ```{r}
-prediction_2 <-pred_data %>% 
+prediction_2 <- pred_data %>% 
   filter(periode == actual_period) %>% 
   prepare_for_export()
 
