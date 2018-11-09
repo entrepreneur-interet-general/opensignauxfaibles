@@ -109,7 +109,7 @@ chiffre_affaires_net_lie_aux_exportations_past_2
 nombre_etab_secondaire
 nbr_etablissements_connus
 apart_heures_consommees
-apart_heures_demandees
+apart_heures_autorisees
 code_ape
 code_naf
 debut_activite

@@ -1,4 +1,4 @@
-light_gradient_boosting <- function(actual_period, last_batch, algorithm){
+light_gradient_boosting <- function(actual_period, last_batch, algorithm, min_effectif = 10){
 
   fields <- c(
     "siret",
@@ -118,7 +118,7 @@ light_gradient_boosting <- function(actual_period, last_batch, algorithm){
     "nbr_etablissements_connus",
     # APART
     "apart_heures_consommees",
-    "apart_heures_demandees",
+    "apart_heures_autorisees",
     # SIRENE
     "code_ape",
     "code_naf",
@@ -136,39 +136,39 @@ light_gradient_boosting <- function(actual_period, last_batch, algorithm){
     date_inf = date_inf,
     date_sup = date_sup,
     algo = algorithm,
-    min_effectif = 10,
+    min_effectif = min_effectif,
     fields = fields)
 
-  all_data <- connect_to_database(
+  current_data <- connect_to_database(
     "Features",
     last_batch,
     date_inf = actual_period %m-% months(1),
     date_sup = actual_period %m+% months(1),
     algo = algorithm,
-    min_effectif = 10,
+    min_effectif = min_effectif,
     fields = fields)
 
   raw_data <- raw_data %>%
     objective_default_or_failure(n_months = 3, threshold = 1, lookback = 18) %>%
     set_objective("default")
 
-  out <- feature_engineering_std(raw_data, all_data)
+  out <- feature_engineering_std(raw_data, current_data)
   raw_data <- out[[1]]
-  all_data <- out[[2]]
+  current_data <- out[[2]]
 
   ref_f_e <- feature_engineering_create(raw_data)
 
-  out <- feature_engineering_apply(ref_f_e, raw_data, all_data)
+  out <- feature_engineering_apply(ref_f_e, raw_data, current_data)
 
   raw_data <- out[[1]]
-  all_data <- out[[2]]
+  current_data <- out[[2]]
 
   rm(out)
 
   h2o.init(ip = "localhost", port = 4444)
 
   train <- as.h2o(raw_data)
-  all <- as.h2o(all_data)
+  current <- as.h2o(current_data)
 
   train["outcome"] <- h2o.relevel(x = train["outcome"], y = "non_default")
 
@@ -186,8 +186,8 @@ light_gradient_boosting <- function(actual_period, last_batch, algorithm){
     blended_avg = TRUE,
     seed = 1234)
 
-  all <- h2o.target_encode_apply(
-    all,
+  current <- h2o.target_encode_apply(
+    current,
     x = list(c("code_naf"), c("code_ape_niveau2"), c("code_ape_niveau3"), c("code_ape_niveau4"), c("code_ape")),
     y = "outcome",
     target_encode_map = te_map,
@@ -254,7 +254,7 @@ light_gradient_boosting <- function(actual_period, last_batch, algorithm){
     ntrees = 60,
     seed = 123
     )
-  prediction <- as.tibble(h2o.cbind(all, h2o.predict(model, all)))
+  prediction <- as.tibble(h2o.cbind(current, h2o.predict(model, current)))
 
   prediction <- prediction %>% mutate(
     # H2O bug ??
@@ -305,7 +305,7 @@ export_fields <-  c(
   "delai_fournisseur",
   "dette_fiscale",
   "apart_heures_consommees",
-  "apart_heures_demandees",
+  "apart_heures_autorisees",
   "cotisation",
   "montant_majorations",
   "numero_compte_urssaf",
@@ -318,5 +318,7 @@ pred_data %>%
   filter(periode == actual_period) %>%
   prepare_for_export(export_fields = export_fields, last_batch = last_batch, algorithm = algorithm) %>%
   export(batch = "1810")
-return(list(data = train, model = model))
+
+# Returns H2O frames and model
+return(list(train_data = train, current_data = current, model = model))
 }

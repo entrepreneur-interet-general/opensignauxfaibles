@@ -60,7 +60,7 @@ function finalize(k, v) {
       "effectif": null,
       "date_effectif": null,
       "apart_heures_consommees": 0,
-      "apart_heures_demandees": 0,
+      "apart_heures_autorisees": 0,
       "apart_motif_recours": 0,
       //"effectif_history": {},
       //"outcome_0_12": "non_default",

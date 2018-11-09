@@ -35,11 +35,12 @@ sourceDirectory(find_rstudio_root_file('tools'), modifiedOnly = FALSE)
 actual_period <- as.Date("2018-09-01")
 last_batch = '1810'
 algorithm = 'algo2'
+min_effectif = 10
 ```
 
 ```{r}
-res <- light_gradient_boosting(actual_period, last_batch, algorithm)
-my_data <- res[["data"]]
+res <- light_gradient_boosting(actual_period, last_batch, algorithm, min_effectif)
+my_data <- res[["current_data"]]
 my_model <- res[["model"]]
 ```
 
@@ -48,6 +49,9 @@ my_data <- as.data.frame(my_data)
 shapley_plot("44829364700013", my_data, my_model)
 ```
 
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+À supprimer
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ## Recuperation des données dans MongoDB
 ```{r}
@@ -170,7 +174,7 @@ fields <- c(
   "nbr_etablissements_connus",
   # APART 
   "apart_heures_consommees",
-  "apart_heures_demandees",
+  "apart_heures_autorisees",
   # SIRENE
   "code_ape",
   "code_naf",
@@ -383,7 +387,7 @@ export_fields <-  c(
   "delai_fournisseur",
   "dette_fiscale",
   "apart_heures_consommees",
-  "apart_heures_demandees",
+  "apart_heures_autorisees",
   "cotisation",
   "montant_majorations",
   "numero_compte_urssaf",
@@ -393,8 +397,8 @@ export_fields <-  c(
 
 # Export
 pred_data %>% 
-  filter(periode == actual_period) %>% 
-  prepare_for_export(export_fields = export_fields, last_batch = last_batch, algorithm = algorithm) %>%
+  filter(periode == actual_period) %>%
+  prepare_for_export(export_fields = export_fields[-2], last_batch = last_batch, algorithm = algorithm) %>%
   export(batch = '1810')
 ```
 

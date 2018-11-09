@@ -15,7 +15,8 @@ prepare_for_export <- function(donnees, export_fields, last_batch, algorithm){
     fields = export_fields)
 
   donnees <- donnees %>%
-    left_join(full_data, by = c("siret", "periode")) %>%
+    mutate(siret = as.character(siret)) %>%
+    left_join(full_data %>% mutate(siret = as.character(siret)), by = c("siret", "periode")) %>%
     dplyr::mutate(CCSF = date_ccsf) %>%
     dplyr::arrange(dplyr::desc(prob))
 

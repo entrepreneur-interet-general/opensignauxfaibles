@@ -125,7 +125,7 @@ connect_to_database <- function(
       )
   }
 
-  if ("code_naf" %in% names(table_wholesample)){
+  if ("siret" %in% names(table_wholesample)){
     table_wholesample <- table_wholesample %>%
       mutate(
         siret = as.factor(siret)
