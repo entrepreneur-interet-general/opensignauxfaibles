@@ -132,16 +132,6 @@ feature_engineering_std <- function(...){
   my_data <- my_data %>%
     mutate(age = lubridate::year(as.POSIXct.Date(periode)) - debut_activite)
 
-  # factors
-  my_data <- my_data  %>%
-    mutate(
-      code_naf = as.factor(code_naf),
-      code_ape_niveau2 = as.factor(substr(code_ape, 1, 2)),
-      code_ape_niveau3 = as.factor(substr(code_ape, 1, 3)),
-      code_ape_niveau4 = as.factor(substr(code_ape, 1, 4)),
-      code_ape = as.factor(code_ape),
-      siret = as.factor(siret),
-      siren = as.factor(siren))
   # REPLACE NA (DELAIS, COTISATION)
   assertthat::assert_that(all(
       c(

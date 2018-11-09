@@ -110,7 +110,26 @@ connect_to_database <- function(
     mutate_if(is.POSIXct, as.Date)
 
   if ("numero_compte_urssaf" %in% names(table_wholesample)){
-    table_wholesample$numero_compte_urssaf <- as.factor(paste(table_wholesample$numero_compte_urssaf))
+    table_wholesample$numero_compte_urssaf <-
+      as.factor(paste(table_wholesample$numero_compte_urssaf))
+  }
+
+  if ("code_naf" %in% names(table_wholesample)){
+  table_wholesample <- table_wholesample %>%
+    mutate(
+      code_naf = as.factor(code_naf),
+      code_ape_niveau2 = as.factor(substr(code_ape, 1, 2)),
+      code_ape_niveau3 = as.factor(substr(code_ape, 1, 3)),
+      code_ape_niveau4 = as.factor(substr(code_ape, 1, 4)),
+      code_ape = as.factor(code_ape)
+      )
+  }
+
+  if ("code_naf" %in% names(table_wholesample)){
+    table_wholesample <- table_wholesample %>%
+      mutate(
+        siret = as.factor(siret)
+      )
   }
 
   cat(" Fini.", "\n")
