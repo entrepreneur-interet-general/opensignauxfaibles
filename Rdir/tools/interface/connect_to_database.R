@@ -132,6 +132,14 @@ connect_to_database <- function(
       )
   }
 
+
+  if ("siren" %in% names(table_wholesample)){
+    table_wholesample <- table_wholesample %>%
+      mutate(
+        siren = as.factor(siren)
+      )
+  }
+
   cat(" Fini.", "\n")
   return(table_wholesample)
 }

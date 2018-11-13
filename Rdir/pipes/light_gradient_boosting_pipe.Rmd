@@ -41,12 +41,19 @@ min_effectif = 10
 ```{r}
 res <- light_gradient_boosting(actual_period, last_batch, algorithm, min_effectif)
 my_data <- res[["current_data"]]
-my_model <- res[["model"]]
+my_model <- res[["model"]]  
 ```
 
 ```{r}
 my_data <- as.data.frame(my_data)
-shapley_plot("44829364700013", my_data, my_model)
+my_data <- my_data %>% mutate(
+  periode =  as.Date(structure(periode / 1000, 
+                               class = c('POSIXct','POSIXt')))
+)
+
+```
+```{r}
+shapley_plot(c("81042975300033","01575266000066"), my_data, my_model, batch = "1810")
 ```
 
 ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------

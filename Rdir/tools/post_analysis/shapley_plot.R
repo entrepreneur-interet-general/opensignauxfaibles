@@ -1,9 +1,20 @@
-shapley_plot <- function(mon_siret, my_data, model) {
+shapley_plot <- function(
+  mes_sirets,
+  my_data,
+  model,
+  batch,
+  dir_out = find_rstudio_root_file("..", "output", "shapley", batch)
+  ) {
+
+  assert_that(inherits(my_data, "data.frame"))
+  max_periode <- max(my_data$periode)
+
   h2o::h2o.no_progress()
   pred <- function(model, newdata)  {
     results <- as.data.frame(h2o::h2o.predict(model, h2o::as.h2o(newdata)))
     return(results[[3L]])
   }
+
 
   x_medium <- c(
     "montant_part_patronale",
@@ -49,7 +60,7 @@ shapley_plot <- function(mon_siret, my_data, model) {
     "ratio_dette_delai",
     "ratio_marge_operationnelle_distrib_APE1",
     "poids_frng"
-  )
+    )
 
 
 
@@ -150,7 +161,7 @@ shapley_plot <- function(mon_siret, my_data, model) {
 
   features  <- my_data[, x_medium]
 
-  response <- 2 - as.numeric(as.factor(as.vector(my_data$outcome)))
+  response <- pred(model, features)
 
   predictor.xgb <- iml::Predictor$new(
     model = model,
@@ -160,31 +171,41 @@ shapley_plot <- function(mon_siret, my_data, model) {
     class = "classification"
     )
 
-  etablissement <- my_data %>%
-    filter(siret == mon_siret) %>%
-    filter(periode == max(periode))
-  etablissement <- etablissement[, x_medium]
-  shap.xgb <- iml::Shapley$new(predictor.xgb, x.interest = etablissement)
+  for (i in seq_along(mes_sirets)){
+    etablissement <- my_data %>%
+      filter(siret == mes_sirets[i]) %>%
+      filter(periode == max_periode)
+    etablissement <- etablissement[, x_medium]
+    shap.xgb <- iml::Shapley$new(predictor.xgb, x.interest = etablissement)
 
-  shap_plot <- shap.xgb %>%
-    plot()
+    shap_plot <- shap.xgb %>%
+      plot()
 
 
-  # Changing for more informative names
-  # names <- levels(shap_plot$data$feature)
+    # Changing for more informative names
+    # names <- levels(shap_plot$data$feature)
 
-  shap_plot$data <- shap_plot$data %>%
-    mutate(category = unname(x_medium_names_test[feature])) %>%
-    group_by(category) %>%
-    summarize(feature = unique(category), phi = sum(phi), phi.var = sum(phi.var)) %>%
-    mutate(feature.value = as.factor(category))
+    shap_plot$data <- shap_plot$data %>%
+      mutate(category = unname(x_medium_names_test[feature])) %>%
+      group_by(category) %>%
+      summarize(
+        feature = unique(category),
+        phi = sum(phi),
+        phi.var = sum(phi.var)
+        ) %>%
+      mutate(feature.value = as.factor(category))
 
-  thresh <- 5e-3
-  to_remove <- abs(shap_plot$data[, "phi"]) < thresh
-  shap_plot$data <- shap_plot$data[!to_remove, ]
+    thresh <- 5e-3
+    to_remove <- abs(shap_plot$data[, "phi"]) < thresh
+    shap_plot$data <- shap_plot$data[!to_remove, ]
 
-  # labels
-  shap_plot$labels$x <- ""
+    # labels
+    shap_plot$labels$x <- ""
+    dir.create(dir_out, showWarnings = FALSE)
+    ggsave(filename = paste0(mes_sirets[i], "_", max_periode,".png"),
+      plot = shap_plot,
+      path = dir_out)
+  }
   h2o::h2o.show_progress()
   return(shap_plot)
 }
