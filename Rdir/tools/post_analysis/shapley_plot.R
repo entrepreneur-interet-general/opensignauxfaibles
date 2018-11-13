@@ -11,7 +11,7 @@ shapley_plot <- function(mon_siret, my_data, model) {
     "ratio_dette_moy12m",
     "etat_proc_collective_num",
     "TargetEncode_code_ape_niveau3",
-    "cotisation",
+    "cotisation_moy12m",
     "frais_financier_distrib_APE1",
     "taux_marge_distrib_APE1",
     "montant_part_patronale_past_3",

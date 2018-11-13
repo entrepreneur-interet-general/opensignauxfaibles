@@ -2,8 +2,8 @@ objective_default_or_failure <- function(data,n_months, threshold, lookback){
 
   proc = c('plan_redressement','liquidation','plan_sauvegarde')
   data <- data %>%
-    mutate(dette_cumulee_aux = ifelse((!is.na(cotisation) & cotisation > 1e-10),
-                                     (montant_part_patronale + montant_part_ouvriere)/cotisation, 0)) %>%
+    mutate(dette_cumulee_aux = ifelse((!is.na(cotisation_moy12m) & cotisation_moy12m > 1e-10),
+                                     (montant_part_patronale + montant_part_ouvriere)/cotisation_moy12m, 0)) %>%
     group_by(siret) %>%
     arrange(siret, periode) %>%
     mutate(default_urssaf = check_n_successive_defaults(dette_cumulee_aux, n_months, threshold),

@@ -21,26 +21,26 @@ feature_engineering_std <- function(...){
     "ratio_rend_capitaux_propres",
     "ratio_rend_des_ress_durables",
     "ratio_RetD"
-  )
+    )
 
   ####################
   ## Default values ##
   ####################
 
-#   past_trend_vars <- c(
-#     "apart_heures_consommees",
-#     "montant_part_ouvriere",
-#     "montant_part_patronale"
-#   )
-#   past_trend_vars_years <- ratios_financiers
-#   cat("Taking default value for past trends variables", "\n")
-#
-#   past_trend_lookbacks <-  c(1, 2, 3, 6, 12)
-#   past_trend_lookbacks_years <- c(1)
-#
-#   cat("Taking default value for past trends lookbacks", "\n")
-#
-#   past_trend_lookbacks_ym <- past_trend_lookbacks_years * 12
+  #   past_trend_vars <- c(
+  #     "apart_heures_consommees",
+  #     "montant_part_ouvriere",
+  #     "montant_part_patronale"
+  #   )
+  #   past_trend_vars_years <- ratios_financiers
+  #   cat("Taking default value for past trends variables", "\n")
+  #
+  #   past_trend_lookbacks <-  c(1, 2, 3, 6, 12)
+  #   past_trend_lookbacks_years <- c(1)
+  #
+  #   cat("Taking default value for past trends lookbacks", "\n")
+  #
+  #   past_trend_lookbacks_ym <- past_trend_lookbacks_years * 12
 
   aux_fun <- function(my_data){
 
@@ -58,7 +58,7 @@ feature_engineering_std <- function(...){
         is.na(effectif_consolide) | effectif_consolide < 500,
         is.na(effectif_entreprise) | effectif_entreprise < 500,
         is.na(CA) | CA < 100000, !siret %in% wrong_sirets
-      )
+        )
 
     ##################
     ## Shaping my_data ##
@@ -80,7 +80,7 @@ feature_engineering_std <- function(...){
             etat_proc_collective == "sauvegarde",
           "plan_sauvegarde",
           etat_proc_collective
-        )
+          )
         ) %>%
       ungroup() %>%
       select(-etat_proc_collective_lag)
@@ -103,10 +103,10 @@ feature_engineering_std <- function(...){
             "plan_sauvegarde",
             "plan_redressement",
             "liquidation"
-          )
+            )
           ),
         etat_proc_collective_num = as.numeric(etat_proc_collective)
-      )
+        )
 
     my_data <- my_data %>%
       rename(
@@ -138,13 +138,13 @@ feature_engineering_std <- function(...){
         "montant_echeancier",
         "delai",
         "duree_delai",
-        "cotisation"
+        "cotisation_moy12m"
         ) %in% names(my_data)
       ))
   my_data <- replace_na_by("montant_echeancier", my_data, 0)
   my_data <- replace_na_by("delai", my_data, 0)
   my_data <- replace_na_by("duree_delai", my_data, 0)
-  my_data <- replace_na_by("cotisation", my_data, 0)
+  my_data <- replace_na_by("cotisation_moy12m", my_data, 0)
 
   # SIMPLIFIED NAF
   #assertthat::assert_that("libelle_naf" %in% names(my_data))
@@ -159,60 +159,60 @@ feature_engineering_std <- function(...){
   #  my_data <- my_data %>%
   #    mutate(libelle_naf_simplifie = libelle_naf_simplifie)
 
-    # Ratios URSSAF
+  # Ratios URSSAF
 
-    assertthat::assert_that(all(
-        c(
-          "apart_heures_consommees",
-          "effectif",
-          "montant_part_patronale",
-          "montant_part_ouvriere",
-          "cotisation"
-          ) %in% names(my_data)
-        ))
+  assertthat::assert_that(all(
+      c(
+        "apart_heures_consommees",
+        "effectif",
+        "montant_part_patronale",
+        "montant_part_ouvriere",
+        "cotisation_moy12m"
+        ) %in% names(my_data)
+      ))
 
-    # Debits
-    #FIX ME toutes les périodes sont elles contigues ??
+  # Debits
+  #FIX ME toutes les périodes sont elles contigues ??
 
-    # Correction cotisations déconnantes
-    my_data <- my_data %>%
-      group_by(siret) %>%
-      arrange(siret, periode) %>%
-      mutate(cotisation_moy12m = average_12m(cotisation)) %>%
-      ungroup()
+  # Correction cotisations déconnantes
+  # my_data <- my_data %>%
+  #   group_by(siret) %>%
+  #   arrange(siret, periode) %>%
+  #   mutate(cotisation_moy12m = average_12m(cotisation)) %>%
+  #   ungroup()
 
 
 
-    my_data <-  my_data %>%
-      mutate(
-        ratio_apart = apart_heures_consommees / (effectif * 157.67),
-        ratio_dette = base::ifelse(
-          !is.na(cotisation_moy12m) & cotisation_moy12m > 0,
-          (montant_part_patronale + montant_part_ouvriere) /
-            cotisation_moy12m,
-          NA
-          ),
-        ratio_dette_delai = base::ifelse(
-          !is.na(duree_delai) & duree_delai > 0,
-          (
-            montant_part_patronale + montant_part_ouvriere -
-              montant_echeancier * delai / (duree_delai / 30)
-            ) / montant_echeancier,
-          NA
+  my_data <-  my_data %>%
+    mutate(
+      ratio_apart = apart_heures_consommees / (effectif * 157.67),
+      # ratio_dette = base::ifelse(
+      #   !is.na(cotisation_moy12m) & cotisation_moy12m > 0,
+      #   (montant_part_patronale + montant_part_ouvriere) /
+      #     cotisation_moy12m,
+      #   NA
+      #   ),
+      ratio_dette_delai = base::ifelse(
+        !is.na(duree_delai) & duree_delai > 0,
+        (
+          montant_part_patronale + montant_part_ouvriere -
+            montant_echeancier * delai / (duree_delai / 30)
+          ) / montant_echeancier,
+        NA
         )
-        ) %>%
-    group_by(siret) %>%
-    arrange(siret, periode) %>%
-    mutate(ratio_dette_moy12m = average_12m(ratio_dette),
-      dette_any_12m = (ratio_dette_moy12m > 0)) %>%
-    ungroup()
+      ) # %>%
+  # group_by(siret) %>%
+  # arrange(siret, periode) %>%
+  # mutate(ratio_dette_moy12m = average_12m(ratio_dette),
+  #   dette_any_12m = (ratio_dette_moy12m > 0)) %>%
+  # ungroup()
 
   # Liquidites et solvabilite
   my_data <- my_data %>%
-    mutate(
-      # Suspect # BFR = total_actif_circ_ch_const_av - total_des_charges_expl,
-      # Suspect # tresorerie_nette = fonds_de_roul_net_global - BFR,
-      ratio_CAF = 100 * capacite_autofinanc_avant_repartition / CA)
+  mutate(
+    # Suspect # BFR = total_actif_circ_ch_const_av - total_des_charges_expl,
+    # Suspect # tresorerie_nette = fonds_de_roul_net_global - BFR,
+    ratio_CAF = 100 * capacite_autofinanc_avant_repartition / CA)
 
   # Rentabilite
   my_data <- my_data %>%
@@ -221,7 +221,7 @@ feature_engineering_std <- function(...){
       taux_marge_neg = taux_marge < 0,
       taux_marge_extr_neg = taux_marge < -100,
       taux_marge_extr_pos = taux_marge > 100
-    )
+      )
 
   # Stocks
   my_data <- my_data %>%
@@ -229,7 +229,7 @@ feature_engineering_std <- function(...){
       stocks = produits_intermed_et_finis + marchandises +
         en_cours_de_prod_de_biens + matieres_prem_approv + marchandises,
       taux_rotation_stocks =  CA / stocks
-    )
+      )
 
   # Autre
   my_data <- my_data %>%
@@ -238,35 +238,35 @@ feature_engineering_std <- function(...){
       ratio_export = 100 * chiffre_affaires_net_lie_aux_exportations / CA,
       ratio_delai_client = (clients_et_cptes_ratt * 360) / CA,
       ratio_RetD = frais_de_RetD / CA
-    )
+      )
 
 
   ##################
   ## PAST TRENDS ###
   ##################
 
-#  assertthat::assert_that(all(past_trend_vars %in% names(my_data)))
-#  my_data <- my_data %>% add_past_trends(past_trend_vars,
-#    past_trend_lookbacks,
-#    type = "lag")
-#
-#  my_data <- my_data %>% add_past_trends(past_trend_vars_years,
-#    past_trend_lookbacks_ym,
-#    type = "mean_unique")
-#
-#  names_with_na <- names(my_data %>% select(contains("variation")))
-#  for (name in names_with_na)
-#    my_data <- replace_na_by(name, my_data, 0)
-#
-#  my_data <- my_data %>%
-#    group_by(siret) %>%
-#    arrange(siret, periode) %>%
-#    mutate(
-#      effectif_diff = c(NA, diff(effectif)),
-#      effectif_diff_moy12 = average_12m(effectif_diff)
-#      ) %>%
-#    select(-effectif_diff) %>%
-#    ungroup()
+  #  assertthat::assert_that(all(past_trend_vars %in% names(my_data)))
+  #  my_data <- my_data %>% add_past_trends(past_trend_vars,
+  #    past_trend_lookbacks,
+  #    type = "lag")
+  #
+  #  my_data <- my_data %>% add_past_trends(past_trend_vars_years,
+  #    past_trend_lookbacks_ym,
+  #    type = "mean_unique")
+  #
+  #  names_with_na <- names(my_data %>% select(contains("variation")))
+  #  for (name in names_with_na)
+  #    my_data <- replace_na_by(name, my_data, 0)
+  #
+  #  my_data <- my_data %>%
+  #    group_by(siret) %>%
+  #    arrange(siret, periode) %>%
+  #    mutate(
+  #      effectif_diff = c(NA, diff(effectif)),
+  #      effectif_diff_moy12 = average_12m(effectif_diff)
+  #      ) %>%
+  #    select(-effectif_diff) %>%
+  #    ungroup()
 
 
   ###################
@@ -281,5 +281,5 @@ feature_engineering_std <- function(...){
 
   return(
     lapply(list(...), aux_fun)
-  )
+    )
 }
