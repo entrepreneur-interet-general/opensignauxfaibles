@@ -185,7 +185,7 @@ feature_engineering_std <- function(...){
 
   my_data <-  my_data %>%
     mutate(
-      ratio_apart = apart_heures_consommees / (effectif * 157.67),
+      # ratio_apart = apart_heures_consommees / (effectif * 157.67),
       # ratio_dette = base::ifelse(
       #   !is.na(cotisation_moy12m) & cotisation_moy12m > 0,
       #   (montant_part_patronale + montant_part_ouvriere) /

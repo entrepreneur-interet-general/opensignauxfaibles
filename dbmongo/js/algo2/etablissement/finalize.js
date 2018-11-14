@@ -187,6 +187,12 @@ function finalize(k, v) {
       }
     })
 
+  output_array.forEach(val => {
+    if (val !== null && val.effectif > 0){
+      val.ratio_apart = val.apart_heures_consommees / (val.effectif * 157.67)
+    }
+  })
+
   //
   ///
   ////////////
