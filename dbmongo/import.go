@@ -3,17 +3,15 @@ package main
 import (
 	"fmt"
 	"io/ioutil"
-	"regexp"
+	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/globalsign/mgo"
 	"github.com/spf13/viper"
 )
 
 func adminFiles(c *gin.Context) {
 	basePath := viper.GetString("APP_DATA")
 	files, err := listFiles(basePath)
-
 	if err != nil {
 		c.JSON(500, err)
 	} else {
@@ -21,12 +19,20 @@ func adminFiles(c *gin.Context) {
 	}
 }
 
-func listFiles(basePath string) ([]string, error) {
-	var files []string
+type fileSummary struct {
+	Name string    `json:"name" bson:"name"`
+	Size int64     `json:"size" bson:"size"`
+	Date time.Time `json:"date" bson:"date"`
+}
+
+func listFiles(basePath string) ([]fileSummary, error) {
+	var files []fileSummary
+	basePathConf := viper.GetString("APP_DATA")
+	b := len(basePathConf)
 
 	currentFiles, err := ioutil.ReadDir(basePath)
 	if err != nil {
-		return []string{}, err
+		return []fileSummary{}, err
 	}
 
 	for _, file := range currentFiles {
@@ -34,68 +40,29 @@ func listFiles(basePath string) ([]string, error) {
 			subPath := fmt.Sprintf("%s/%s", basePath, file.Name())
 			subFiles, err := listFiles(subPath)
 			if err != nil {
-				return []string{}, err
+				return []fileSummary{}, err
 			}
 			files = append(files, subFiles...)
 		} else {
-			files = append(files, fmt.Sprintf("%s/%s", basePath, file.Name()))
+			files = append(files, fileSummary{
+				Name: fmt.Sprintf("%s/%s", basePath, file.Name())[b:],
+				Size: file.Size(),
+				Date: file.ModTime(),
+			})
 		}
 	}
 	return files, nil
 }
 
-// GetFileList construit la liste des fichiers à traiter
-func GetFileList(basePath string, period string) (map[string][]string, error) {
-	list := make(map[string][]string)
-	directories := []string{
-		"admin_urssaf",
-		"altares",
-		"apdemande",
-		"apconso",
-		"bdf",
-		"diane",
-		"ccsf",
-		"cotisation",
-		"debit",
-		"delai",
-		"effectif",
-		"sirene",
-		"interim",
-		"dmmo",
-		"dpae",
-	}
-
-	for _, dir := range directories {
-
-		path := fmt.Sprintf("%s/%s/%s", basePath, period, dir)
-		l, err := ioutil.ReadDir(path)
-
-		if err != nil {
-			return nil, err
-		}
-
-		for _, f := range l {
-			if match, _ := regexp.MatchString("\\.(csv|xls|xlsx)$", f.Name()); match {
-				list[dir] = append(list[dir], fmt.Sprintf("%s/%s", path, f.Name()))
-			}
-		}
-	}
-
-	return list, nil
-}
-
-func importAll(c *gin.Context) {
-}
-
 var importFunctions = map[string]func(*AdminBatch) error{
 	"apconso":    importAPConso,
 	"bdf":        importBDF,
+	"delai":      importDelai,
+	"apdemande":  importAPDemande,
 	"diane":      importDiane,
 	"cotisation": importCotisation,
-	"delai":      importDelai,
 	"dpae":       importDPAE,
 	"altares":    importAltares,
-	"apdemande":  importAPDemande,
 	"ccsf":       importCCSF,
 	"debit":      importDebit,
 	"effectif":   importEffectif,
@@ -103,31 +70,28 @@ var importFunctions = map[string]func(*AdminBatch) error{
 }
 
 func purge(c *gin.Context) {
-	db, _ := c.Keys["DB"].(*mgo.Database)
-	db.C("Etablissement").RemoveAll(nil)
-	db.C("Entreprise").RemoveAll(nil)
+	db.DB.C("Etablissement").RemoveAll(nil)
+	db.DB.C("Entreprise").RemoveAll(nil)
+	db.DB.C("Prediction").RemoveAll(nil)
 	c.String(200, "Done")
 }
 
-func importBatch(c *gin.Context) {
-	batch := AdminBatch{}
+func importBatchHandler(c *gin.Context) {
 	batchKey := c.Params.ByName("batch")
-	db := c.Keys["DB"].(*mgo.Database)
-	chanEtablissement := c.Keys["ChanEtablissement"].(chan *ValueEtablissement)
-	chanEntreprise := c.Keys["ChanEntreprise"].(chan *ValueEntreprise)
-	batch.load(batchKey, db, chanEtablissement, chanEntreprise)
+	batch := AdminBatch{}
+	batch.load(batchKey)
+	go importBatch(&batch)
+}
 
-	if batch.Open {
+func importBatch(batch *AdminBatch) {
+	if !batch.Readonly {
 		for _, fn := range importFunctions {
-			err := fn(&batch)
+			err := fn(batch)
 			if err != nil {
-				c.JSON(500, err)
-				return
+				log(critical, "importMain", "Erreur à l'importation")
 			}
-
 		}
 	} else {
-		c.JSON(403, "Ce lot est fermé, import impossible.")
+		log(critical, "importMain", "Le lot "+batch.ID.Key+" est fermé, import impossible.")
 	}
-
 }

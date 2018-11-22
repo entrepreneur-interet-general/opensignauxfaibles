@@ -114,7 +114,6 @@ validation.hex <- as.h2o(sample_validation)
 Définition classe positive
 ```{r}
 train.hex['outcome'] <- h2o.relevel(x = train.hex['outcome'], y = "non_default")
-
 validation.hex['outcome'] <- h2o.relevel(x = validation.hex['outcome'], y = "non_default")
 ```
 
@@ -123,11 +122,6 @@ Target encoding APE
 te_map <- h2o.target_encode_create(
   train.hex, 
   x = list(c('code_naf_niveau1'), c('code_ape_niveau2'), c('code_ape_niveau3'), c('code_ape_niveau4'), c('code_ape')), 
-  y = 'outcome',
-  fold_column = 'fold_column')
-
-
-train.hex <- h2o.target_encode_apply(
   train.hex, 
   x = list(c('code_naf_niveau1'),c('code_ape_niveau2'), c('code_ape_niveau3'), c('code_ape_niveau4'), c('code_ape')), 
   y = 'outcome',

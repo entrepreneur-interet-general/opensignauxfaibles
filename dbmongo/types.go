@@ -7,21 +7,6 @@ import (
 	"github.com/globalsign/mgo/bson"
 )
 
-// Value Objet racine pour le stockage établissement.
-// En insertion, ID est un ObjectId généré automatiquement, puis devient un siret après mapReduce
-// Value est une map des lots d'intégration à ordonner par ordre alphanumérique
-// type Value struct {
-// 	ID    bson.ObjectId `json:"id" bson:"_id"`
-// 	Value Etablissement `json:"value" bson:"value"`
-// }
-
-// Prediction prediction
-type Prediction struct {
-	Siret      string  `json:"siret" bson:"siret"`
-	Probabilty float64 `json:"prob" bson:"prob"`
-	Periode    float64 `json:"periode" bson:"periode"`
-}
-
 // ValueEntreprise permet de stocker une entreprise dans un objet Bson
 type ValueEntreprise struct {
 	ID    bson.ObjectId `json:"id" bson:"_id"`
@@ -64,7 +49,6 @@ type Batch struct {
 	Sirene     map[string]*Sirene     `json:"sirene,omitempty" bson:"sirene,omitempty"`
 	BDF        map[string]*BDF        `json:"bdf,omitempty" bson:"bdf,omitempty"`
 	Diane      map[string]*Diane      `json:"diane,omitempty" bson:"diane,omitempty"`
-	Prediction map[string]*Prediction `json:"prediction,omitempty" bson:"prediction,omitempty"`
 	DPAE       map[string]*DPAE       `json:"dpae,omitempty" bson:"dpae,omitempty"`
 }
 
@@ -183,4 +167,25 @@ func (value1 ValueEntreprise) merge(value2 ValueEntreprise) (ValueEntreprise, er
 type Periode struct {
 	Start time.Time `json:"start" bson:"start"`
 	End   time.Time `json:"end" bson:"end"`
+}
+
+// Prediction structure des prédiction #FASTDIRTY #FIXME
+type Prediction struct {
+	ID struct {
+		Siret string `json:"siret" bson:"siret"`
+		Batch string `json:"batch" bson:"batch"`
+		Algo  string `json:"algo" bson:"algo"`
+	} `json:"id" bson:"_id"`
+
+	Prob          float64 `json:"prob" bson:"prob"`
+	Diff          float64 `json:"diff" bson:"diff"`
+	RaiSoc        string  `json:"raison_sociale" bson:"raison_sociale"`
+	Departement   string  `json:"departement" bson:"departement"`
+	Region        string  `json:"region" bson:"region"`
+	EtatProCol    string  `json:"procol" bson:"procol"`
+	DefaultUrssaf bool    `json:"default_urssaf" bson:"default_urssaf"`
+	Connu         bool    `json:"connu" bson:"connu"`
+	Niveau1       string  `json:"naf1" bson:"naf1"`
+	Effectif      int     `json:"effectif" bson:"effectif"`
+	CCSF          bool    `json:"ccsf" bson:"ccsf"`
 }

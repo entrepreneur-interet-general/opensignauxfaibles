@@ -5,10 +5,11 @@ import (
 	"encoding/csv"
 	"fmt"
 	"io"
-	"log"
 	"os"
 	"strconv"
 	"time"
+
+	"github.com/spf13/viper"
 
 	"github.com/cnf/structhash"
 )
@@ -35,7 +36,7 @@ func parseDebit(paths []string) chan *Debit {
 
 	go func() {
 		for _, path := range paths {
-			file, err := os.Open(path)
+			file, err := os.Open(viper.GetString("APP_DATA") + path)
 			if err != nil {
 				fmt.Println("Error", err)
 			}
@@ -62,7 +63,7 @@ func parseDebit(paths []string) chan *Debit {
 				if error == io.EOF {
 					break
 				} else if error != nil {
-					log.Fatal(error)
+					// log.Fatal(error)
 				}
 
 				debit := Debit{
@@ -94,7 +95,7 @@ func parseDebit(paths []string) chan *Debit {
 }
 
 func importDebit(batch *AdminBatch) error {
-	mapping := getCompteSiretMapping(batch.Files["admin_urssaf"])
+	mapping, _ := getCompteSiretMapping(batch)
 
 	for debit := range parseDebit(batch.Files["debit"]) {
 		if siret, ok := mapping[debit.NumeroCompte]; ok {
@@ -108,9 +109,9 @@ func importDebit(batch *AdminBatch) error {
 							Debit: map[string]*Debit{
 								hash: debit,
 							}}}}}
-							batch.ChanEtablissement <- &value
-						}
-					}
-					batch.ChanEtablissement <- &ValueEtablissement{}
-					return nil
-				}
+			db.ChanEtablissement <- &value
+		}
+	}
+	db.ChanEtablissement <- &ValueEtablissement{}
+	return nil
+}

@@ -1,12 +1,18 @@
 <template>
-<div class="container">
-  <div class="fixed d-inline-block elevation-6">
+    <div >
+      
     <v-navigation-drawer
+    class="elevation-6"
+    absolute
     permanent
-    :key="'nav' + currentBatch"
     style="z-index: 1"
     >
       <v-list dense class="pt-0">
+          <!-- <v-list-tile >
+            <v-list-tile-content class="text-xs-center">
+                          <v-icon large>fa-database</v-icon>
+            </v-list-tile-content>
+          </v-list-tile> -->
         <v-list-group>
           <v-list-tile slot="activator" bgcolor="red">
             <v-list-tile-action>
@@ -21,10 +27,10 @@
           :key="batchKey + param.key"
           ripple
           @click="setCurrentType(param.key)">
-            <v-list-tile-content
-            :class="(param.key===currentType) ? 'selected': null"
-            >
-              <v-list-tile-title>{{ param.text }}</v-list-tile-title>
+            <v-list-tile-content> 
+              <v-list-tile-title
+              :class="(param.key===currentType) ? 'selected': null"
+              >{{ param.text }}</v-list-tile-title>
             </v-list-tile-content>
           </v-list-tile>
         </v-list-group>
@@ -41,12 +47,18 @@
           v-for="type in types"
           :key="type.text"
           @click="setCurrentType(type.type)"
-          :class="(type.type==currentType) ? 'selected': null"
           >
-            <v-list-tile-content
-            >
-              <v-list-tile-title>{{ type.text }}</v-list-tile-title>
+            <v-list-tile-content>
+              <v-list-tile-title
+              :class="(type.type==currentType) ? 'selected': null">
+              {{ type.text }}
+              </v-list-tile-title>
             </v-list-tile-content>
+            <v-list-tile-action>
+              <v-icon 
+              @click="toggleComplete(type.type)"
+              >{{ currentBatch.complete_types.includes(type.type)?'mdi-square-inc':'mdi-shape-square-plus' }}</v-icon>
+            </v-list-tile-action>
           </v-list-tile>
           <v-divider></v-divider>
         </v-list-group>
@@ -65,41 +77,37 @@
           :key="batchKey + process.key"
           @click="setCurrentType(process.key)"
           >
-            <v-list-tile-content
-            :class="(process.key==currentType) ? 'selected': null"
-            >
-              <v-list-tile-title>{{ process.text }}</v-list-tile-title>
+            <v-list-tile-content>
+              <v-list-tile-title
+              :class="(process.key==currentType) ? 'selected': null">
+              {{ process.text }}</v-list-tile-title>
             </v-list-tile-content>
           </v-list-tile>
         </v-list-group>
       </v-list>
-    </v-navigation-drawer> 
+      
+    </v-navigation-drawer>
+
+    <div class="widget">
+      <BatchDate 
+      class="elevation-6"
+      :key="batchKey + 'batchDate'"
+      :date="currentType"
+      :param="parameters.filter(p => p.key === currentType)[0]"
+      v-if="parameters.map(p => p.key).includes(currentType)"
+      />
+      <BatchFile 
+      :key="batchKey + 'batchFile'"
+      :type="currentType"
+      v-if="types.map(t => t.type).includes(currentType)"
+      />
+      <BatchProcess
+      :key="batchKey + 'batchProcess'"
+      :process="processes.filter(p => p.key === currentType)[0]"
+      v-if="processes.map(p => p.key).includes(currentType)"
+      />
     </div>
-    <div class="flex-item">
-      <v-container grid-list-xs text-xs-center>
-        <v-layout row wrap justify-start>
-          <v-flex xs12 >
-            <BatchDate 
-            class="d-inline-block elevation-6"
-            :key="batchKey + 'batchDate'"
-            :date="currentType"
-            :param="parameters.filter(p => p.key === currentType)[0]"
-            v-if="parameters.map(p => p.key).includes(currentType)"
-            />
-            <BatchFile 
-            :key="batchKey + 'batchFile'"
-            :type="currentType"
-            v-if="types.map(t => t.type).includes(currentType)"
-            />
-            <BatchProcess
-            :key="batchKey + 'batchProcess'"
-            :process="processes.filter(p => p.key === currentType)[0]"
-            v-if="processes.map(p => p.key).includes(currentType)"
-            />
-          </v-flex>
-        </v-layout>
-      </v-container>
-    </div>
+
   </div>
 </template>
 
@@ -124,7 +132,7 @@ export default {
           key: 'reset',
           img: '/static/poubelle.png',
           description: 'Retour au batch précédent',
-          do (self) { self.$axios.get('/api/batch/reset') }
+          do (self) { self.$axios.get('/api/batch/revert') }
         },
         {text: 'Purger',
           color: 'blue',
@@ -139,13 +147,32 @@ export default {
           img: '/static/warning.png',
           description: 'Intégration des données et calcul des prédictions.',
           do (self) { self.$axios.get('/api/batch/process') }
+        },
+        {text: 'Clôture',
+          color: 'black',
+          key: 'close',
+          img: '/static/warning.png',
+          description: 'Clôture du batch en cours et création du suivant',
+          do (self) { self.$axios.get('/api/batch/next') }
         }
       ]
     }
   },
   computed: {
-    currentBatch () {
-      return this.$store.state.batches.filter(b => b.id.key === this.batchKey)
+    currentBatchKey () {
+      return this.$store.state.currentBatchKey
+    },
+    currentBatch: {
+      get () {
+        if (this.$store.state.batches !== []) {
+          return this.$store.state.batches[this.currentBatchKey]
+        } else {
+          return null
+        }
+      },
+      set (batch) {
+        this.$store.dispatch('saveBatch', batch).then(r => this.$store.dispatch('checkEpoch'))
+      }
     },
     features () {
       return this.$store.state.features
@@ -157,6 +184,15 @@ export default {
   methods: {
     setCurrentType (type) {
       this.currentType = type
+    },
+    toggleComplete (type) {
+      let batch = this.currentBatch
+      if (batch.complete_types.includes(type)) {
+        batch.complete_types = batch.complete_types.filter(t => t !== type)
+      } else {
+        batch.complete_types = (batch.complete_types || []).concat(type)
+      }
+      this.currentBatch = batch
     }
   },
   components: { BatchFile, BatchDate, BatchProcess }
@@ -164,17 +200,14 @@ export default {
 </script>
 
 <style>
-  .selected {
-    color: blue;
-    font-size: 14px;
-  }
-  .container{
-    display: flex;
-  }
-  .fixed{
-    width: 300px;
-  }
-  .flex-item{
-    flex-grow: 1;
-  }
+.selected {
+  color: #700;
+  font-size: 15px;
+}
+.widget {
+  position: absolute;
+  left: 320px;
+  top: 20px; 
+  right: 20px;
+}
 </style>

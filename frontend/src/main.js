@@ -20,8 +20,7 @@ Vue.prototype.$axios = axios.create(
   {
     headers: {
       'Content-Type': 'application/json'
-    },
-    baseURL: process.env.API_URL
+    }
   }
 )
 

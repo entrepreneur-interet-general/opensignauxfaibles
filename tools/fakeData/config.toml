@@ -1,0 +1,17 @@
+##### Fichiers source, /!\ un seul fichier par type /!\
+debits = "/home/christophe/Project/data-fake/debits.csv"
+cotisations = "/home/christophe/Project/data-fake/cotisations.csv"
+comptes = "/home/christophe/Project/data-fake/comptes.csv"
+delais = "/home/christophe/Project/data-fake/delais.csv"
+sirene = "/home/christophe/Project/data-fake/geo_sirene.csv"
+altares = "/home/christophe/Project/data-fake/altares.csv"
+emploi = "/home/christophe/Project/data-fake/emploi.csv"
+prediction = "/home/christophe/Project/data-fake/prediction.csv"
+bdf = "/home/christophe/Project/data-fake/bdf.xlsx"
+
+###### Les fichiers générés seront préfixés par outputPrefix
+prefixOutput = "fake-"
+
+###### Lien API/Database
+api = "http://localhost:3000/"
+db = "fakesignauxfaibles"

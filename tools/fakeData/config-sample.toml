@@ -1,0 +1,13 @@
+##### Fichiers source, /!\ un seul fichier par type /!\
+debits = "/foo/bar/data-fake/debits.csv"
+cotisations = "/foo/bar/data-fake/cotisations.csv"
+comptes = "/foo/bar/data-fake/comptes.csv"
+delais = "/foo/bar/data-fake/delais.csv"
+sirene = "/foo/bar/data-fake/geo_sirene.csv"
+altares = "/foo/bar/data-fake/altares.csv"
+emploi = "/foo/bar/data-fake/emploi.csv"
+prediction = "/foo/bar/data-fake/prediction.csv"
+bdf = "/foo/bar/data-fake/bdf.xlsx"
+
+###### Les fichiers générés seront préfixés par outputPrefix
+prefixOutput = "fake-"

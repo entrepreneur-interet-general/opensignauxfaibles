@@ -5,11 +5,11 @@ import (
 	"encoding/csv"
 	"fmt"
 	"io"
-	"log"
 	"os"
 	"time"
 
 	"github.com/cnf/structhash"
+	"github.com/spf13/viper"
 )
 
 // Altares Extrait du récapitulatif altarès
@@ -39,16 +39,14 @@ func parseAltares(path string) chan *Altares {
 	codeJournalIndex := sliceIndex(len(fields), func(i int) bool { return fields[i] == "Code du journal" })
 	codeEvenementIndex := sliceIndex(len(fields), func(i int) bool { return fields[i] == "Code de la nature de l'événement" })
 	siretIndex := sliceIndex(len(fields), func(i int) bool { return fields[i] == "Siret" })
-
 	go func() {
 		for {
 			row, error := reader.Read()
 			if error == io.EOF {
 				break
 			} else if error != nil {
-				log.Fatal(error)
+				// log.Fatal(error)
 			}
-
 			dateEffet, err := time.Parse("2006-01-02", row[dateEffetIndex])
 			dateParution, _ := time.Parse("2006-01-02", row[dateParutionIndex])
 
@@ -71,19 +69,21 @@ func parseAltares(path string) chan *Altares {
 }
 
 func importAltares(batch *AdminBatch) error {
-	for altares := range parseAltares(batch.Files["altares"][0]) {
-		hash := fmt.Sprintf("%x", structhash.Md5(altares, 1))
+	for _, fileName := range batch.Files["altares"] {
+		for altares := range parseAltares(viper.GetString("APP_DATA") + fileName) {
+			hash := fmt.Sprintf("%x", structhash.Md5(altares, 1))
 
-		value := ValueEtablissement{
-			Value: Etablissement{
-				Siret: altares.Siret,
-				Batch: map[string]Batch{
-					batch.ID.Key: Batch{
-						Altares: map[string]*Altares{
-							hash: altares,
-						}}}}}
-		batch.ChanEtablissement <- &value
+			value := ValueEtablissement{
+				Value: Etablissement{
+					Siret: altares.Siret,
+					Batch: map[string]Batch{
+						batch.ID.Key: Batch{
+							Altares: map[string]*Altares{
+								hash: altares,
+							}}}}}
+			db.ChanEtablissement <- &value
+		}
 	}
-	batch.ChanEtablissement <- &ValueEtablissement{}
+	db.ChanEtablissement <- &ValueEtablissement{}
 	return nil
 }

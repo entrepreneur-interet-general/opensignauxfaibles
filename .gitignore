@@ -17,7 +17,9 @@ Rdir/RData/*
 Rdir/exploration/*
 Rdir/pipes/my_log_dir/*
 Rdir/pipes/RNNs/*
-dbmongo/config.toml
+dbmongo/config.toml*
 dbmongo/debug
+dbmongo/dbmongo
+dbmongo/tools/fakeData/config.toml
 .Rproj.user
 *.orig

@@ -1,8 +1,6 @@
 package main
 
 import (
-	"log"
-
 	"github.com/chrnin/ganboard"
 	"github.com/davecgh/go-spew/spew"
 	"github.com/gin-gonic/gin"
@@ -23,10 +21,10 @@ func Kanboard() gin.HandlerFunc {
 	}
 
 	projects, err := client.GetAllProjects()
-	logerror.Println("Connexion à Kanboard et récupération des projets")
+	// logerror.Println("Connexion à Kanboard et récupération des projets")
 
 	if err != nil {
-		log.Panic("Kanboard n'est pas disponible, avortement du démarrage")
+		// log.Panic("Kanboard n'est pas disponible, avortement du démarrage")
 	}
 
 	for _, project := range projects {
@@ -44,12 +42,12 @@ func Kanboard() gin.HandlerFunc {
 		})
 
 		if err != nil {
-			log.Panic("Kanboard n'est pas disponible, avortement du démarrage")
+			// log.Panic("Kanboard n'est pas disponible, avortement du démarrage")
 		}
 		client.Project, err = client.GetProjectByID(projectID)
 
 		if err != nil {
-			log.Panic("Kanboard n'est pas disponible, avortement du démarrage")
+			// log.Panic("Kanboard n'est pas disponible, avortement du démarrage")
 		}
 	}
 

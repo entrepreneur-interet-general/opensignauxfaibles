@@ -1,6 +1,5 @@
 <template>
 <div>
-
   <v-container grid-list-md text-xs-center>
     <v-layout>
       <v-flex key="database" xs3>
@@ -18,6 +17,14 @@
           </v-card-actions>
           <v-card-actions>
             <v-btn @click="cloneDatabase()">Cloner</v-btn>
+          </v-card-actions>
+        </v-card>
+        <v-card>
+          <v-card-title databaseCopy>
+            Purge de la base
+          </v-card-title>
+          <v-card-actions>
+            <v-btn @click="purgeDatabase()">Purger</v-btn>
           </v-card-actions>
         </v-card>
       </v-flex>
@@ -43,6 +50,10 @@ export default {
     },
     go () {
       this.$axios.get('/api/processBatch').then(r => { this.d = r.data })
+    },
+    purgeDatabase () {
+      this.$axios.get('/api/purge')
+      .then(response => alert(JSON.stringify(response.data, null, 2)))
     }
   },
   data () {

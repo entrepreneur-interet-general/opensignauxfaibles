@@ -6,7 +6,6 @@
   type="month"
   v-model="currentDate">
   </v-date-picker>
-  
 </template>
 
 <script>

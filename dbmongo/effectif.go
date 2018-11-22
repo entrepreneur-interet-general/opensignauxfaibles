@@ -5,12 +5,13 @@ import (
 	"encoding/csv"
 	"fmt"
 	"io"
-	"log"
+
 	"os"
 	"strconv"
 	"time"
 
 	"github.com/cnf/structhash"
+	"github.com/spf13/viper"
 )
 
 // Effectif Urssaf
@@ -39,7 +40,7 @@ func parseEffectif(paths []string) chan map[string]*Effectif {
 	go func() {
 		for _, path := range paths {
 
-			file, err := os.Open(path)
+			file, err := os.Open(viper.GetString("APP_DATA") + path)
 
 			if err != nil {
 				fmt.Println("Error", err)
@@ -61,7 +62,7 @@ func parseEffectif(paths []string) chan map[string]*Effectif {
 			periods, err := parseEffectifPeriod(fields[0:boundaryIndex])
 
 			if err != nil {
-				log.Panic("Aborting: could not read a period:", err)
+				// log.Panic("Aborting: could not read a period:", err)
 			}
 
 			for {
@@ -69,7 +70,7 @@ func parseEffectif(paths []string) chan map[string]*Effectif {
 				if error == io.EOF {
 					break
 				} else if error != nil {
-					log.Fatal(error)
+					// log.Fatal(error)
 				}
 
 				i := 0
@@ -118,10 +119,10 @@ func importEffectif(batch *AdminBatch) error {
 						batch.ID.Key: Batch{
 							Effectif: effectif,
 						}}}}
-			batch.ChanEtablissement <- &value
+			db.ChanEtablissement <- &value
 		}
 	}
 
-	batch.ChanEtablissement <- &ValueEtablissement{}
+	db.ChanEtablissement <- &ValueEtablissement{}
 	return nil
 }

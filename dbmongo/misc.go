@@ -4,14 +4,12 @@ import (
 	"bufio"
 	"encoding/csv"
 	"errors"
-	"fmt"
 	"io"
-	"log"
 	"os"
 	"strconv"
 	"time"
 
-	"github.com/gin-gonic/gin"
+	"github.com/spf13/viper"
 )
 
 func sliceIndex(limit int, predicate func(i int) bool) int {
@@ -61,42 +59,16 @@ func excelToTime(excel string) (time.Time, error) {
 	return time.Unix((excelInt-25569)*3600*24, 0), nil
 }
 
-var (
-	trace    *log.Logger
-	info     *log.Logger
-	warning  *log.Logger
-	logerror *log.Logger
-)
-
-// InitLogger initialise les variables permettant l'écriture des messages de log
-func InitLogger(
-	traceHandle io.Writer,
-	infoHandle io.Writer,
-	warningHandle io.Writer,
-	errorHandle io.Writer) {
-
-	trace = log.New(traceHandle,
-		"TRACE: ",
-		log.Ldate|log.Ltime|log.Lshortfile)
-
-	info = log.New(infoHandle,
-		"INFO: ",
-		log.Ldate|log.Ltime|log.Lshortfile)
-
-	warning = log.New(warningHandle,
-		"WARNING: ",
-		log.Ldate|log.Ltime|log.Lshortfile)
-
-	logerror = log.New(errorHandle,
-		"ERROR: ",
-		log.Ldate|log.Ltime|log.Lshortfile)
-}
-
-func getCompteSiretMapping(path []string) map[string]string {
+func getCompteSiretMapping(batch *AdminBatch) (map[string]string, error) {
 	compteSiretMapping := make(map[string]string)
+	path := batch.Files["admin_urssaf"]
+	basePath := viper.GetString("APP_DATA")
 
 	for _, p := range path {
-		file, _ := os.Open(p)
+		file, err := os.Open(basePath + p)
+		if err != nil {
+			return map[string]string{}, errors.New("Erreur à l'ouverture du fichier, " + err.Error())
+		}
 
 		reader := csv.NewReader(bufio.NewReader(file))
 		reader.Comma = ';'
@@ -108,11 +80,12 @@ func getCompteSiretMapping(path []string) map[string]string {
 		compteIndex := 0
 
 		for {
-			row, error := reader.Read()
-			if error == io.EOF {
+			row, err := reader.Read()
+			if err == io.EOF {
 				break
-			} else if error != nil {
-				log.Fatal(error)
+			} else if err != nil {
+				log(critical, "importCompteSiret", "Erreur à la lecture du fichier "+file.Name())
+				return map[string]string{}, err
 			}
 			if _, err := strconv.Atoi(row[siretIndex]); err == nil && len(row[siretIndex]) == 14 {
 				compteSiretMapping[row[compteIndex]] = row[siretIndex]
@@ -120,11 +93,43 @@ func getCompteSiretMapping(path []string) map[string]string {
 		}
 		file.Close()
 	}
-	return compteSiretMapping
+	return compteSiretMapping, nil
 }
 
-func importAdminUrsaff(c *gin.Context, batch *AdminBatch) {
+func getSirensFromMapping(batch *AdminBatch) (map[string]bool, error) {
+	SiretsFromMapping := make(map[string]bool)
+	path := batch.Files["admin_urssaf"]
+	basePath := viper.GetString("APP_DATA")
 
+	for _, p := range path {
+		file, err := os.Open(basePath + p)
+		if err != nil {
+			return map[string]bool{}, errors.New("Erreur à l'ouverture du fichier, " + err.Error())
+		}
+
+		reader := csv.NewReader(bufio.NewReader(file))
+		reader.Comma = ';'
+
+		// discard header row
+		reader.Read()
+
+		siretIndex := 3
+
+		for {
+			row, err := reader.Read()
+			if err == io.EOF {
+				break
+			} else if err != nil {
+				log(critical, "importCompteSiret", "Erreur à la lecture du fichier "+file.Name())
+				return map[string]bool{}, err
+			}
+			if _, err := strconv.Atoi(row[siretIndex]); err == nil && len(row[siretIndex]) == 14 {
+				SiretsFromMapping[row[siretIndex][0:9]] = true
+			}
+		}
+		file.Close()
+	}
+	return SiretsFromMapping, nil
 }
 
 func max(a, b int) int {
@@ -139,52 +144,6 @@ func min(a, b int) int {
 		return a
 	}
 	return b
-}
-
-// batchToTime calcule la date de référence à partir de la référence de batch
-func batchToTime(batch string) (time.Time, error) {
-	year, err := strconv.Atoi(batch[0:2])
-	if err != nil {
-		return time.Time{}, err
-	}
-
-	month, err := strconv.Atoi(batch[2:4])
-	if err != nil {
-		return time.Time{}, err
-	}
-
-	date := time.Date(2000+year, time.Month(month), 1, 0, 0, 0, 0, time.UTC)
-	return date, err
-}
-
-func timeToBatch(date time.Time) string {
-	return date.Format("0602")
-}
-
-func batchList(first string, last string) ([]string, error) {
-	var list []string
-
-	if len(first) != 4 || len(last) != 4 {
-		return nil, errors.New("valeurs non autorisées, batch = YYMM")
-	}
-	year1, errY1 := strconv.Atoi(first[0:2])
-	year2, errY2 := strconv.Atoi(last[0:2])
-	month1, errM1 := strconv.Atoi(first[2:4])
-	month2, errM2 := strconv.Atoi(last[2:4])
-
-	fmt.Println(year1, year2, month1, month2)
-	if errY1 != nil || errY2 != nil || errM1 != nil || errM2 != nil || month1 > 12 || month2 > 12 || 100*year2+month2 < 100*year1+month1 {
-		return nil, errors.New("Valeurs non autorisées, batch = YYMM")
-	}
-	dateBatch1 := time.Date(2000+year1, time.Month(month1), 1, 0, 0, 0, 0, time.UTC)
-	dateBatch2 := time.Date(2000+year2, time.Month(month2), 1, 0, 0, 0, 0, time.UTC)
-
-	list = append(list, dateBatch1.Format("0601"))
-	for dateBatch1.Before(dateBatch2) {
-		dateBatch1 = dateBatch1.AddDate(0, 1, 0)
-		list = append(list, dateBatch1.Format("0601"))
-	}
-	return list, nil
 }
 
 func genereSeriePeriode(debut time.Time, fin time.Time) []time.Time {
@@ -203,4 +162,97 @@ func genereSeriePeriodeAnnuelle(debut time.Time, fin time.Time) []int {
 		debut = debut.AddDate(1, 0, 0)
 	}
 	return serie
+}
+
+func allErrors(slice []error, item interface{}) bool {
+	for _, i := range slice {
+		if i != item {
+			return false
+		}
+	}
+	return true
+}
+
+func parsePInt(s string) (*int, error) {
+	if s == "" {
+		return nil, nil
+	}
+	i, err := strconv.Atoi(s)
+	return &i, err
+}
+
+func parsePFloat(s string) (*float64, error) {
+	if s == "" {
+		return nil, nil
+	}
+	i, err := strconv.ParseFloat(s, 64)
+	return &i, err
+}
+
+// UrssafToPeriod convertit le format de période urssaf en type Period
+func UrssafToPeriod(urssaf string) (Periode, error) {
+	// format en 4 ou 6 caractère YYQM ou YYYYQM
+	// si YY < 50 alors YYYY = 20YY sinon YYYY = 19YY
+	// si QM == 62 alors période annuelle sur YYYY
+	// si M == 0 alors période trimestrielle sur le trimestre Q de YYYY
+	// si 0 < M < 4 alors mois M du trimestre Q
+
+	period := Periode{}
+
+	if len(urssaf) == 4 {
+		if urssaf[0:2] < "50" {
+			urssaf = "20" + urssaf
+		} else {
+			urssaf = "19" + urssaf
+		}
+	}
+
+	if len(urssaf) != 6 {
+		return period, errors.New("Valeur non autorisée")
+	}
+
+	year, err := strconv.Atoi(urssaf[0:4])
+	if err != nil {
+		return period, err
+	}
+
+	if urssaf[4:6] == "62" {
+		period.Start = time.Date(year, time.Month(1), 1, 0, 0, 0, 0, time.UTC)
+		period.End = time.Date(year+1, time.Month(1), 1, 0, 0, 0, 0, time.UTC)
+	} else {
+		quarter, err := strconv.Atoi(urssaf[4:5])
+		if err != nil {
+			return period, err
+		}
+		monthOfQuarter, err := strconv.Atoi(urssaf[5:6])
+		if err != nil {
+			return period, err
+		}
+		if monthOfQuarter == 0 {
+			period.Start = time.Date(year, time.Month((quarter-1)*3+1), 1, 0, 0, 0, 0, time.UTC)
+			period.End = time.Date(year, time.Month((quarter-1)*3+4), 1, 0, 0, 0, 0, time.UTC)
+		} else {
+			period.Start = time.Date(year, time.Month((quarter-1)*3+monthOfQuarter), 1, 0, 0, 0, 0, time.UTC)
+			period.End = time.Date(year, time.Month((quarter-1)*3+monthOfQuarter+1), 1, 0, 0, 0, 0, time.UTC)
+		}
+	}
+	return period, nil
+}
+
+// UrssafToDate Convertit le format de date urssaf en type Date
+func UrssafToDate(urssaf string) (time.Time, error) {
+	// Date au format YYYMMJJ
+	// YYY = YYYY - 1900
+
+	intUrsaff, err := strconv.Atoi(urssaf)
+	if err != nil {
+		return time.Time{}, errors.New("Valeur non autorisée")
+	}
+	strDate := strconv.Itoa(intUrsaff + 19000000)
+	date, err := time.Parse("20060102", strDate)
+	if err != nil {
+		return time.Time{}, errors.New("Valeur non autorisée")
+	}
+
+	return date, nil
 }

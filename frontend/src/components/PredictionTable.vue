@@ -1,19 +1,95 @@
 <template>
   <div>
-      <v-card>
+    <v-navigation-drawer
+    class="elevation-6"
+    absolute
+    permanent
+    :mini-variant = "mini"
+    style="z-index: 1"
+    >
+    <v-list two-line>
+      <v-list-group
+      v-model="nomini">
+        <v-list-tile  slot="activator" @click="mini=!mini">
+          <v-list-tile-action>
+            <v-icon>fa-filter</v-icon>
+          </v-list-tile-action>
+          <v-list-tile-content>Filtrage</v-list-tile-content>
+        </v-list-tile>
+        <v-list-tile>
+          <v-list-tile-action>
+            <v-icon>fa-industry</v-icon>
+          </v-list-tile-action>
+          <v-list-tile-content>
+            <v-select
+              :items="naf1"
+              v-model="naf"
+              label="Secteur d'activité"
+            ></v-select>
+          </v-list-tile-content>
+        </v-list-tile>
+        <v-list-tile>
+          <v-list-tile-action>
+            <v-icon>fa-users</v-icon>
+          </v-list-tile-action>
+          <v-list-tile-content>
+            <v-select
+              :items="effectifClass"
+              v-model="minEffectif"
+              label="Effectif minimum"
+            ></v-select>
+          </v-list-tile-content>
+        </v-list-tile>
+        <v-list-tile>
+          <v-list-tile-action>
+          <v-checkbox
+            v-model="entrepriseConnue">   
+          </v-checkbox>
+          </v-list-tile-action>
+          <v-list-tile-content>
+            Entreprise non suivie
+          </v-list-tile-content>
+
+        </v-list-tile>
+        <v-list-tile>
+          <v-list-tile-action>
+          <v-checkbox
+            v-model="horsCCSF">   
+          </v-checkbox>
+          </v-list-tile-action>
+          <v-list-tile-content>
+            hors CCSF
+          </v-list-tile-content>
+        </v-list-tile>
+        <v-list-tile>
+          <v-list-tile-action>
+          <v-checkbox
+            v-model="horsProcol">   
+          </v-checkbox>
+          </v-list-tile-action>
+          <v-list-tile-content>
+            hors Procédure Collective
+          </v-list-tile-content>
+        </v-list-tile>
+        </v-list-group>
+    </v-list>
+    </v-navigation-drawer>
+
+    <v-card :class="mini?'widget_large':'widget_tiny'">
     <v-data-table
-      v-model="selected"
-      :headers="headers"
-      :items="prediction"
-      :pagination.sync="pagination"
-      select-all
-      item-key="name"
-      class="elevation-1"
-      :loading="loading"
-      :rows-per-page-items="[10]"
+    v-model="selected"
+    :headers="headers"
+    :items="predictionFiltered"
+    :pagination.sync="pagination"
+    select-all
+    item-key="name"
+    class="elevation-1"
+    loading="false"
+    :rows-per-page-items="[10]"
     >
       <template slot="headers" slot-scope="props">
         <tr>
+          <th/>
           <th
             v-for="header in props.headers"
             :key="header.text"
@@ -26,121 +102,58 @@
         </tr>
       </template>
       <template slot="items" slot-scope="props">
-        <tr :active="props.selected">
-          <td>{{ props.item.siret }}</td>
-          <td>{{ props.item.raisonSociale }}</td>
-          <td class="text-xs-right">{{ Math.round(props.item.score*1000)/1000 }}</td>
-          <td class="text-xs-right">
-            <v-bottom-sheet 
-              lazy
+        <tr 
+        :active="props.selected"
+        >
+          <td>
+            <v-icon
+            @click.left="open(props.item, true)"
+            @click.middle="open(props.item, false)"
             >
-              <v-btn
-                slot="activator"
-                flat 
-              >
-                {{ props.item.effectif }}
-              </v-btn>
-              <v-card>
-                <v-toolbar center card color="indigo lighten-3">
-                <h1>EFFECTIFS {{ props.item.raisonSociale }}</h1>
-                </v-toolbar>
-                <div class="echarts">
-                  
-                  <IEcharts class="chart"
-                  style="height: 500px; width: 1300px"
-
-                  :option="props.item.historyEffectif">
-                  </IEcharts>
-                </div>
-              </v-card>
-            </v-bottom-sheet>
+              fa-address-card
+            </v-icon>
           </td>
-          <td class="text-xs-right">{{ (props.item.dette_urssaf>0)?"oui":"non" }}</td>
-          <td class="text-xs-right">{{ props.item.activite_partielle }}</td>
+          <td ><v-tooltip left>
+            <div slot="activator">{{ props.item.raison_sociale }}</div>
+            {{ props.item._id.siret }}
+            </v-tooltip> </td>
+          <td class="text-xs-center"><widgetPrediction :prob="props.item.prob" :diff="props.item.diff"/></td>
           <td class="text-xs-right">
-            <v-bottom-sheet
-              v-if="props.item.all_financiere[props.item.all_financiere.length -1]"
-              :close-on-content-click="false"
-              offset-y
-            >
-              <v-btn 
-                slot="activator"
-                flat
-              >
-                {{ props.item.all_financiere[props.item.all_financiere.length -1].arrete_bilan }}
-              </v-btn>
-                    <v-card>
-            <v-data-iterator
-              :items="props.item.all_financiere"
-              hide-actions
-              :pagination.sync="pagination"
-              content-tag="v-layout"
-              row
-              wrap
-              solid
-            >
-
-                  <v-toolbar
-                    slot="header"
-                    class="mb-2"
-                    color="indigo darken-5"
-                    dark
-                    flat
-                  >
-                    <v-toolbar-title>Ratios Financiers {{ props.item.raisonSociale }}</v-toolbar-title>
-                    <v-spacer></v-spacer>
-                    <v-toolbar-items>
-                      <v-btn flat @click="fichart = !fichart">
-                        <v-icon v-if="fichart">fa-table</v-icon>
-                        <v-icon v-if="!fichart">fa-chart-line</v-icon>
-                      </v-btn>
-                    </v-toolbar-items>
-                    </v-toolbar>
-
-                    <v-flex
-                      slot="item"
-                      slot-scope="fin"
-                      xs12
-                      sm6
-                      md4
-                      lg2
-                    >
-                    <div>
-                    <v-card>
-                      <v-card-title><h4>{{ fin.item.annee }} ({{ fin.item.arrete_bilan }})</h4></v-card-title>
-                      <v-divider></v-divider>
-                      <v-list dense>
-                        <v-list-tile>
-                          <v-list-tile-content>Délai Fournisseur:</v-list-tile-content>
-                          <v-list-tile-content class="align-end">{{ fin.item.delai_fournisseur }}</v-list-tile-content>
-                        </v-list-tile>
-                        <v-list-tile>
-                          <v-list-tile-content>Dette Fiscale:</v-list-tile-content>
-                          <v-list-tile-content class="align-end">{{ fin.item.dette_fiscale }}</v-list-tile-content>
-                        </v-list-tile>
-                        <v-list-tile>
-                          <v-list-tile-content>Financier Court Terme:</v-list-tile-content>
-                          <v-list-tile-content class="align-end">{{ fin.item.financier_court_terme }}</v-list-tile-content>
-                        </v-list-tile>
-                        <v-list-tile>
-                          <v-list-tile-content>Frais Financier:</v-list-tile-content>
-                          <v-list-tile-content class="align-end">{{ fin.item.frais_financier }}</v-list-tile-content>
-                        </v-list-tile>
-                        <v-list-tile>
-                          <v-list-tile-content>Poids Fond de Roulement:</v-list-tile-content>
-                          <v-list-tile-content class="align-end">{{ fin.item.poids_frng }}</v-list-tile-content>
-                        </v-list-tile>
-                        <v-list-tile>
-                          <v-list-tile-content>Taux de marge:</v-list-tile-content>
-                          <v-list-tile-content class="align-end">{{ fin.item.taux_marge }}</v-list-tile-content>
-                        </v-list-tile>
-                      </v-list>
-                    </v-card>
-                    </div>
-                    </v-flex>
-                </v-data-iterator>
-               </v-card>  
-            </v-bottom-sheet>
+            {{ props.item.effectif }}
+          </td>
+          <td class="text-xs-right">{{ props.item.default_urssaf?"oui":"non" }}</td>
+          <td>
+            <IEcharts
+              style="height: 40px"
+              :loading="chart"
+              :option="getMargeOption(
+                (props.item.bdf || []).map(b => {
+                return {'x': b.annee, 'y': b.taux_marge}
+                })
+              )"
+            />
+          </td>
+          <td>
+            <IEcharts
+              style="height: 40px"
+              :loading="chart"
+              :option="getMargeOption(
+                (props.item.bdf || []).map(b => {
+                return {'x': b.annee, 'y': b.poids_frng}
+                })
+              )"
+            />
+          </td>
+          <td>
+            <IEcharts
+              style="height: 40px"
+              :loading="chart"
+              :option="getMargeOption(
+                (props.item.bdf || []).map(b => {
+                return {'x': b.annee, 'y': b.financier_court_terme}
+                })
+              )"
+            />
           </td>
         </tr>
       </template>
@@ -151,45 +164,105 @@
 </template>
 
 <script>
-  import IEcharts from 'vue-echarts-v3/src/full.js'
-
+  import IEcharts from 'vue-echarts-v3/src/lite.js'
+  import 'echarts/lib/chart/line'
+  import 'echarts/lib/component/title'
+  import widgetPrediction from '@/components/widgetPrediction'
   export default {
     props: ['batchKey'],
     components: {
-      IEcharts
+      IEcharts,
+      widgetPrediction
     },
     data: () => ({
-      fichart: false,
-      loading: true,
+      effectifClass: [10, 20, 50, 100],
+      selected: [],
+      mini: true,
+      loading: false,
+      chart: false,
       pagination: {
         sortBy: 'name'
       },
-      naf: {},
-      selected: [],
-      actualBatch: '1803',
+      naf1: [
+        'Tous',
+        'Activités spécialisées, scientifiques et techniques',
+        'Activités de services administratifs et de soutien',
+        'Industrie manufacturière',
+        'Hébergement et restauration',
+        'Construction',
+        'Transports et entreposage',
+        'Commerce ; réparation d\'automobiles et de motocycles',
+        'Santé humaine et action sociale',
+        'Autres activités de services',
+        'Arts, spectacles et activités récréatives',
+        'Industries extractives',
+        'Production et distribution d\'eau ; assainissement, gestion des déchets et dépollution',
+        'Information et communication',
+        'Activités financières et d\'assurance',
+        'Activités immobilières',
+        'Agriculture, sylviculture et pêche',
+        'Production et distribution d\'électricité, de gaz, de vapeur et d\'air conditionné',
+        'Activités extra-territoriales'
+      ],
       headers: [
-        {
-          text: 'siret',
-          align: 'left',
-          value: 'siret'
-        },
         {
           text: 'raison sociale',
           align: 'left',
           value: 'raison_sociale'
         },
-        { text: 'score', value: 'score' },
-        { text: 'effectif', value: 'effectif' },
-        { text: 'dette urssaf', value: 'dette urssaf' },
-        { text: 'activite partielle', value: 'activite_partielle' },
-        { text: 'données financières', value: 'données financières' }
+        {text: 'détection', value: 'prob'},
+        {text: 'emploi', value: 'effectif'},
+        {text: 'Défault urssaf', value: 'default_urssaf'},
+        {text: 'Taux de marge', value: 'taux_marge'},
+        {text: 'Fond de roulement', value: 'fond_roulement'},
+        {text: 'Financier court terme', value: 'financier_court_terme'}
       ],
-      prediction: []
+      prediction: [],
+      naf: 'Industrie manufacturière',
+      minEffectif: 20,
+      entrepriseConnue: true,
+      horsCCSF: true,
+      horsProcol: true
     }),
+    computed: {
+      nomini: {
+        get () { return !this.mini },
+        set (mini) { this.mini = !mini }
+      },
+      predictionFiltered () {
+        return this.prediction.filter(p => this.applyFilter(p))
+      },
+      tabs: {
+        get () { return this.$store.getters.getTabs },
+        set (tabs) { this.$store.dispatch('updateTabs', tabs) }
+      },
+      activeTab: {
+        get () { return this.$store.getters.activeTab },
+        set (activeTab) { this.$store.dispatch('updateActiveTab', activeTab) }
+      }
+    },
     mounted () {
       this.getPrediction()
     },
     methods: {
+      open (etab, focus) {
+        if (this.tabs.findIndex(t => t.siret === etab._id.siret) === -1) {
+          let i = this.tabs.push({
+            'type': 'Etablissement',
+            'param': etab.raison_sociale,
+            'siret': etab._id.siret,
+            'batch': '1802'
+          })
+          if (focus) { this.activeTab = i - 1 }
+        }
+      },
+      applyFilter (p) {
+        return (this.naf === 'Tous' || p.naf1 === this.naf) &&
+        (p.effectif >= this.minEffectif) &&
+        (p.connu === false || this.entrepriseConnue === false) &&
+        (p.ccsf === false || this.horsCCSF === false) &&
+        (p.procol === 'in_bonis' || this.horsProcol === false)
+      },
       getNAF () {
         var self = this
         this.$axios.get('/api/data/naf').then(response => { self.naf = response.data })
@@ -206,102 +279,79 @@
           this.pagination.descending = false
         }
       },
-      getPrediction () {
-        var self = this
-        this.loading = true
-        this.$axios.get('/api/data/prediction/' + this.batchKey + '/algo1/0', this.$store.getters.axiosConfig).then(response => {
-          self.prediction = response.data.map(prediction => {
-            var etablissement = self.flattenTypes(
-              self.projectBatch(
-                prediction.etablissement
-                )
-            )
-            var entreprise = self.flattenTypes(
-              self.projectBatch(
-                (prediction.entreprise || {})
-                )
-            )
-            var allEffectif = etablissement.effectif.reduce((accu, effectif) => {
-              var effectifPeriode = Date.parse(effectif.periode)
-              accu[effectifPeriode] = (accu[effectif.periode] || 0) + effectif.effectif
-              return accu
-            }, {})
-            var lastTime = Object.keys(allEffectif).reduce((accu, time) => {
-              return (time > accu) ? time : accu
-            })
-            self.loading = false
-            return {
-              'siret': prediction._id.siret,
-              'score': prediction.score,
-              'effectif': allEffectif[lastTime],
-              'raisonSociale': (etablissement.sirene || [{'raisonsociale': 'n/a'}])[0].raisonsociale,
-              'features': prediction.features,
-              'dette_urssaf': prediction.features[prediction.features.length - 1].montant_part_patronale + prediction.features[prediction.features.length - 1].montant_part_ouvriere,
-              'activite_partielle': prediction.features[prediction.features.length - 1].apart_heures_consommees,
-              'all_financiere': (entreprise.bdf || []).sort((a, b) => a.annee > b.annee).map(bdf => {
-                return {
-                  'annee': bdf.annee,
-                  'secteur': bdf.secteur,
-                  'siren': bdf.siren,
-                  'arrete_bilan': bdf.arrete_bilan.substring(0, 10),
-                  'delai_fournisseur': Math.round(bdf.delai_fournisseur * 1000) / 1000,
-                  'dette_fiscale': Math.round(bdf.dette_fiscale * 1000) / 1000,
-                  'financier_court_terme': Math.round(bdf.financier_court_terme * 1000) / 1000,
-                  'frais_financier': Math.round(bdf.frais_financier * 1000) / 1000,
-                  'poids_frng': Math.round(bdf.poids_frng * 1000) / 1000,
-                  'taux_marge': Math.round(bdf.taux_marge * 1000) / 1000
-                }
-              }),
-              'historyEffectif': {
-                tooltip: {},
-                xAxis: [{
-                  type: 'time',
-                  splitNumber: 3
-                }],
-                yAxis: {},
-                series: [{
-                  type: 'line',
-                  smooth: true,
-                  color: 'blue',
-                  data: (Object.keys(allEffectif))
-                    .map(key => [key, allEffectif[key]])
-                    .sort((a, b) => parseInt(b[0]) - parseInt(a[0]))
-                    .map(entry => [new Date(parseInt(entry[0])), entry[1]])
-                    .slice(0, 14)
-                }]
+      getMargeOption (marge) {
+        return {
+          title: {
+            text: null
+          },
+          tooltip: {
+            trigger: 'axis',
+            axisPointer: {
+              type: 'cross',
+              label: {
+                backgroundColor: '#283b56'
               }
             }
+          },
+          toolbox: {
+            show: true
+          },
+          xAxis: {
+            show: true,
+            type: 'category',
+            axisTick: false,
+            data: marge.map((m) => m.x)
+          },
+          yAxis: {
+            type: 'value',
+            show: false,
+            min: -150,
+            max: 150
+          },
+          series: [{
+            color: 'indigo',
+            smooth: true,
+            name: 'taux marge',
+            type: 'line',
+            data: marge.map((m) => m.y)
+          }]
+        }
+      },
+      getPrediction () {
+        this.loading = true
+        var self = this
+        this.$axios.get('/api/data/prediction').then(response => {
+          var prediction = response.data
+          console.log(prediction)
+          prediction.forEach(p => {
+            p.bdf = Object.keys((p.bdf || {})).map(b => p.bdf[b]).sort((a, b) => a.annee < b.annee)
           })
+          console.log(prediction)
+          this.prediction = prediction
+          self.loading = false
         })
-      },
-      projectBatch (o) {
-        return Object.keys((o.batch || {})).sort()
-          .filter(batch => batch <= this.actualBatch).reduce((m, batch) => {
-            Object.keys(o.batch[batch]).forEach((type) => {
-              m[type] = (m[type] || {})
-              var arrayDelete = (o.batch[batch].compact.delete[type] || [])
-              if (arrayDelete !== {}) {
-                arrayDelete.forEach(hash => {
-                  delete m[type][hash]
-                })
-              }
-              Object.assign(m[type], o.batch[batch][type])
-            })
-            return m
-          }, {})
-      },
-      flattenTypes (o) {
-        return Object.keys(o).filter(type => type !== 'compact').reduce((accu, type) => {
-          accu[type] = Object.values(o[type])
-          return accu
-        }, {})
       }
     }
   }
 </script>
 
-<style>
+<style scoped>
 .echarts {
   width: 400px
+}
+.widget_tiny {
+  position: absolute;
+  left: 320px;
+  top: 20px; 
+  right: 20px;
+}
+.widget_large {
+  position: absolute;
+  left: 100px;
+  top: 20px;
+  right: 20px;
+}
+.pointer:hover {
+  cursor: hand;
 }
 </style>

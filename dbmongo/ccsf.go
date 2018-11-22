@@ -5,11 +5,11 @@ import (
 	"encoding/csv"
 	"fmt"
 	"io"
-	"log"
 	"os"
 	"time"
 
 	"github.com/cnf/structhash"
+	"github.com/spf13/viper"
 )
 
 // CCSF information urssaf ccsf
@@ -24,7 +24,7 @@ type CCSF struct {
 func parseCCSF(path string, dateBatch time.Time) chan *CCSF {
 	outputChannel := make(chan *CCSF)
 
-	file, err := os.Open(path)
+	file, err := os.Open(viper.GetString("APP_DATA") + path)
 	if err != nil {
 		fmt.Println("Error", err)
 	}
@@ -46,7 +46,7 @@ func parseCCSF(path string, dateBatch time.Time) chan *CCSF {
 			if error == io.EOF {
 				break
 			} else if error != nil {
-				log.Fatal(error)
+				// log.Fatal(error)
 			}
 
 			ccsf := CCSF{}
@@ -65,7 +65,7 @@ func parseCCSF(path string, dateBatch time.Time) chan *CCSF {
 
 func importCCSF(batch *AdminBatch) error {
 
-	mapping := getCompteSiretMapping(batch.Files["admin_urssaf"])
+	mapping, _ := getCompteSiretMapping(batch)
 
 	dateBatch, errDate := batchToTime(batch.ID.Key)
 	if errDate != nil {
@@ -85,10 +85,10 @@ func importCCSF(batch *AdminBatch) error {
 								CCSF: map[string]*CCSF{
 									hash: ccsf,
 								}}}}}
-				batch.ChanEtablissement <- &value
+				db.ChanEtablissement <- &value
 			}
 		}
 	}
-	batch.ChanEtablissement <- &ValueEtablissement{}
+	db.ChanEtablissement <- &ValueEtablissement{}
 	return nil
 }

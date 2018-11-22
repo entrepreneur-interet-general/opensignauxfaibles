@@ -5,10 +5,11 @@ import (
 	"encoding/csv"
 	"fmt"
 	"io"
-	"log"
 	"os"
 	"strconv"
 	"strings"
+
+	"github.com/spf13/viper"
 
 	"github.com/cnf/structhash"
 )
@@ -39,7 +40,7 @@ func parseCotisation(paths []string) chan *Cotisation {
 
 	go func() {
 		for _, path := range paths {
-			file, err := os.Open(path)
+			file, err := os.Open(viper.GetString("APP_DATA") + path)
 			if err != nil {
 				fmt.Println("Error", err)
 			}
@@ -54,7 +55,7 @@ func parseCotisation(paths []string) chan *Cotisation {
 				if error == io.EOF {
 					break
 				} else if error != nil {
-					log.Fatal(error)
+					// log.Fatal(error)
 				}
 
 				cotisation := Cotisation{}
@@ -77,7 +78,7 @@ func parseCotisation(paths []string) chan *Cotisation {
 }
 
 func importCotisation(batch *AdminBatch) error {
-	mapping := getCompteSiretMapping(batch.Files["admin_urssaf"])
+	mapping, _ := getCompteSiretMapping(batch)
 
 	for cotisation := range parseCotisation(batch.Files["cotisation"]) {
 		if siret, ok := mapping[cotisation.NumeroCompte]; ok {
@@ -91,9 +92,9 @@ func importCotisation(batch *AdminBatch) error {
 							Cotisation: map[string]*Cotisation{
 								hash: cotisation,
 							}}}}}
-			batch.ChanEtablissement <- &value
+			db.ChanEtablissement <- &value
 		}
 	}
-	batch.ChanEtablissement <- &ValueEtablissement{}
+	db.ChanEtablissement <- &ValueEtablissement{}
 	return nil
 }

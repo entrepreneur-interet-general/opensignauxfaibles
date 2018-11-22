@@ -5,3 +5,7 @@
 # DB_HOST = "127.0.0.1")
 # DB_PORT = "27017")
 # DB = "opensignauxfaibles"
+# FIRST_BATCH = "YYMM"
+# NAF_L1 = "/path/to/naf1.csv"
+# NAF_L5 = "/path/to/naf5.csv"
+# NAF_5TO1 = "/path/to/5to1.csv"

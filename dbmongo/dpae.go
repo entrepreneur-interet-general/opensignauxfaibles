@@ -5,12 +5,12 @@ import (
 	"encoding/csv"
 	"fmt"
 	"io"
-	"log"
 	"os"
 	"strconv"
 	"time"
 
 	"github.com/cnf/structhash"
+	"github.com/spf13/viper"
 )
 
 // DPAE Déclaration préalabre à l'embauche
@@ -25,7 +25,7 @@ type DPAE struct {
 func parseDPAE(path string) chan *DPAE {
 	outputChannel := make(chan *DPAE)
 
-	file, err := os.Open(path)
+	file, err := os.Open(viper.GetString("APP_DATA") + path)
 	if err != nil {
 		fmt.Println("Error", err)
 	}
@@ -40,7 +40,7 @@ func parseDPAE(path string) chan *DPAE {
 			if error == io.EOF {
 				break
 			} else if error != nil {
-				log.Fatal(error)
+				// log.Fatal(error)
 			}
 
 			date, err := time.Parse("20060102", row[1]+row[2]+"01")
@@ -77,9 +77,9 @@ func importDPAE(batch *AdminBatch) error {
 							DPAE: map[string]*DPAE{
 								hash: dpae,
 							}}}}}
-			batch.ChanEtablissement <- &value
+			db.ChanEtablissement <- &value
 		}
 	}
-	batch.ChanEtablissement <- &ValueEtablissement{}
+	db.ChanEtablissement <- &ValueEtablissement{}
 	return nil
 }

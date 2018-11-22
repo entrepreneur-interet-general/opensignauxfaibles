@@ -3,7 +3,7 @@ import Router from 'vue-router'
 import Dashboard from '@/components/Dashboard'
 import Data from '@/components/Data'
 import Admin from '@/components/Admin'
-import Prediction from '@/components/Prediction'
+import Browse from '@/components/Browse'
 
 Vue.use(Router)
 
@@ -25,9 +25,9 @@ export default new Router({
       component: Admin
     },
     {
-      path: '/prediction',
-      name: 'Prediction',
-      component: Prediction
+      path: '/browse',
+      name: 'Browse',
+      component: Browse
     }
   ]
 })

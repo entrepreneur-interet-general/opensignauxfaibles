@@ -2,26 +2,8 @@
   <v-container fluid grid-list-md text-xs-center>
       <v-layout row wrap justify-start>
         <v-flex xs12>TABLEAU DE BORD</v-flex>
-        
-        <v-flex xs4>
-          <v-card>
-            <v-card-title class="headline font-weight-thin">
-              Intégration des données
-            </v-card-title>
-            <v-divider/>
-            <v-card-text>
-              <v-list>
-                <v-list-tile avatar>
-                  Chiffre 1
-                </v-list-tile>
-                <v-list-tile avatar>
-                  Chiffre 2
-                </v-list-tile>
-              </v-list>
-            </v-card-text>
-          </v-card>
-        </v-flex>
-        <v-flex xs4>
+      
+        <v-flex xs6>
           <v-card>
             <v-card-title class="headline font-weight-thin" >
               Calcul prédictions
@@ -40,7 +22,7 @@
             </v-card-text>
           </v-card>
         </v-flex>
-        <v-flex xs4>
+        <v-flex xs6>
           <v-card>
             <v-card-title  class="headline font-weight-thin">
               Visites d'entreprises
@@ -66,6 +48,15 @@
   </v-container>
 </template>
 
+<script>
+export default {
+  computed: {
+    message () {
+      return this.$store.getters.reverseLog
+    }
+  }
+}
+</script>
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
 h1, h2 {

@@ -5,13 +5,13 @@ import (
 	"encoding/csv"
 	"fmt"
 	"io"
-	"log"
 	"os"
 	"strconv"
 	"strings"
 	"time"
 
 	"github.com/cnf/structhash"
+	"github.com/spf13/viper"
 )
 
 // Delai tuple fichier ursaff
@@ -50,41 +50,60 @@ func parseDelai(paths []string) chan *Delai {
 
 	go func() {
 		for _, path := range paths {
+			log(debug, "importDelais", "Import du fichier délais "+path)
+			file, err := os.Open(viper.GetString("APP_DATA") + path)
 
-			file, err := os.Open(path)
 			if err != nil {
-				fmt.Println("Error", err)
-			}
+				log(critical, "importDelais", "Erreur à l'ouverture du fichier "+path+": "+err.Error()+", passe.")
+				break
+			} else {
+				var errorLines []int
+				n := 0
+				e := 0
 
-			reader := csv.NewReader(bufio.NewReader(file))
-			reader.Comma = ';'
-			reader.Read()
+				reader := csv.NewReader(bufio.NewReader(file))
+				reader.Comma = ';'
+				reader.Read()
+				for {
+					row, err := reader.Read()
+					if err == io.EOF {
+						break
+					} else if err != nil {
+						n++
+						e++
+						log(warning, "importDelais", "Erreur à la ligne '"+fmt.Sprint(n)+"': «"+err.Error()+"», passe.")
+						break
+					} else {
+						n++
+						var errors [5]error
 
-			for {
-				row, error := reader.Read()
-				if error == io.EOF {
-					break
-				} else if error != nil {
-					log.Fatal(error)
+						delai := Delai{}
+						delai.NumeroCompte = row[field["NumeroCompte"]]
+						delai.NumeroContentieux = row[field["NumeroContentieux"]]
+						delai.DateCreation, errors[0] = time.Parse("2006-01-02", row[field["DateCreation"]])
+						delai.DateEcheanche, errors[1] = time.Parse("2006-01-02", row[field["DateEcheanche"]])
+						delai.DureeDelai, errors[2] = strconv.Atoi(row[field["DureeDelai"]])
+						delai.Denomination = row[field["Denomination"]]
+						delai.Indic6m = row[field["Indic6m"]]
+						delai.AnneeCreation, errors[3] = strconv.Atoi(row[field["AnneeCreation"]])
+						delai.MontantEcheancier, errors[4] = strconv.ParseFloat(strings.Replace(row[field["MontantEcheancier"]], ",", ".", -1), 64)
+						delai.NumeroStructure = row[field["NumeroStructure"]]
+						delai.Stade = row[field["Stade"]]
+						delai.Action = row[field["Action"]]
+						if allErrors(errors[:], nil) {
+							outputChannel <- &delai
+						} else {
+							e++
+							errorLines = append(errorLines, n)
+						}
+					}
 				}
-
-				delai := Delai{}
-				delai.NumeroCompte = row[field["NumeroCompte"]]
-				delai.NumeroContentieux = row[field["NumeroContentieux"]]
-				delai.DateCreation, err = time.Parse("2006-01-02", row[field["DateCreation"]])
-				delai.DateEcheanche, err = time.Parse("2006-01-02", row[field["DateEcheanche"]])
-				delai.DureeDelai, err = strconv.Atoi(row[field["DureeDelai"]])
-				delai.Denomination = row[field["Denomination"]]
-				delai.Indic6m = row[field["Indic6m"]]
-				delai.AnneeCreation, err = strconv.Atoi(row[field["AnneeCreation"]])
-				delai.MontantEcheancier, err = strconv.ParseFloat(strings.Replace(row[field["MontantEcheancier"]], ",", ".", -1), 64)
-				delai.NumeroStructure = row[field["NumeroStructure"]]
-				delai.Stade = row[field["Stade"]]
-				delai.Action = row[field["Action"]]
-
-				outputChannel <- &delai
+				file.Close()
+				log(debug, "importDelais", "Import du fichier délais "+path+" terminé. "+fmt.Sprint(n)+" lignes traitée(s), "+fmt.Sprint(e)+" rejet(s)")
+				if len(errorLines) > 0 {
+					log(warning, "importDelais", "Erreurs de conversion constatées aux lignes suivantes: "+fmt.Sprintf("%v", errorLines))
+				}
 			}
-			file.Close()
 		}
 		close(outputChannel)
 	}()
@@ -93,7 +112,11 @@ func parseDelai(paths []string) chan *Delai {
 }
 
 func importDelai(batch *AdminBatch) error {
-	mapping := getCompteSiretMapping(batch.Files["admin_urssaf"])
+	log(info, "importDelais", "Import du batch "+batch.ID.Key+": Délai")
+	mapping, err := getCompteSiretMapping(batch)
+	if err != nil {
+		log(critical, "importDelais", "Erreur d'accès au mapping Siret/Compte, interruption. "+err.Error())
+	}
 
 	for delai := range parseDelai(batch.Files["delai"]) {
 		if siret, ok := mapping[delai.NumeroCompte]; ok {
@@ -107,9 +130,10 @@ func importDelai(batch *AdminBatch) error {
 							Delai: map[string]*Delai{
 								hash: delai,
 							}}}}}
-			batch.ChanEtablissement <- &value
+			db.ChanEtablissement <- &value
 		}
 	}
-	batch.ChanEtablissement <- &ValueEtablissement{}
+	db.ChanEtablissement <- &ValueEtablissement{}
+	log(info, "importDelais", "Importation du batch "+batch.ID.Key+" terminée")
 	return nil
 }
