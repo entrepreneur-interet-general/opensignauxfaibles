@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 ---
 title: "Untitled"
 author: "Pierre Camilleri"

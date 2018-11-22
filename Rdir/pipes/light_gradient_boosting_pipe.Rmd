@@ -228,9 +228,27 @@ out <- feature_engineering_std(raw_data, all_data)
 raw_data <- out[[1]]
 all_data <- out[[2]]
 
+<<<<<<< HEAD
 ref_f_e <- feature_engineering_create(raw_data)
 
 out <- feature_engineering_apply(ref_f_e, raw_data, all_data)
+=======
+out <- feature_engineering_std(raw_data, all_data)
+raw_data <- out[[1]]
+all_data <- out[[2]]
+
+ref_f_e <- feature_engineering_create(raw_data)
+
+out <- feature_engineering_apply(ref_f_e, raw_data, all_data)
+
+raw_data <- out[[1]]
+all_data <- out[[2]]
+
+rm(out)
+
+raw_data <- raw_data %>%
+    mutate_if(is.POSIXct, as.Date)
+>>>>>>> master
 
 raw_data <- out[[1]]
 all_data <- out[[2]]
@@ -280,6 +298,7 @@ all <- h2o.target_encode_apply(
 ## Model
 
 ```{r}
+<<<<<<< HEAD
 x_medium <- c("montant_part_patronale",                   
               "ratio_dette",                              
               "ratio_dette_moy12m",                       
@@ -323,6 +342,75 @@ x_medium <- c("montant_part_patronale",
               "ratio_dette_delai",                        
               "ratio_marge_operationnelle_distrib_APE1",  
               "poids_frng")  
+=======
+x_minimal = c(    
+  "effectif",
+  "effectif_diff_moy12",
+  "apart_heures_consommees",
+  "ratio_apart",
+  "cotisation",                                
+  "montant_part_ouvriere",                    
+  "montant_part_patronale",
+  "ratio_dette_moy12m",
+  "dette_any_12m",
+  "ratio_dette",
+  "poids_frng",                               
+  "taux_marge",                                
+  "delai_fournisseur",                         
+  "dette_fiscale",                            
+  "financier_court_terme",                     
+  "frais_financier")
+
+ratios_diane =c(
+  "CA",
+  "chiffre_affaires_net_lie_aux_exportations",
+  "resultat_net_consolide",
+  "ratio_CAF",
+  "ratio_marge_operationnelle",
+  "taux_rotation_stocks",
+  "ratio_productivite",
+  "ratio_export",
+  "ratio_delai_client",
+  "ratio_liquidite_reduite",
+  "ratio_endettement",
+  "ratio_rend_capitaux_propres",
+  "ratio_rend_des_ress_durables",
+  "ratio_RetD", 
+  "taux_marge_neg",
+  "taux_marge_extr_neg",
+  "taux_marge_extr_pos")
+
+new_variables = c(
+  "etat_proc_collective_num",   
+  "delai",
+  "montant_echeancier",
+  "ratio_dette_delai",
+  "duree_delai",
+  "age",
+  "productif",
+  "indice_monoactivite",
+  "effectif_entreprise",
+  "apart_entreprise",
+  "nbr_etablissements_connus",
+  "resultat_net_consolide",
+  "nombre_etab_secondaire")
+#,
+# "code_naf_niveau1")
+
+variations = c(grep('variation',names(raw_data), value = TRUE),
+               grep('diff_moy12',names(raw_data), value = TRUE))
+
+distrib = c(grep('APE1',names(raw_data), value = TRUE),
+            grep('APE1',names(raw_data), value = TRUE), 
+            'TargetEncode_code_naf_niveau1')
+
+x_distrib = c(
+  x_minimal,
+  ratios_diane,
+  new_variables,
+  variations,
+  distrib)
+>>>>>>> master
 
 y = "outcome"
 ```
