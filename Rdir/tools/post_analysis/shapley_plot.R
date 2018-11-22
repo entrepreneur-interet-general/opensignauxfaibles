@@ -110,53 +110,53 @@ shapley_plot <- function(
     "Poids du frng"
     )
 
-  x_medium_names_test <- c(
-    "Dette_URSSAF",
-    "Dette_URSSAF",
-    "Dette_URSSAF",
-    "Procédure_collective_en_cours",
-    "Taux_de_defaillance_dans_le_secteur_d_activité",
-    "Taille_de_l_entreprise",
-    "Endettement_par_code_NAF",
-    "Solvabilité_par_code_NAF",
-    "Dette_URSSAF",
-    "Solvabilité_par_code_NAF",
-    "Dette_fiscale_et_sociale",
-    "Délais_de_paiement_par_code_NAF",
-    "Dette_URSSAF",
-    "Dette_URSSAF",
-    "Rentabilité",
-    "Rentabilité",
-    "Robustesse",
-    "Délais_de_paiement_par_code_NAF",
-    "Comparaison_du_taux_de_rotation_des_stocks_par_code_NAF",
-    "Taille_de_l_entreprise",
-    "Rentabilité_par_code_NAF",
-    "Ratio_d_exportation",
-    "Taux_de_defaillance_dans_le_secteur_d_activité",
-    "Variation_de_taille",
-    "Dette_URSSAF",
-    "Solvabilité_par_code_NAF",
-    #"effectif_entreprise",
-    "Age_de_l_entreprise",
-    "Solvabilité",
-    "Rentabilité_par_code_NAF",
-    "Endettement",
-    "Solvabilité",
-    "Délais",
-    "Taux_de_defaillance_dans_le_secteur_d_activité",
-    "Résultat_net_consolidé",
-    "Taux_de_rotation_des_stocks",
-    "Taille_de_l_entreprise",
-    "Taille_de_l_entreprise",
-    "Taille_de_l_entreprise",
-    "Taille_de_l_entreprise",
-    "Délai_URSSAF",
-    "Rentabilité_par_code_NAF",
-    "Robustesse"
-    )
+  # x_medium_names_test <- c(
+  #   "Dette_URSSAF",
+  #   "Dette_URSSAF",
+  #   "Dette_URSSAF",
+  #   "Procédure_collective_en_cours",
+  #   "Taux_de_defaillance_dans_le_secteur_d_activité",
+  #   "Taille_de_l_entreprise",
+  #   "Endettement_par_code_NAF",
+  #   "Solvabilité_par_code_NAF",
+  #   "Dette_URSSAF",
+  #   "Solvabilité_par_code_NAF",
+  #   "Dette_fiscale_et_sociale",
+  #   "Délais_de_paiement_par_code_NAF",
+  #   "Dette_URSSAF",
+  #   "Dette_URSSAF",
+  #   "Rentabilité",
+  #   "Rentabilité",
+  #   "Robustesse",
+  #   "Délais_de_paiement_par_code_NAF",
+  #   "Comparaison_du_taux_de_rotation_des_stocks_par_code_NAF",
+  #   "Taille_de_l_entreprise",
+  #   "Rentabilité_par_code_NAF",
+  #   "Ratio_d_exportation",
+  #   "Taux_de_defaillance_dans_le_secteur_d_activité",
+  #   "Variation_de_taille",
+  #   "Dette_URSSAF",
+  #   "Solvabilité_par_code_NAF",
+  #   #"effectif_entreprise",
+  #   "Age_de_l_entreprise",
+  #   "Solvabilité",
+  #   "Rentabilité_par_code_NAF",
+  #   "Endettement",
+  #   "Solvabilité",
+  #   "Délais",
+  #   "Taux_de_defaillance_dans_le_secteur_d_activité",
+  #   "Résultat_net_consolidé",
+  #   "Taux_de_rotation_des_stocks",
+  #   "Taille_de_l_entreprise",
+  #   "Taille_de_l_entreprise",
+  #   "Taille_de_l_entreprise",
+  #   "Taille_de_l_entreprise",
+  #   "Délai_URSSAF",
+  #   "Rentabilité_par_code_NAF",
+  #   "Robustesse"
+  #   )
 
-  names(x_medium_names_test) <- x_medium
+  # names(x_medium_names_test) <- x_medium
   names(x_medium_names) <- x_medium
 
   features  <- my_data[, x_medium]
@@ -186,7 +186,7 @@ shapley_plot <- function(
     # names <- levels(shap_plot$data$feature)
 
     shap_plot$data <- shap_plot$data %>%
-      mutate(category = unname(x_medium_names_test[feature])) %>%
+      mutate(category = unname(x_medium_names[feature])) %>%
       group_by(category) %>%
       summarize(
         feature = unique(category),

@@ -32,8 +32,8 @@ sourceDirectory(find_rstudio_root_file('tools'), modifiedOnly = FALSE)
 
 ## Script parameters
 ```{r}
-actual_period <- as.Date("2018-09-01")
-last_batch = '1810'
+actual_period <- as.Date("2018-10-01")
+last_batch = '1811'
 algorithm = 'algo2'
 min_effectif = 10
 ```
@@ -41,7 +41,7 @@ min_effectif = 10
 ```{r}
 res <- light_gradient_boosting(actual_period, last_batch, algorithm, min_effectif)
 my_data <- res[["current_data"]]
-my_model <- res[["model"]]  
+my_model <- res[["model"]]
 ```
 
 ```{r}
@@ -50,10 +50,14 @@ my_data <- my_data %>% mutate(
   periode =  as.Date(structure(periode / 1000, 
                                class = c('POSIXct','POSIXt')))
 )
-
 ```
+
 ```{r}
-shapley_plot(c("81042975300033","01575266000066"), my_data, my_model, batch = "1810")
+shapley_plot(c("81755759800023" ,"82452612300024" ,"49442016900026" ,"34323685700045" ,"64282087200025" ,"87695038700020" ,"40256514700020" ,"35342749500018" ,"40207811700015" ,"83063258400017"), my_data, my_model, batch = last_batch)
+```
+
+```{r results="hide"}
+export_fiche_visite(sirets = c("95000399600044", "33362117500053", "34323685700045", "40256514700020", "35342749500018", "87695038700020"), last_batch, with_urssaf = FALSE)
 ```
 
 ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------

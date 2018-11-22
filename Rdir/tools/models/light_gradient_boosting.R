@@ -4,6 +4,7 @@ light_gradient_boosting <- function(actual_period, last_batch, algorithm, min_ef
     "siret",
     "siren",
     "periode",
+    "age",
     # URSSAF
     "montant_part_patronale",
     "montant_part_ouvriere",
@@ -13,7 +14,7 @@ light_gradient_boosting <- function(actual_period, last_batch, algorithm, min_ef
     "montant_echeancier",
     "delai",
     "duree_delai",
-    # URSSAF 12m, 
+    # URSSAF 12m,
     "ratio_dette",
     "ratio_dette_moy12m",
     "cotisation_moy12m",
@@ -130,6 +131,7 @@ light_gradient_boosting <- function(actual_period, last_batch, algorithm, min_ef
     "productif"
     )
 
+
   date_inf <- as.Date("2015-01-01")
   date_sup <- as.Date("2017-01-01")
 
@@ -168,7 +170,7 @@ light_gradient_boosting <- function(actual_period, last_batch, algorithm, min_ef
 
   rm(out)
 
-  h2o.init(ip = "localhost", port = 4444)
+  h2o.init(ip = "localhost", port = 4444, min_mem_size = "2G")
 
   train <- as.h2o(raw_data)
   current <- as.h2o(current_data)
@@ -283,10 +285,10 @@ export_fields <-  c(
   "region",
   "prob",
   "diff",
+  "connu",
   "date_ccsf",
   "etat_proc_collective",
   "date_proc_collective",
-  "connu",
   "interessante_urssaf",
   #"default_urssaf",
   "effectif",
@@ -320,7 +322,7 @@ export_fields <-  c(
 pred_data %>%
   filter(periode == actual_period) %>%
   prepare_for_export(export_fields = export_fields, last_batch = last_batch, algorithm = algorithm) %>%
-  export(batch = "1810")
+  export(batch = last_batch)
 
 # Returns H2O frames and model
 return(list(train_data = train, current_data = current, model = model))

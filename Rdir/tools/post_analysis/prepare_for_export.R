@@ -12,7 +12,7 @@ prepare_for_export <- function(donnees, export_fields, last_batch, algorithm){
     date_sup = last_period %m+% months(1),
     algo = algorithm,
     min_effectif = 10,
-    fields = export_fields)
+    fields = export_fields[!export_fields %in% c("connu", "diff", "prob")])
 
   donnees <- donnees %>%
     mutate(siret = as.character(siret)) %>%
@@ -23,7 +23,8 @@ prepare_for_export <- function(donnees, export_fields, last_batch, algorithm){
   # Report des dernières infos financieres connues
 
   donnees <- donnees %>%
-    mark_known_sirets(name = "sirets_connus.csv")
+    mark_known_sirets(name = "sirets_connus.csv") %>%
+    select(export_fields)
 
   all_names <- names(donnees)
   cat("Les variables suivantes sont absentes du dataframe:", "\n")

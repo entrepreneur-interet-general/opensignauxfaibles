@@ -13,7 +13,7 @@ import (
 // BDF Information Banque de France
 type BDF struct {
 	Siren               string    `json:"siren" bson:"siren"`
-	Annee               int       `json:"exercice_bdf" bson:"exercice_bdf"`
+	Annee               int       `json:"annee_bdf" bson:"annee_bdf"`
 	ArreteBilan         time.Time `json:"arrete_bilan_bdf" bson:"arrete_bilan_bdf"`
 	RaisonSociale       string    `json:"raison_sociale" bson:"raison_sociale"`
 	Secteur             string    `json:"secteur" bson:"secteur"`

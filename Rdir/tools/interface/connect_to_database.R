@@ -6,15 +6,15 @@ connect_to_database <- function(
   date_inf = NULL,
   date_sup = NULL,
   min_effectif = 10,
-  fields = NULL){
-
+  fields = NULL,
+  code_ape_niveau3 = NULL){
 
   assert_that(
     !is.null(date_inf) &&
       !is.null(date_sup) &&
       !is.na(date_inf) &&
       !is.na(date_sup),
-    msg = "Les dates spécifiés sont invalides")
+    msg = "connect_to_database: les dates spécifiés sont invalides")
 
   cat("Connexion à la collection mongodb ...")
 
@@ -35,6 +35,12 @@ connect_to_database <- function(
         paste0('{"_id.siren":"', siren[i], '"}')
         )
     }
+
+    if (!is.null(code_ape_niveau3)){
+      match_APE <- paste0('{"value.0.code_ape":{"$regex":"^', code_ape_niveau3, '", "$options":"i"}}')
+      match_siren <- c(match_siren, match_APE)
+    }
+
     match_siren <- paste0('"$or":[', paste(match_siren, collapse = ","), "]")
     match_req <- paste(match_req, match_siren, sep = ", ")
   }
@@ -50,8 +56,11 @@ connect_to_database <- function(
     eff_req <- paste0(
       '{"$match":{', '"value.effectif":{"$gte":',
       min_effectif,
-      '},"value.periode":{"$gte": {"$date":"', date_inf, 'T00:00:00Z"}, "$lt": {"$date":"', date_sup, 'T00:00:00Z"}}}}')
-  }
+      '},"value.periode":{
+      "$gte": {"$date":"', date_inf, 'T00:00:00Z"},
+      "$lt": {"$date":"', date_sup, 'T00:00:00Z"}
+}}}')
+}
 
   # Construction de la projection
   if (is.null(fields)){
@@ -138,6 +147,23 @@ connect_to_database <- function(
       mutate(
         siren = as.factor(siren)
       )
+  }
+
+  # Champs manquants
+  champs_manquants <- fields[!fields %in% names(table_wholesample)]
+  if (length(champs_manquants) >= 1){
+    cat("Champs manquants: ")
+  cat(champs_manquants, "\n")
+
+  cat("Remplacements par NA", "\n")
+
+  remplacement <- NA * double(length(champs_manquants))
+  names(remplacement) <- champs_manquants
+  remplacement <- as.data.frame(t(remplacement))
+  table_wholesample <- cbind(
+    table_wholesample,
+    remplacement
+    )
   }
 
   cat(" Fini.", "\n")

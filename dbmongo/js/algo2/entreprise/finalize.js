@@ -45,6 +45,7 @@ function finalize(k, v) {
         if (periode.getTime() in output_indexed){
           output_indexed[periode.getTime()][k] = v.bdf[hash][k]
         }
+        output_indexed[periode.getTime()].exercice_bdf = output_indexed[periode.getTime()].annee_bdf - 1
         let past_year_offset = [1,2]
         past_year_offset.forEach( offset =>{
           let periode_offset = DateAddMonth(periode, 12* offset)

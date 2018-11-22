@@ -128,9 +128,9 @@ feature_engineering_std <- function(...){
 
 
   # AGE
-  assertthat::assert_that(all(c("debut_activite") %in% names(my_data)))
-  my_data <- my_data %>%
-    mutate(age = lubridate::year(as.POSIXct.Date(periode)) - debut_activite)
+ # assertthat::assert_that(all(c("debut_activite") %in% names(my_data)))
+ # my_data <- my_data %>%
+ #   mutate(age = lubridate::year(as.POSIXct.Date(periode)) - debut_activite)
 
   # REPLACE NA (DELAIS, COTISATION)
   assertthat::assert_that(all(

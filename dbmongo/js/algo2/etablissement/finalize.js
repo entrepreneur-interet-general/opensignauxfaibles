@@ -371,13 +371,13 @@ function finalize(k, v) {
       }
     })
     
-    let future_month_offsets = [1, 2, 3, 4, 5, 6]
+    let future_month_offsets = [0, 1, 2, 3, 4, 5]
     if (val.montant_part_ouvriere + val.montant_part_patronale > 0){
       future_month_offsets.forEach(offset => {
         time_offset = DateAddMonth(time_d, offset)
         val_offset = output_indexed[time_offset.getTime()]
         if (time_offset.getTime() in output_indexed){
-          val_offset.interessante_urssaf = false    
+          val_offset.nteressante_urssaf = false    
         }
       })
     }
@@ -441,6 +441,7 @@ function finalize(k, v) {
     val.activite_saisonniere = (sirene || {"activitesaisoniere": null}).activitesaisoniere
     val.productif = (sirene || {"productif": null}).productif
     val.debut_activite = (sirene || {"debut_activite":null}).debut_activite.getFullYear()
+    val.age = val.periode.getFullYear() - val.debut_activite
     val.tranche_ca = (sirene || {"trancheca":null}).trancheca
     val.indice_monoactivite = (sirene || {"indicemonoactivite": null}).indicemonoactivite  
 

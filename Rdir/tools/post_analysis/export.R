@@ -15,7 +15,7 @@ export <- function(
     if (! dir.exists(dirname)) error("Directory not found. Check relative_path")
 
     file_list <- list.files(dirname)
-    filename <-  paste0("prediction_batch", batch, "_exported_", Sys.Date())
+    filename <-  paste0("detection_batch", batch, "_exported_", Sys.Date())
     n_different <- sum(grepl(
         paste0("^", filename, "(_v)?[0-9]*.csv$"),
         file_list))
