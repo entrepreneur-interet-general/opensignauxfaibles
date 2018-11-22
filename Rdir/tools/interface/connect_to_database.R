@@ -1,0 +1,171 @@
+connect_to_database <- function(
+  collection,
+  batch,
+  algo = "algo2",
+  siren = NULL,
+  date_inf = NULL,
+  date_sup = NULL,
+  min_effectif = 10,
+  fields = NULL,
+  code_ape_niveau3 = NULL){
+
+  assert_that(
+    !is.null(date_inf) &&
+      !is.null(date_sup) &&
+      !is.na(date_inf) &&
+      !is.na(date_sup),
+    msg = "connect_to_database: les dates spécifiés sont invalides")
+
+  cat("Connexion à la collection mongodb ...")
+
+  dbconnection <- mongo(
+    collection = collection,
+    db = "opensignauxfaibles",
+    verbose = TRUE,
+    url = "mongodb://localhost:27017")
+  cat(" Fini.", "\n")
+
+  # Construction du match
+  match_req  <- paste0('"_id.batch":"', batch, '","_id.algo":"', algo, '"')
+  if (!is.null(siren)){
+    match_siren  <- c()
+    for (i in seq_along(siren)){
+      match_siren  <- c(
+        match_siren,
+        paste0('{"_id.siren":"', siren[i], '"}')
+      )
+    }
+
+    if (!is.null(code_ape_niveau3)){
+      match_APE <- paste0('{"value.0.code_ape":{"$regex":"^', code_ape_niveau3, '", "$options":"i"}}')
+      match_siren <- c(match_siren, match_APE)
+    }
+
+    match_siren <- paste0('"$or":[', paste(match_siren, collapse = ","), "]")
+    match_req <- paste(match_req, match_siren, sep = ", ")
+  }
+  match_req <- paste0('{"$match":{', match_req, "}}")
+
+  # Construction de l'unwind
+  unwind_req <- '{"$unwind":{"path": "$value"}}'
+
+  # Filtrage effectif et date
+  if (!is.null(siren)){
+    eff_req <- ""
+  } else {
+    eff_req <- paste0(
+      '{"$match":{', '"value.effectif":{"$gte":',
+      min_effectif,
+      '},"value.periode":{
+      "$gte": {"$date":"', date_inf, 'T00:00:00Z"},
+      "$lt": {"$date":"', date_sup, 'T00:00:00Z"}
+  }}}')
+}
+
+  # Construction de la projection
+  if (is.null(fields)){
+    projection_req  <- ""
+  } else {
+    projection_req  <- paste0('"value.',fields,'":1')
+    projection_req  <- paste(projection_req, collapse = ",")
+    projection_req  <- paste0('{"$project":{', projection_req, '}}')
+  }
+
+  reqs <- c(
+    match_req,
+    unwind_req,
+    eff_req,
+    projection_req)
+
+  requete  <- paste(
+    reqs[reqs != ""],
+    collapse = ", ")
+  requete <- paste0(
+    "[",
+    requete,
+    "]")
+
+
+
+  cat("Import ...")
+
+  donnees <- dbconnection$aggregate(requete)$value
+
+  cat(" Fini.", "\n")
+
+  assertthat::assert_that(nrow(donnees) > 0,
+                          msg = "La requête ne retourne aucun résultat")
+  assertthat::assert_that(
+    all(c("periode", "siret") %in% names(donnees))
+  )
+  assertthat::assert_that(
+    anyDuplicated(donnees %>% select(siret, periode)) == 0
+  )
+
+  table_wholesample <- donnees %>%
+    mutate(periode = as.Date(periode)) %>%
+    arrange(periode) %>%
+    tibbletime::as_tbl_time(periode)
+
+  n_eta <- table_wholesample$siret %>%
+    n_distinct()
+  n_ent <- table_wholesample$siret %>%
+    str_sub(1, 9) %>%
+    n_distinct()
+  cat("Import de", n_eta, "etablissements issus de", n_ent, "entreprises", "\n")
+
+  # Typage
+  table_wholesample <- table_wholesample %>%
+    mutate_if(is.POSIXct, as.Date)
+
+  if ("numero_compte_urssaf" %in% names(table_wholesample)){
+    table_wholesample$numero_compte_urssaf <-
+      as.factor(paste(table_wholesample$numero_compte_urssaf))
+  }
+
+  if ("code_naf" %in% names(table_wholesample)){
+    table_wholesample <- table_wholesample %>%
+      mutate(
+        code_naf = as.factor(code_naf),
+        code_ape_niveau2 = as.factor(substr(code_ape, 1, 2)),
+        code_ape_niveau3 = as.factor(substr(code_ape, 1, 3)),
+        code_ape_niveau4 = as.factor(substr(code_ape, 1, 4)),
+        code_ape = as.factor(code_ape)
+      )
+  }
+
+  if ("siret" %in% names(table_wholesample)){
+    table_wholesample <- table_wholesample %>%
+      mutate(
+        siret = as.factor(siret)
+      )
+  }
+
+
+  if ("siren" %in% names(table_wholesample)){
+    table_wholesample <- table_wholesample %>%
+      mutate(
+        siren = as.factor(siren)
+      )
+  }
+
+  # Champs manquants
+  champs_manquants <- fields[!fields %in% names(table_wholesample)]
+  if (length(champs_manquants) >= 1){
+    cat("Champs manquants: ")
+    cat(champs_manquants, "\n")
+
+    cat("Remplacements par NA", "\n")
+
+    remplacement <- NA * double(length(champs_manquants))
+    names(remplacement) <- champs_manquants
+    remplacement <- as.data.frame(t(remplacement))
+    table_wholesample <- cbind(
+      table_wholesample,
+      remplacement
+    )
+  }
+
+  cat(" Fini.", "\n")
+  return(table_wholesample)
+}
