@@ -134,6 +134,6 @@ func importDelai(batch *AdminBatch) error {
 		}
 	}
 	db.ChanEtablissement <- &ValueEtablissement{}
-	log(info, "importDelais", "Importation du batch "+batch.ID.Key+" terminée")
+  log(info, "importDelais", "Import du batch "+batch.ID.Key+" terminée: Délai")
 	return nil
 }

@@ -150,7 +150,7 @@ func main() {
 		api.GET("/batch/purge", purgeBatchHandler)
 		api.GET("/batch/process", processBatchHandler)
 		api.POST("/admin/files", addFile)
-		api.GET("/data/naf", getNAF)
+		// api.GET("/data/naf", getNAF)
 		api.GET("/data/features", getFeatures)
 		api.GET("/admin/epoch", epoch)
 		api.GET("/data/prediction", predictionBrowse)

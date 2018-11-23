@@ -93,7 +93,7 @@ func parseDiane(paths []string) chan *Diane {
 
 			reader := csv.NewReader(bufio.NewReader(file))
 			reader.Comma = ';'
-			reader.FieldsPerRecord = 69
+			//reader.FieldsPerRecord = 62
 
 			for {
 				row, error := reader.Read()

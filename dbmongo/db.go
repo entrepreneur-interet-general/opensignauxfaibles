@@ -68,78 +68,6 @@ func initDB() DB {
 		}
 	}
 
-  mongodb, err := mgo.Dial(dbDial)
-  mongodb.SetSocketTimeout(3600 * time.Second)
-  db := mongodb.DB(dbDatabase)
-
-  // pousse les fonctions partagées JS
-  declareServerFunctions(db)
-
-  if err != nil {
-    log.Panic(err)
-  }
-
-  chanEntreprise := insertEntreprise(db)
-  chanEtablissement := insertEtablissement(db)
-
-  go func() {
-    for range time.Tick(30 * time.Second) {
-      chanEntreprise <- &ValueEntreprise{}
-      chanEtablissement <- &ValueEtablissement{}
-    }
-  }()
-
-  return func(c *gin.Context) {
-    c.Set("ChanEntreprise", chanEntreprise)
-    c.Set("ChanEtablissement", chanEtablissement)
-    c.Set("DBSESSION", mongodb)
-    c.Set("DB", db)
-    c.Next()
-  }
-=======
-	dbDial := viper.GetString("DB_DIAL")
-	dbDatabase := viper.GetString("DB")
-
-	// définition de 3 connexions pour isoler les curseurs
-	mongostatus, err := mgo.Dial(dbDial)
-	if err != nil {
-		// log.Panic(err)
-	}
-
-	mongodb, err := mgo.Dial(dbDial)
-	if err != nil {
-		// log.Panic(err)
-	}
-
-	mongostatus.SetSocketTimeout(3600 * time.Second)
-	mongodb.SetSocketTimeout(3600 * time.Second)
-	dbstatus := mongostatus.DB(dbDatabase)
-	db := mongodb.DB(dbDatabase)
-
-	firstBatchID := viper.GetString("FIRST_BATCH")
-	if !isBatchID(firstBatchID) {
-		panic("Paramètre FIRST_BATCH incorrect, vérifiez la configuration.")
-	}
-
-	// firstBatch, err := getBatch(db, firstBatchID)
-	var firstBatch AdminBatch
-	err = db.C("Admin").Find(bson.M{"_id.type": "batch", "_id.key": firstBatchID}).One(&firstBatch)
-
-	if firstBatch.ID.Type == "" {
-		firstBatch = AdminBatch{
-			ID: AdminID{
-				Key:  firstBatchID,
-				Type: "batch",
-			},
-		}
-
-		err := db.C("Admin").Insert(firstBatch)
-
-		if err != nil {
-			panic("Impossible de créer le premier batch: " + err.Error())
-		}
-	}
-
 	status := Status{
 		DB: dbstatus,
 		ID: AdminID{
@@ -173,7 +101,6 @@ func initDB() DB {
 		ChanEtablissement: chanEtablissement,
 		Status:            status,
 	}
->>>>>>> origin/master
 }
 
 func logErrors(db *mgo.Database, err error) {
@@ -181,12 +108,12 @@ func logErrors(db *mgo.Database, err error) {
 }
 
 func insertEntreprise(db *mgo.Database) chan *ValueEntreprise {
-  source := make(chan *ValueEntreprise, 1000)
+	source := make(chan *ValueEntreprise, 1000)
 
-  go func(chan *ValueEntreprise) {
-    buffer := make(map[string]*ValueEntreprise)
-    objects := make([]interface{}, 0)
-    i := 0
+	go func(chan *ValueEntreprise) {
+		buffer := make(map[string]*ValueEntreprise)
+		objects := make([]interface{}, 0)
+		i := 0
 
 		for value := range source {
 			if (value.Value.Batch == nil) || i >= 100 {
@@ -213,16 +140,16 @@ func insertEntreprise(db *mgo.Database) chan *ValueEntreprise {
 		}
 	}(source)
 
-  return source
+	return source
 }
 
 func insertEtablissement(db *mgo.Database) chan *ValueEtablissement {
-  source := make(chan *ValueEtablissement, 1000)
+	source := make(chan *ValueEtablissement, 1000)
 
-  go func(chan *ValueEtablissement) {
-    buffer := make(map[string]*ValueEtablissement)
-    objects := make([]interface{}, 0)
-    i := 0
+	go func(chan *ValueEtablissement) {
+		buffer := make(map[string]*ValueEtablissement)
+		objects := make([]interface{}, 0)
+		i := 0
 
 		for value := range source {
 			if (value.Value.Batch == nil) || i >= 100 {
@@ -249,13 +176,13 @@ func insertEtablissement(db *mgo.Database) chan *ValueEtablissement {
 		}
 	}(source)
 
-  return source
+	return source
 }
 
 // ServerJSFunc Function à injecter dans l'instance MongoDB
 type ServerJSFunc struct {
-  ID    string          `json:"id" bson:"_id"`
-  Value bson.JavaScript `json:"value" bson:"value"`
+	ID    string          `json:"id" bson:"_id"`
+	Value bson.JavaScript `json:"value" bson:"value"`
 }
 
 // Add Méthode pour upsérer une fonction serveur
@@ -270,11 +197,11 @@ func (f ServerJSFunc) Drop(db *mgo.Database) error {
 }
 
 func declareDatabaseCopy(db *mgo.Database, from string, to string) {
-  f := ServerJSFunc{
-    ID:    "copyDatabase",
-    Value: bson.JavaScript{Code: "function () {db.copyDatabase('" + from + "', '" + to + "')}"},
-  }
-  f.Add(db)
+	f := ServerJSFunc{
+		ID:    "copyDatabase",
+		Value: bson.JavaScript{Code: "function () {db.copyDatabase('" + from + "', '" + to + "')}"},
+	}
+	f.Add(db)
 }
 
 func removeDatabaseCopy(db *mgo.Database) {

@@ -1,4 +1,4 @@
-db = db.getSiblingDB('opensignauxfaibles')
+db = db.getSiblingDB(db_name)
 db.getCollection("Features").aggregate(
 	[
 		{ 

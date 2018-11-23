@@ -70,7 +70,7 @@ func nextBatchHandler(c *gin.Context) {
 
 func nextBatch() error {
 	batch := lastBatch()
-	spew.Dump(batch)
+	// spew.Dump(batch)
 	newBatchID, err := nextBatchID(batch.ID.Key)
 	if err != nil {
 		return fmt.Errorf("Mauvais numéro de batch: " + err.Error())
@@ -194,7 +194,7 @@ func processBatchHandler(c *gin.Context) {
 }
 
 func processBatch() {
-	log("info", "processBatch", "Lancement du process 1802")
+	log("info", "processBatch", "Lancement de l'intégration du batch")
 	status := db.Status
 	batch := lastBatch()
 	status.setDBStatus(sp("Import des fichiers"))
