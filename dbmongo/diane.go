@@ -74,7 +74,10 @@ type Diane struct {
 	ConcesBrevEtDroitsSim                *float64 `json:"conces_brev_et_droits_sim" bson:"conces_brev_et_droits_sim"`
 	NotePreface                          *float64 `json:"note_preface" bson:"note_preface"`
 	NombreEtabSecondaire                 *int     `json:"nombre_etab_secondaire" bson:"nombre_etab_secondaire"`
+  ArreteBilan                          time.Time `json:"arrete_bilan_diane" bson:"arrete_bilan_diane"`
 }
+
+
 
 func parseDiane(paths []string) chan *Diane {
 	outputChannel := make(chan *Diane)
