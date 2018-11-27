@@ -209,7 +209,7 @@ func parseAPConso(path string) chan *APConso {
 }
 
 func importAPConso(batch *AdminBatch) error {
-	log(info, "importAPConso", "Import du batch "+batch.ID.Key+": APDemande")
+	log(info, "importAPConso", "Import du batch "+batch.ID.Key+": APConso")
 
 	for _, file := range batch.Files["apconso"] {
 		for apconso := range parseAPConso(file) {

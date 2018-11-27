@@ -6,18 +6,19 @@ function finalize(k, o) {
         o.batch[batch].compact = (o.batch[batch].compact||{})
         o.batch[batch].compact["status"] = (o.batch[batch].compact["status"]||false)
 
-        types.map(type => {
+        types.forEach(type => {
             o.batch[batch][type] = (o.batch[batch][type]||{})
             m[type] = (m[type] || new Set())
-
             var keys = Object.keys(o.batch[batch][type])
-           
             o.batch[batch].compact.delete = (o.batch[batch].compact.delete||{})
+
             if (deleteOld.has(type) && o.batch[batch].compact.status == false) {
                 var discardKeys = [...m[type]].filter(key => !(new Set(keys).has(key)))
                 o.batch[batch].compact.delete[type] = discardKeys;
-
-                discardKeys.forEach(key => {
+            }
+            if (deleteOld.has(type)) {
+                o.batch[batch].compact.delete[type] = (o.batch[batch].compact.delete[type] || {})
+                o.batch[batch].compact.delete[type].forEach(key => {
                     m[type].delete(key)
                 })
             }
