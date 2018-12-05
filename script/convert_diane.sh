@@ -16,7 +16,7 @@ BEGIN { # Semi-column separated csv as input and output
   FS = ";"
   OFS = ";"
 } 
-NR==1 { # Change field names
+FNR==1 { # Change field names
   printf "%s", "\"Annee\""
 
   for (i=1; i<=NF; ++i) {
@@ -38,15 +38,21 @@ NR==1 { # Change field names
 }
 printf "%s", ORS
 }
-NR>1{
+FNR>1 && $1 !~ "Marquée" {
   for (current_y=2012; current_y<=2017; ++current_y){ # FIX ME: years hardcoded
     printf "%i", current_y
     for (i=1; i<=nf; ++i) {
       if (f[i])
-        printf "%s%s", OFS, $(f[i]);
+        if (f[i])
+          printf "%s%s", OFS, $(f[i]);
+        else 
+          printf "%s%s", OFS, "\"\"";
       else {
         # Only print fields relative to current year 
-        printf "%s%s", OFS, $(f[i, current_y]);
+        if (f[i, current_y])
+          printf "%s%s", OFS, $(f[i, current_y]);
+        else 
+          printf "%s%s", OFS, "\"\"";
       }
     }
     printf "%s", ORS # Each year on a new line
@@ -54,6 +60,6 @@ NR>1{
 }'
 
 # Concat all exported files /!\ FIX ME: no spaces in file_names !
-awk -F ";" 'NR == 1 || FNR >= 2'  <(cat ${FILES:-$@} | iconv --from-code UTF-16LE --to-code UTF-8 | dos2unix -ascii) |
+awk -F ";" 'NR == 1 || FNR >= 2' <(cat ${FILES:-$@} | iconv --from-code UTF-16LE --to-code UTF-8 | dos2unix -ascii) |
  awk  "$AWK_SCRIPT" |
  sed 's/,/./g' 

@@ -1,5 +1,6 @@
 export_fiche_visite <- function(
   sirets,
+  database,
   batch,
   with_urssaf,
   folder = batch){
@@ -45,6 +46,7 @@ export_fiche_visite <- function(
   for (i in seq_along(sirets)){
 
     one_company <- connect_to_database(
+      database = database,
       collection = "Features",
       batch = batch,
       date_inf = "2014-01-01",
@@ -58,6 +60,7 @@ export_fiche_visite <- function(
     cat("Filtrage par code ape ", substring(one_company$code_ape[1], 1, 3),"\n")
 
     donnees <- connect_to_database(
+      database = database,
       collection = "Features",
       batch = batch,
       date_inf = "2014-01-01",

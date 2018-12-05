@@ -1,4 +1,4 @@
-prepare_for_export <- function(donnees, export_fields, last_batch, algorithm){
+prepare_for_export <- function(donnees, export_fields, database, last_batch, algorithm){
 
   last_period  <- max(donnees$periode, na.rm = TRUE)
   cat("Préparation à l'export ... \n")
@@ -6,13 +6,15 @@ prepare_for_export <- function(donnees, export_fields, last_batch, algorithm){
       last_period, "\n"))
 
   full_data <- connect_to_database(
+    database,
     "Features",
     last_batch,
     date_inf = last_period,
     date_sup = last_period %m+% months(1),
     algo = algorithm,
     min_effectif = 10,
-    fields = export_fields[!export_fields %in% c("connu", "diff", "prob")])
+    fields = export_fields[!export_fields %in% c("connu", "diff", "prob")]
+  )
 
   donnees <- donnees %>%
     mutate(siret = as.character(siret)) %>%

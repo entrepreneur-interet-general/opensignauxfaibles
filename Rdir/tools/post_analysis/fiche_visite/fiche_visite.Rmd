@@ -10,6 +10,7 @@ params:
   siret: '48137217500028'
   raison_sociale: 'DECOMETAL'
   batch: '1810'
+  database: 'signauxfaibles'
   with_urssaf: 'FALSE'
 ---
 
@@ -33,6 +34,7 @@ load("/home/pierre/Documents/opensignauxfaibles/Rdir/RData/donnees.RData")
 my_data <- donnees
 mon_siret <- params$siret
 batch <- params$batch
+database <- params$database
 with_urssaf <- params$with_urssaf
 
 ratios <- c('CA', 'resultat_net_consolide', 'resultat_expl','poids_frng','taux_marge','delai_fournisseur','dette_fiscale','financier_court_terme','frais_financier')
@@ -64,6 +66,7 @@ cat('algo et batch écrits en dur', '\n')
 fields <- names(etablissement_one_period)
 
 ajout_export <- connect_to_database(
+  database,
   'Features', 
   batch, 
   algo = 'algo2',

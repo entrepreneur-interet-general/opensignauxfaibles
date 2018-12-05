@@ -7,12 +7,8 @@ done
 shift $(($OPTIND -1))
 
 AWK_COMMAND='
-BEGIN { # Semi-column separated csv as input and output
-FS = ","
-OFS = ","
-} 
-NR==1 || ($17 != "N" && (($4 == "" && $6 != "F") || $4 > min_date ))
+NR == 1 || ($17 != "N" && ($4 > min_date || ($4=="" && $6 != "F")))
 '
 
 
-awk -F "," -v min_date="${MIN_DATE:-'2014-01-01'}" "$AWK_COMMAND" "$@"
+awk -F "," -v min_date="${MIN_DATE:-'2015-01-01'}" "$AWK_COMMAND" "$@"
