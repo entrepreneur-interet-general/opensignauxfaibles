@@ -1,4 +1,5 @@
 connect_to_database <- function(
+  database,
   collection,
   batch,
   algo = "algo2",
@@ -20,7 +21,7 @@ connect_to_database <- function(
 
   dbconnection <- mongo(
     collection = collection,
-    db = "opensignauxfaibles",
+    db = database,
     verbose = TRUE,
     url = "mongodb://localhost:27017")
   cat(" Fini.", "\n")

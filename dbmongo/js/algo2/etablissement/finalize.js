@@ -2,10 +2,10 @@ function finalize(k, v) {
   var offset_effectif = (date_fin_effectif.getUTCFullYear() - date_fin.getUTCFullYear()) * 12 + date_fin_effectif.getUTCMonth() - date_fin.getUTCMonth()
   var offset_cotisation = 1
 
-  liste_periodes = generatePeriodSerie(date_debut, date_fin)
-
+  var liste_periodes = generatePeriodSerie(date_debut, date_fin)
+ 
   v = Object.keys((v.batch || {})).sort().filter(batch => batch <= actual_batch).reduce((m, batch) => {
-    Object.keys(v.batch[batch]).forEach((type) => {
+    Object.keys(v.batch[batch]).forEach(type => {
       m[type] = (m[type] || {})
       var  array_delete = (v.batch[batch].compact.delete[type]||[])
       if (array_delete != {}) {array_delete.forEach(hash => {
@@ -16,6 +16,7 @@ function finalize(k, v) {
     })
     return m
   }, { "siret": k })
+
 
   v.apconso = (v.apconso || {})
   v.apdemande = (v.apdemande || {})
@@ -47,7 +48,7 @@ function finalize(k, v) {
     var l = ecn[i].length
     ecn[i].forEach((e, idx) => {
       if (idx <= l - 2) {
-        v.debit[e.hash].debit_suivant = ecn[i][idx + 1].hash;
+        v.debit[e.hash].debit_suivant = ecn[i][idx + 1].hash
       }
     })
   })
@@ -70,12 +71,12 @@ function finalize(k, v) {
       "etat_proc_collective": "in_bonis",
       "interessante_urssaf": true
     }
-  });
+  })
 
   var output_indexed = output_array.reduce(function (periode, val) {
     periode[val.periode.getTime()] = val
     return periode
-  }, {});
+  }, {})
 
 
 
@@ -86,9 +87,8 @@ function finalize(k, v) {
   ///////////////
   ///
   //
-
-  map_effectif = Object.keys(v.effectif).reduce(function (map_effectif, hash) {
-    var effectif = v.effectif[hash];
+  var map_effectif = Object.keys(v.effectif).reduce(function (map_effectif, hash) {
+    var effectif = v.effectif[hash]
     if (effectif == null) {
       return map_effectif
     }
@@ -98,28 +98,27 @@ function finalize(k, v) {
   }, {})
 
 
-
   Object.keys(map_effectif).forEach(time =>{
-    time_d = new Date(parseInt(time))
-    time_offset = DateAddMonth(time_d, -offset_effectif -1)
+    var time_d = new Date(parseInt(time))
+    var time_offset = DateAddMonth(time_d, -offset_effectif -1)
     if (time_offset.getTime() in output_indexed){
       output_indexed[time_offset.getTime()].effectif = map_effectif[time]
       output_indexed[time_offset.getTime()].date_effectif = time_d
     }
 
-    let past_month_offsets = [6,12,18,24]
+    var past_month_offsets = [6,12,18,24]
     past_month_offsets.forEach( offset =>{
-      time_past_offset = DateAddMonth(time_offset, offset)
-      variable_name_effectif = 'effectif_past_' + offset
+      var time_past_offset = DateAddMonth(time_offset, offset)
+      var variable_name_effectif = "effectif_past_" + offset
       if (time_past_offset.getTime() in output_indexed){
-        let val_offset = output_indexed[time_past_offset.getTime()]
+        var val_offset = output_indexed[time_past_offset.getTime()]
         val_offset[variable_name_effectif] = map_effectif[time]
       }
     }
     )
   }
   )
-
+  
   output_array.forEach(function (val, index) {
     if (val.effectif == null) {
       delete output_indexed[val.periode.getTime()]
@@ -145,13 +144,13 @@ function finalize(k, v) {
   }, {})
 
   Object.keys(v.apdemande).forEach(hash => {
-    periode_deb = v.apdemande[hash].periode.start
-    periode_fin = v.apdemande[hash].periode.end
-    periode_deb_floor = new Date(Date.UTC(periode_deb.getUTCFullYear(), periode_deb.getUTCMonth(), 1, 0, 0, 0, 0));
-    periode_fin_ceil = new Date(Date.UTC(periode_fin.getUTCFullYear(), periode_fin.getUTCMonth() + 1, 1, 0, 0, 0, 0));
-    series = generatePeriodSerie(periode_deb_floor, periode_fin_ceil)
+    var periode_deb = v.apdemande[hash].periode.start
+    var periode_fin = v.apdemande[hash].periode.end
+    var periode_deb_floor = new Date(Date.UTC(periode_deb.getUTCFullYear(), periode_deb.getUTCMonth(), 1, 0, 0, 0, 0))
+    var periode_fin_ceil = new Date(Date.UTC(periode_fin.getUTCFullYear(), periode_fin.getUTCMonth() + 1, 1, 0, 0, 0, 0))
+    var series = generatePeriodSerie(periode_deb_floor, periode_fin_ceil)
     series.forEach( date => {
-      time = date.getTime()
+      let time = date.getTime()
       if (time in output_indexed){
         output_indexed[time].apart_heures_autorisees = v.apdemande[hash].hta
       }  
@@ -170,8 +169,8 @@ function finalize(k, v) {
   // relier apdemande et apconso
   Object.keys(apart).forEach(k => {
     v.apdemande[apart[k].demande].hash_consommation = apart[k].consommation
-    for (j in apart[k].consommation) {
-      v.apconso[apart[k].consommation[j]].hash_demande = apart[k].demande;
+    for (let j in apart[k].consommation) {
+      v.apconso[apart[k].consommation[j]].hash_demande = apart[k].demande
     }
   })
 
@@ -181,8 +180,8 @@ function finalize(k, v) {
       if (conso.hash_demande) {
         var time = conso.periode.getTime()
         if (time in output_indexed){
-          output_indexed[time].apart_heures_consommees = output_indexed[time].apart_heures_consommees + conso.heure_consomme;
-          output_indexed[time].apart_motif_recours = v.apdemande[conso.hash_demande].motif_recours_se;
+          output_indexed[time].apart_heures_consommees = output_indexed[time].apart_heures_consommees + conso.heure_consomme
+          output_indexed[time].apart_motif_recours = v.apdemande[conso.hash_demande].motif_recours_se
         }
       }
     })
@@ -212,7 +211,7 @@ function finalize(k, v) {
           if (time in output_indexed) {
             var remaining_months = (date_echeance.getUTCMonth() - new Date(time).getUTCMonth()) +
               12*(date_echeance.getUTCFullYear() - new Date(time).getUTCFullYear()) 
-            output_indexed[time].delai = remaining_months;
+            output_indexed[time].delai = remaining_months
             output_indexed[time].duree_delai = delai.duree_delai
             output_indexed[time].montant_echeancier = delai.montant_echeancier
 
@@ -259,7 +258,7 @@ function finalize(k, v) {
       })
     }
   )
-  
+
   output_array.forEach(periode => {
     if ((periode.date_proc_collective || new Date(0)).getTime() == 0){
       delete periode.date_proc_collective
@@ -275,7 +274,7 @@ function finalize(k, v) {
   //             function (time) {
   //                 if (time in output) {
   //                     output[time].date_defaillance = altares.date_effet
-  //                     output[time].outcome_0_12 = "default";
+  //                     output[time].outcome_0_12 = "default"
   //                 }
   //             }
   //         )
@@ -297,7 +296,7 @@ function finalize(k, v) {
     var cotisation = v.cotisation[h]
     var periode_cotisation = generatePeriodSerie(cotisation.periode.start, cotisation.periode.end)
     periode_cotisation.forEach(date_cotisation => {
-      date_offset = DateAddMonth(date_cotisation, offset_cotisation)
+      let date_offset = DateAddMonth(date_cotisation, offset_cotisation)
       value_cotisation[date_offset.getTime()] = (value_cotisation[date_offset.getTime()] || []).concat(cotisation.du / periode_cotisation.length)
     })
   })
@@ -309,7 +308,7 @@ function finalize(k, v) {
     var debit = v.debit[h]
 
     var debit_suivant = (v.debit[debit.debit_suivant] || {"date_traitement" : date_fin})
-    date_limite = date_fin//new Date(new Date(debit.periode.start).setFullYear(debit.periode.start.getFullYear() + 1))
+    let date_limite = date_fin//new Date(new Date(debit.periode.start).setFullYear(debit.periode.start.getFullYear() + 1))
     date_traitement_debut = new Date(
       Date.UTC(debit.date_traitement.getFullYear(), debit.date_traitement.getUTCMonth())
     )
@@ -318,11 +317,11 @@ function finalize(k, v) {
       Date.UTC(debit_suivant.date_traitement.getFullYear(), debit_suivant.date_traitement.getUTCMonth())
     )
 
-    periode_debut = (date_traitement_debut.getTime() >= date_limite.getTime() ? date_limite : date_traitement_debut)
-    periode_fin = (date_traitement_fin.getTime() >= date_limite.getTime() ? date_limite : date_traitement_fin)
+    let periode_debut = (date_traitement_debut.getTime() >= date_limite.getTime() ? date_limite : date_traitement_debut)
+    let periode_fin = (date_traitement_fin.getTime() >= date_limite.getTime() ? date_limite : date_traitement_fin)
 
     generatePeriodSerie(periode_debut, periode_fin).map(function (date) {
-      time = date.getTime()
+      let time = date.getTime()
       value_dette[time] = (value_dette[time] || []).concat([{ "periode": debit.periode.start, "part_ouvriere": debit.part_ouvriere, "part_patronale": debit.part_patronale, "montant_majorations": debit.montant_majorations}])
     })
 
@@ -332,6 +331,7 @@ function finalize(k, v) {
     Object.keys(v.cotisation).map(function (h) {
       return(v.cotisation[h].numero_compte)
     })))
+
 
   Object.keys(output_indexed).forEach(function (time) {
     output_indexed[time].numero_compte_urssaf = numeros_compte
@@ -345,8 +345,8 @@ function finalize(k, v) {
   })
 
   Object.keys(output_indexed).forEach(time => {
-    time_d = new Date(parseInt(time))
-    val = output_indexed[time]
+    let time_d = new Date(parseInt(time))
+    var val = output_indexed[time]
 
     val.montant_dette = val.debit_array.reduce(function (m, dette) {
       m.part_ouvriere += dette.part_ouvriere
@@ -361,23 +361,23 @@ function finalize(k, v) {
 
     let past_month_offsets = [1,2,3,6,12]
     past_month_offsets.forEach(offset => {
-      time_offset = DateAddMonth(time_d, offset)      
-      variable_name_part_ouvriere = "montant_part_ouvriere_past_" + offset
-      variable_name_part_patronale = "montant_part_patronale_past_" + offset
+      let time_offset = DateAddMonth(time_d, offset)      
+      let variable_name_part_ouvriere = "montant_part_ouvriere_past_" + offset
+      let variable_name_part_patronale = "montant_part_patronale_past_" + offset
       if (time_offset.getTime() in output_indexed){
-        val_offset = output_indexed[time_offset.getTime()]
+        let val_offset = output_indexed[time_offset.getTime()]
         val_offset[variable_name_part_ouvriere] = val.montant_part_ouvriere
         val_offset[variable_name_part_patronale] = val.montant_part_patronale
       }
     })
-    
+
     let future_month_offsets = [0, 1, 2, 3, 4, 5]
     if (val.montant_part_ouvriere + val.montant_part_patronale > 0){
       future_month_offsets.forEach(offset => {
-        time_offset = DateAddMonth(time_d, offset)
-        val_offset = output_indexed[time_offset.getTime()]
+        let time_offset = DateAddMonth(time_d, offset)
+        let val_offset = output_indexed[time_offset.getTime()]
         if (time_offset.getTime() in output_indexed){
-          val_offset.nteressante_urssaf = false    
+          val_offset.interessante_urssaf = false    
         }
       })
     }
@@ -398,7 +398,7 @@ function finalize(k, v) {
   output_array.forEach(val => {        
     var optccsf = ccsfHashes.reduce( 
       function (accu, hash) { 
-        ccsf = v.ccsf[hash] 
+        var ccsf = v.ccsf[hash] 
         if (ccsf.date_traitement.getTime() < val.periode.getTime() && ccsf.date_traitement.getTime() > accu.date_traitement.getTime()) { 
           accu = ccsf 
         } 
@@ -429,7 +429,7 @@ function finalize(k, v) {
     // geolocalisation
 
     if (sireneHashes.length != 0) {
-      sirene = v.sirene[sireneHashes[0]]
+      var sirene = v.sirene[sireneHashes[0]]
     }
     val.siren = val.siret.substring(0, 9)
     val.lattitude = (sirene || { "lattitude": null }).lattitude
@@ -440,7 +440,8 @@ function finalize(k, v) {
     val.raison_sociale = (sirene || {"raisonsociale": null}).raisonsociale
     val.activite_saisonniere = (sirene || {"activitesaisoniere": null}).activitesaisoniere
     val.productif = (sirene || {"productif": null}).productif
-    val.debut_activite = (sirene || {"debut_activite":null}).debut_activite.getFullYear()
+    val.debut_activite = (sirene || {"debut_activite":null})
+    val.debut_activite = val.debut_acivite !== null ? val.debut_activite.getFullYear : val.debut_activite
     val.age = val.periode.getFullYear() - val.debut_activite
     val.tranche_ca = (sirene || {"trancheca":null}).trancheca
     val.indice_monoactivite = (sirene || {"indicemonoactivite": null}).indicemonoactivite  
@@ -456,12 +457,14 @@ function finalize(k, v) {
   ///
   //
   Object.keys(output_indexed).forEach(k =>{
-    output_indexed[k].code_naf = naf.n5to1[output_indexed[k].code_ape]
-    output_indexed[k].libelle_naf = naf.n1[output_indexed[k].code_naf]
-    output_indexed[k].libelle_ape2 = naf.n2[output_indexed[k].code_ape.substring(0,2)]
-    output_indexed[k].libelle_ape3 = naf.n3[output_indexed[k].code_ape.substring(0,3)]
-    output_indexed[k].libelle_ape4 = naf.n4[output_indexed[k].code_ape.substring(0,4)]
-    output_indexed[k].libelle_ape5 = naf.n5[output_indexed[k].code_ape]
+    if (("code_ape" in output_indexed[k]) && (output_indexed[k].code_ape !== null)){
+      output_indexed[k].code_naf = naf.n5to1[output_indexed[k].code_ape]
+      output_indexed[k].libelle_naf = naf.n1[output_indexed[k].code_naf]
+      output_indexed[k].libelle_ape2 = naf.n2[output_indexed[k].code_ape.substring(0,2)]
+      output_indexed[k].libelle_ape3 = naf.n3[output_indexed[k].code_ape.substring(0,3)]
+      output_indexed[k].libelle_ape4 = naf.n4[output_indexed[k].code_ape.substring(0,4)]
+      output_indexed[k].libelle_ape5 = naf.n5[output_indexed[k].code_ape]
+    }
   }
   )
 
@@ -480,8 +483,9 @@ function finalize(k, v) {
     let series = generatePeriodSerie(periode_courante, periode_12_mois)
     series.forEach(periode => {
       if (periode.getTime() in output_indexed){
-        output_indexed[periode.getTime()].cotisation_array = (output_indexed[periode.getTime()].cotisation_array || []).concat( output_indexed[periode_courante.getTime()].cotisation)
-        
+        if ("cotisation" in output_indexed[periode_courante.getTime()])
+          output_indexed[periode.getTime()].cotisation_array = (output_indexed[periode.getTime()].cotisation_array || []).concat(output_indexed[periode_courante.getTime()].cotisation)
+
         output_indexed[periode.getTime()].montant_pp_array = 
           (output_indexed[periode.getTime()].montant_pp_array || []).concat( output_indexed[periode_courante.getTime()].montant_part_patronale)
         output_indexed[periode.getTime()].montant_po_array = 
@@ -492,11 +496,8 @@ function finalize(k, v) {
   )
 
   output_array.forEach(val => {
-    val.cotisation_moy12m = (val.cotisation_array || []).reduce( (p, c) => p + c, 0) / (val.cotisation_array.length || 1) 
-    //val.ratio_dette = (val.montant_part_ouvriere + val.montant_part_patronale) / (val.cotisation_moy12m || 1)
-    //let pp_average = (val.montant_pp_array || []).reduce((p, c) => p + c, 0) / (val.montant_pp_array.length || 1) 
-    //let po_average =  (val.montant_po_array || []).reduce((p, c) => p + c, 0) / (val.montant_po_array.length || 1)
-    //val.dette_any_12m = (val.montant_pp_array || []).reduce((p,c) => (c >= 100) || p, false) || (val.montant_po_array || []).reduce((p, c) => (c >= 100) || p, false)
+    val.cotisation_array = (val.cotisation_array || [] )
+    val.cotisation_moy12m = val.cotisation_array.reduce( (p, c) => p + c, 0) / (val.cotisation_array.length || 1) 
     if (val.cotisation_moy12m > 0) {
       val.ratio_dette = (val.montant_part_ouvriere + val.montant_part_patronale) / val.cotisation_moy12m
       let pp_average = (val.montant_pp_array || []).reduce((p, c) => p + c, 0) / (val.montant_pp_array.length || 1)
@@ -510,8 +511,9 @@ function finalize(k, v) {
   })
 
 
-  return_value = {"siren": k.substring(0, 9)}
+  var return_value = {"siren": k.substring(0, 9)}
   return_value[k] = output_array
+  
   return return_value
 }
 

@@ -1,3 +1,4 @@
+_*
 .*
 !.gitignore
 **/*.html
@@ -23,3 +24,8 @@ dbmongo/dbmongo
 dbmongo/tools/fakeData/config.toml
 .Rproj.user
 *.orig
+*.rdx
+*.rdb
+*.patch
+*.json
+dbmongo/js/node_modules
