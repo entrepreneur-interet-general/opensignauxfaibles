@@ -44,6 +44,7 @@ type Batch struct {
 	CCSF       map[string]*CCSF       `json:"ccsf,omitempty" bson:"ccsf,omitempty"`
 	Cotisation map[string]*Cotisation `json:"cotisation,omitempty" bson:"cotisation,omitempty"`
 	Altares    map[string]*Altares    `json:"altares,omitempty" bson:"altares,omitempty"`
+  Procol     map[string]*Procol     `json:"procol,omitempty" bson:"procol,omitempty"`
 	APDemande  map[string]*APDemande  `json:"apdemande,omitempty" bson:"apdemande,omitempty"`
 	APConso    map[string]*APConso    `json:"apconso,omitempty" bson:"apconso,omitempty"`
 	Sirene     map[string]*Sirene     `json:"sirene,omitempty" bson:"sirene,omitempty"`
@@ -58,6 +59,13 @@ func (batch1 Batch) merge(batch2 Batch) {
 	}
 	for hash, altares := range batch2.Altares {
 		batch1.Altares[hash] = altares
+	}
+
+	if batch1.Procol == nil {
+		batch1.Procol = make(map[string]*Procol)
+	}
+	for hash, procol := range batch2.Procol {
+		batch1.Procol[hash] = procol
 	}
 
 	if batch1.Cotisation == nil {

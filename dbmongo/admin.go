@@ -36,6 +36,7 @@ func listTypes(c *gin.Context) {
 		{"dpae", "Déclaration Préalable à l'embauche", "DPAE"},
 		{"interim", "Base Interim", "interim"},
 		{"altares", "Base Altarès", "ALTARES"},
+    {"procol", "Procédures collectives", "procol"},
 		{"apdemande", "Demande Activité Partielle", "dde"},
 		{"ccsf", "Stock CCSF à date", "ccsf"},
 		{"debit", "Débits URSSAF", "debit"},

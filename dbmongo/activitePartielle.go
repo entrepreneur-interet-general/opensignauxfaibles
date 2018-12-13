@@ -18,18 +18,18 @@ type APDemande struct {
 	EffectifEntreprise *int      `json:"effectif_entreprise" bson:"effectif_entreprise"`
 	Effectif           *int      `json:"effectif" bson:"effectif"`
 	DateStatut         time.Time `json:"date_statut" bson:"date_statut"`
-	TxPC               *float64  `json:"tx_pc" bson:"tx_pc"`
-	TxPCUnedicDares    *float64  `json:"tx_pc_unedic_dares" bson:"tx_pc_unedic_dares"`
-	TxPCEtatDares      *float64  `json:"tx_pc_etat_dares" bson:"tx_pc_etat_dares"`
+	//TxPC               *float64  `json:"tx_pc" bson:"tx_pc"`
+	//TxPCUnedicDares    *float64  `json:"tx_pc_unedic_dares" bson:"tx_pc_unedic_dares"`
+	//TxPCEtatDares      *float64  `json:"tx_pc_etat_dares" bson:"tx_pc_etat_dares"`
 	Periode            Periode   `json:"periode" bson:"periode"`
 	HTA                *float64  `json:"hta" bson:"hta"`
 	MTA                *float64  `json:"mta" bson:"mta"`
 	EffectifAutorise   *int      `json:"effectif_autorise" bson:"effectif_autorise"`
-	ProdHTAEffectif    *float64  `json:"prod_hta_effectif" bson:"prod_hta_effectif"`
+	//ProdHTAEffectif    *float64  `json:"prod_hta_effectif" bson:"prod_hta_effectif"`
 	MotifRecoursSE     *int      `json:"motif_recours_se" bson:"motif_recours_se"`
-	Perimetre          *int      `json:"perimetre" bson:"perimetre"`
-	RecoursAnterieur   *int      `json:"recours_anterieur" bson:"recours_anterieur"`
-	AvisCE             *int      `json:"avis_ce" bson:"avis_ce"`
+	//Perimetre          *int      `json:"perimetre" bson:"perimetre"`
+	//RecoursAnterieur   *int      `json:"recours_anterieur" bson:"recours_anterieur"`
+	//AvisCE             *int      `json:"avis_ce" bson:"avis_ce"`
 	HeureConsommee     *float64  `json:"heure_consommee" bson:"heure_consommee"`
 	MontantConsomme    *float64  `json:"montant_consommee" bson:"montant_consommee"`
 	EffectifConsomme   *int      `json:"effectif_consomme" bson:"effectif_consomme"`
@@ -91,7 +91,7 @@ func parseAPDemande(path string) chan *APDemande {
 			}
 			// FIXME: établir une meilleure méthode pour tester la validité de la ligne
 			for _, row := range sheet.Rows[3:] {
-				var errors [10]error
+				var errors [12]error
 				if len(row.Cells) >= minLength {
 					n++
 					apdemande := APDemande{}
@@ -104,10 +104,12 @@ func parseAPDemande(path string) chan *APDemande {
 					apdemande.Periode.Start, errors[3] = excelToTime(row.Cells[f["DATE_DEB"]].Value)
 					apdemande.Periode.End, errors[4] = excelToTime(row.Cells[f["DATE_FIN"]].Value)
 					apdemande.HTA, errors[5] = parsePFloat(row.Cells[f["HTA"]].Value)
+					apdemande.MTA, errors[11] = parsePFloat(row.Cells[f["MTA"]].Value)
 					apdemande.EffectifAutorise, errors[6] = parsePInt(row.Cells[f["EFF_AUTO"]].Value)
 					apdemande.MotifRecoursSE, errors[7] = parsePInt(row.Cells[f["MOTIF_RECOURS_SE"]].Value)
 					apdemande.HeureConsommee, errors[8] = parsePFloat(row.Cells[f["S_HEURE_CONSOM_TOT"]].Value)
 					apdemande.EffectifConsomme, errors[9] = parsePInt(row.Cells[f["S_EFF_CONSOM_TOT"]].Value)
+					apdemande.MontantConsomme, errors[10] = parsePFloat(row.Cells[f["S_MONTANT_CONSOM_TOT"]].Value)
 
 					if allErrors(errors[:], nil) && apdemande.Siret != "" {
 						outputChannel <- &apdemande

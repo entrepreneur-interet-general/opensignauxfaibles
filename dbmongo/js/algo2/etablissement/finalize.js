@@ -440,9 +440,9 @@ function finalize(k, v) {
     val.raison_sociale = (sirene || {"raisonsociale": null}).raisonsociale
     val.activite_saisonniere = (sirene || {"activitesaisoniere": null}).activitesaisoniere
     val.productif = (sirene || {"productif": null}).productif
-    val.debut_activite = (sirene || {"debut_activite":null})
-    val.debut_activite = val.debut_acivite !== null ? val.debut_activite.getFullYear : val.debut_activite
-    val.age = val.periode.getFullYear() - val.debut_activite
+    val.date_creation = (sirene || {"creation": null}).creation
+    val.date_creation = val.date_creation !== null ? val.date_creation.getFullYear() : val.date_creation
+    val.age = val.periode.getFullYear() - val.date_creation
     val.tranche_ca = (sirene || {"trancheca":null}).trancheca
     val.indice_monoactivite = (sirene || {"indicemonoactivite": null}).indicemonoactivite  
 

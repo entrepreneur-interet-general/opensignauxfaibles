@@ -55,17 +55,18 @@ func listFiles(basePath string) ([]fileSummary, error) {
 }
 
 var importFunctions = map[string]func(*AdminBatch) error{
-	"apconso":    importAPConso,
-	"bdf":        importBDF,
-	"delai":      importDelai,
-	"apdemande":  importAPDemande,
-	"diane":      importDiane,
-	"cotisation": importCotisation,
-	"dpae":       importDPAE,
-	"altares":    importAltares,
-	"ccsf":       importCCSF,
-	"debit":      importDebit,
-	"effectif":   importEffectif,
+  "apconso":    importAPConso,
+  "bdf":        importBDF,
+  "delai":      importDelai,
+  "apdemande":  importAPDemande,
+  "diane":      importDiane,
+  "cotisation": importCotisation,
+  "dpae":       importDPAE,
+  "altares":    importAltares,
+  "procol":   importProcol,
+  "ccsf":       importCCSF,
+  "debit":      importDebit,
+  "effectif":   importEffectif,
 	"sirene":     importSirene,
 }
 
@@ -82,16 +83,17 @@ func importBatchHandler(c *gin.Context) {
 	batch.load(batchKey)
 	go importBatch(&batch)
 }
-
 func importBatch(batch *AdminBatch) {
-	if !batch.Readonly {
-		for _, fn := range importFunctions {
-			err := fn(batch)
-			if err != nil {
-				log(critical, "importMain", "Erreur à l'importation")
-			}
-		}
-	} else {
-		log(critical, "importMain", "Le lot "+batch.ID.Key+" est fermé, import impossible.")
-	}
+    if !batch.Readonly {
+        for fnName, fn := range importFunctions {
+            log(info, "importMain", "Début de l'import du type: "+fnName+" pour le batch "+batch.ID.Key)
+            err := fn(batch)
+            if err != nil {
+                log(critical, "importMain", "Erreur à l'importation du type: "+fnName)
+            }
+            log(info, "importMain", "Fin de l'import du type: "+fnName+" pour le batch "+batch.ID.Key)
+        }
+    } else {
+        log(critical, "importMain", "Le lot "+batch.ID.Key+" est fermé, import impossible.")
+    }
 }

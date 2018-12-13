@@ -7,9 +7,7 @@ while getopts b: option; do
 done
 shift $(($OPTIND -1))
 
-echo "$FILES"
 [ -z "$1" ] && echo "Please insert files as argument" && exit 1
-
 
 AWK_SCRIPT='
 BEGIN { # Semi-column separated csv as input and output
