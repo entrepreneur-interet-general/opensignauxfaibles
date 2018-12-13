@@ -112,6 +112,6 @@ apart_heures_consommees
 apart_heures_autorisees
 code_ape
 code_naf
-debut_activite
+age
 activite_saisonniere
 productif

@@ -66,10 +66,10 @@ function finalize(k, v) {
 
     //v.diane[hash].arrete_bilan_diane = new Date(Date.UTC(v.diane[hash].exercice_diane, 11, 31, 0, 0, 0, 0))
     let periode_arrete_bilan = new Date(Date.UTC(v.diane[hash].arrete_bilan_diane.getUTCFullYear(), v.diane[hash].arrete_bilan_diane.getUTCMonth() +1, 1, 0, 0, 0, 0))
-    let periode_dispo = DateAddMonth(periode_arrete_bilan, 8)
+    let periode_dispo = DateAddMonth(periode_arrete_bilan, 8) // 01/09 pour un bilan le 31/12
     let series = generatePeriodSerie(
       periode_dispo,
-      DateAddMonth(periode_dispo, 13)
+      DateAddMonth(periode_dispo, 13) // periode de validité d'un bilan auprès de la Banque de France: 21 mois (13+8)
     )
 
     series.forEach(periode => {
@@ -81,6 +81,7 @@ function finalize(k, v) {
         if (periode.getTime() in output_indexed){
           output_indexed[periode.getTime()][k] = v.diane[hash][k]
         }
+
         let past_year_offset = [1,2]
         past_year_offset.forEach(offset =>{
           let periode_offset = DateAddMonth(periode, 12 * offset)
@@ -95,6 +96,15 @@ function finalize(k, v) {
       }                   
       )           
     })
+
+    series.forEach(periode => {
+      if (periode.getTime() in output_indexed) {
+        if (!("taux_marge" in output_indexed[periode]) && 
+              // relevant things in v.diane[hash]?){
+          output_indexed[taux_marge
+        }
+      }
+    }
 
 
     //    series.forEach(periode => {
