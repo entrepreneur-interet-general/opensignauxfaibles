@@ -2,26 +2,26 @@ feature_engineering_std <- function(...){
 
   cat("Data preproccessing ...", "\n")
 
-  ratios_financiers <- c(
-    "CA",
-    "taux_marge",
-    "delai_fournisseur",
-    "poids_frng",
-    "frais_financier",
-    "financier_court_terme",
-    "ratio_CAF",
-    "ratio_marge_operationnelle",
-    "taux_rotation_stocks",
-    "ratio_productivite",
-    "ratio_export",
-    "ratio_delai_client",
-    "ratio_liquidite_reduite",
-    "ratio_rentabilite_nette",
-    "ratio_endettement",
-    "ratio_rend_capitaux_propres",
-    "ratio_rend_des_ress_durables",
-    "ratio_RetD"
-  )
+  #ratios_financiers <- c(
+  #  "ca",
+  #  "taux_marge",
+  #  "delai_fournisseur",
+  #  "poids_frng",
+  #  "frais_financier",
+  #  "financier_court_terme",
+  #  "ratio_CAF",
+  #  "ratio_marge_operationnelle",
+  #  "taux_rotation_stocks",
+  #  "ratio_productivite",
+  #  "ratio_export",
+  #  "ratio_delai_client",
+  #  "ratio_liquidite_reduite",
+  #  "ratio_rentabilite_nette",
+  #  "ratio_endettement",
+  #  "ratio_rend_capitaux_propres",
+  #  "ratio_rend_des_ress_durables",
+  #  "ratio_RetD"
+  #)
 
   ####################
   ## Default values ##
@@ -57,7 +57,7 @@ feature_engineering_std <- function(...){
       filter(
         is.na(effectif_consolide) | effectif_consolide < 500,
         is.na(effectif_entreprise) | effectif_entreprise < 500,
-        is.na(CA) | CA < 100000, !siret %in% wrong_sirets
+        is.na(ca) | ca < 100000, !siret %in% wrong_sirets
       )
 
     ##################
@@ -108,17 +108,17 @@ feature_engineering_std <- function(...){
         etat_proc_collective_num = as.numeric(etat_proc_collective)
       )
 
-    my_data <- my_data %>%
-      rename(
-        ratio_liquidite_reduite = liquidite_reduite,
-        ratio_rentabilite_nette = rentabilite_nette_pourcent,
-        ratio_endettement = endettement_pourcent,
-        ratio_rend_capitaux_propres =
-          rend_des_capitaux_propres_nets_pourcent,
-        ratio_rend_des_ress_durables =
-          rend_des_ress_durables_nettes_pourcent
-      ) %>%
-      mutate(ratio_liquidite_reduite = 100 * ratio_liquidite_reduite)
+    # my_data <- my_data %>%
+    #   rename(
+    #     ratio_liquidite_reduite = liquidite_reduite,
+    #     ratio_rentabilite_nette = rentabilite_nette_pourcent,
+    #     ratio_endettement = endettement_pourcent,
+    #     ratio_rend_capitaux_propres =
+    #       rend_des_capitaux_propres_nets_pourcent,
+    #     ratio_rend_des_ress_durables =
+    #       rend_des_ress_durables_nettes_pourcent
+    #   ) %>%
+    #   mutate(ratio_liquidite_reduite = 100 * ratio_liquidite_reduite)
 
 
     #########################
@@ -208,37 +208,37 @@ feature_engineering_std <- function(...){
     # ungroup()
 
     # Liquidites et solvabilite
-    my_data <- my_data %>%
-      mutate(
-        # Suspect # BFR = total_actif_circ_ch_const_av - total_des_charges_expl,
-        # Suspect # tresorerie_nette = fonds_de_roul_net_global - BFR,
-        ratio_CAF = 100 * capacite_autofinanc_avant_repartition / CA)
+    # my_data <- my_data %>%
+    #   mutate(
+    #     # Suspect # BFR = total_actif_circ_ch_const_av - total_des_charges_expl,
+    #     # Suspect # tresorerie_nette = fonds_de_roul_net_global - BFR,
+    #     ratio_CAF = 100 * capacite_autofinanc_avant_repartition / ca)
 
-    # Rentabilite
-    my_data <- my_data %>%
-      mutate(
-        ratio_marge_operationnelle =  100 * resultat_expl / CA,
-        taux_marge_neg = taux_marge < 0,
-        taux_marge_extr_neg = taux_marge < -100,
-        taux_marge_extr_pos = taux_marge > 100
-      )
+    # # Rentabilite
+    # my_data <- my_data %>%
+    #   mutate(
+    #     ratio_marge_operationnelle =  100 * resultat_expl / ca,
+    #     taux_marge_neg = taux_marge < 0,
+    #     taux_marge_extr_neg = taux_marge < -100,
+    #     taux_marge_extr_pos = taux_marge > 100
+    #   )
 
-    # Stocks
-    my_data <- my_data %>%
-      mutate(
-        stocks = produits_intermed_et_finis + marchandises +
-          en_cours_de_prod_de_biens + matieres_prem_approv + marchandises,
-        taux_rotation_stocks =  CA / stocks
-      )
+    # # Stocks
+    # my_data <- my_data %>%
+    #   mutate(
+    #     stocks = produits_intermed_et_finis + marchandises +
+    #       en_cours_de_prod_de_biens + matieres_prem_approv + marchandises,
+    #     taux_rotation_stocks =  ca / stocks
+    #   )
 
-    # Autre
-    my_data <- my_data %>%
-      mutate(
-        ratio_productivite = 100 * CA / effectif,
-        ratio_export = 100 * chiffre_affaires_net_lie_aux_exportations / CA,
-        ratio_delai_client = (clients_et_cptes_ratt * 360) / CA,
-        ratio_RetD = frais_de_RetD / CA
-      )
+    # # Autre
+    # my_data <- my_data %>%
+    #   mutate(
+    #     ratio_productivite = 100 * ca / effectif,
+    #     ratio_export = 100 * chiffre_affaires_net_lie_aux_exportations / ca,
+    #     ratio_delai_client = (clients_et_cptes_ratt * 360) / ca,
+    #     ratio_RetD = frais_de_RetD / ca
+    #   )
 
 
     ##################

@@ -51,7 +51,7 @@ shapley_plot <- function(
     "financier_court_terme",
     "ratio_delai_client",
     "TargetEncode_code_naf",
-    "resultat_net_consolide",
+    "benefice_ou_perte",
     "taux_rotation_stocks",
     "nombre_etab_secondaire",
     "nbr_etablissements_connus",

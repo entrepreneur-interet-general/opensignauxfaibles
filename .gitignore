@@ -29,3 +29,4 @@ dbmongo/tools/fakeData/config.toml
 *.patch
 *.json
 dbmongo/js/node_modules
+dbmongo/export/mongo_dump

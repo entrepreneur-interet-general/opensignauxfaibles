@@ -67,7 +67,7 @@ var importFunctions = map[string]func(*AdminBatch) error{
   "ccsf":       importCCSF,
   "debit":      importDebit,
   "effectif":   importEffectif,
-	"sirene":     importSirene,
+  "sirene":     importSirene,
 }
 
 func purge(c *gin.Context) {

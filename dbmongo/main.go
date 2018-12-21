@@ -163,6 +163,7 @@ func main() {
 		api.GET("/compact/entreprise", compactEntrepriseHandler)
 		api.GET("/reduce/:algo/:batch/:siret", reduceHandler)
 		api.GET("/reduce/:algo/:batch", reduceHandler)
+    api.GET("/reduce2/group_by_sector", group_sectors_aggregation)
     api.GET("/union/:algo/:batch", unionReduceHandler)
 	}
 

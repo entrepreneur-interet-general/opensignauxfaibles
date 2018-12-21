@@ -69,7 +69,7 @@ export_fiche_visite <- function(
       siren = substr(sirets[i], 1, 9),
       min_effectif = 0,
       fields = field_names,
-      code_ape_niveau3 = substring(one_company$code_ape[1], 1, 3)
+      code_ape = substring(one_company$code_ape[1], 1, 3)
     )
 
 
