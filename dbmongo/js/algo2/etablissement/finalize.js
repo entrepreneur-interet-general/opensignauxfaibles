@@ -1,4 +1,5 @@
 function finalize(k, v) {
+
   var offset_effectif = (date_fin_effectif.getUTCFullYear() - date_fin.getUTCFullYear()) * 12 + date_fin_effectif.getUTCMonth() - date_fin.getUTCMonth()
   var offset_cotisation = 1
 
@@ -22,6 +23,7 @@ function finalize(k, v) {
   v.apdemande = (v.apdemande || {})
   v.effectif = (v.effectif || {})
   v.altares = (v.altares || {})
+  v.procol = (v.procol || {})
   v.cotisation = (v.cotisation || {})
   v.debit = (v.debit || {})
   v.delai = (v.delai || {})
@@ -192,35 +194,16 @@ function finalize(k, v) {
     }
   })
 
-  //
-  ///
-  ////////////
-  // delais //
-  ////////////
-  ///
-  //
 
-  Object.keys(v.delai).map(
-    function (hash) {
-      var delai = v.delai[hash]
-      var date_creation = new Date(Date.UTC(delai.date_creation.getUTCFullYear(), delai.date_creation.getUTCMonth(), 1, 0, 0, 0, 0))
-      var date_echeance = new Date(Date.UTC(delai.date_echeance.getUTCFullYear(), delai.date_echeance.getUTCMonth(), 1, 0, 0, 0, 0))
-      var pastYearTimes = generatePeriodSerie(date_creation, date_echeance).map(function (date) { return date.getTime() })
-      pastYearTimes.map(
-        function(time){
-          if (time in output_indexed) {
-            var remaining_months = (date_echeance.getUTCMonth() - new Date(time).getUTCMonth()) +
-              12*(date_echeance.getUTCFullYear() - new Date(time).getUTCFullYear()) 
-            output_indexed[time].delai = remaining_months
-            output_indexed[time].duree_delai = delai.duree_delai
-            output_indexed[time].montant_echeancier = delai.montant_echeancier
-
-          }
-        }
-      )
-    }
-  ) 
-
+  // ratio_dette_delai = base::ifelse(
+  //   !is.na(duree_delai) & duree_delai > 0,
+  //   (
+  //     montant_part_patronale + montant_part_ouvriere -
+  //       montant_echeancier * delai / (duree_delai / 30)
+  //   ) / montant_echeancier,
+  //   NA
+  // )
+  
   //
   ///
   //////////////////
@@ -228,58 +211,108 @@ function finalize(k, v) {
   //////////////////
   ///
   //
+  function deal_with_procols(data_source, altar_or_procol){
+    var codes  =  Object.keys(data_source).reduce(function(events,hash) {
+      var the_event = data_source[hash]
 
-  // On filtre altares pour ne garder que les codes qui nous intéressents
-  var altares_codes  =  Object.keys(v.altares).reduce(function(events,hash) {
-    var altares_event = v.altares[hash]
+      if (altar_or_procol == "altares")
+        var etat = altaresToHuman(the_event.code_evenement);
+      else if (altar_or_procol == "procol")
+        var etat = procolToHuman(the_event.action_procol, the_event.stade_procol);
+
+      if (etat != null)
+        events.push({"etat": etat, "date_proc_col": new Date(the_event.date_effet)})
+
+      return(events)
+    },[]).sort(
+      function(a,b) {return(a.date_proc_col.getTime() > b.date_proc_col.getTime())}
+    )
+
+    codes.forEach(
+      function (event) {
+        let periode_effet = new Date(Date.UTC(event.date_proc_col.getFullYear(), event.date_proc_col.getUTCMonth(), 1, 0, 0, 0, 0))
+        var time_til_last = Object.keys(output_indexed).filter(val => {return (val >= periode_effet)})
+
+        time_til_last.forEach(time => {
+          if (time in output_indexed) {
+            output_indexed[time].etat_proc_collective = event.etat
+            output_indexed[time].date_proc_collective = event.date_proc_col
+            if (event.etat != "in_bonis")
+              output_indexed[time].tag_outcome = "failure"
+          }
+        })
+      }
+    )
+
+    //output_array.forEach(periode => {
+    //  if ((periode.date_proc_collective || new Date(0)).getTime() == 0){
+    //    delete periode.date_proc_collective
+    //  }
+    //})
+  }
 
 
-    var etat = altaresToHuman(altares_event.code_evenement)
+  deal_with_procols(v.altares, "altares")
+  deal_with_procols(v.procol, "procol")
+  // // On filtre altares pour ne garder que les codes qui nous intéressents
+  // var altares_codes  =  Object.keys(v.altares).reduce(function(events,hash) {
+  //   var altares_event = v.altares[hash]
 
-    if (etat != null)
-      events.push({"etat": etat, "date_proc_col": new Date(altares_event.date_effet)})
+  //   var etat = altaresToHuman(altares_event.code_evenement)
 
-    return(events)
-  },[{"etat" : "in_bonis", "date_proc_col" : new Date(0)}]).sort(
-    function(a,b) {return(a.date_proc_col.getTime() > b.date_proc_col.getTime())}
-  )
+  //   if (etat != null)
+  //     events.push({"etat": etat, "date_proc_col": new Date(altares_event.date_effet)})
 
-
-
-  altares_codes.forEach(
-    function (event) {
-      var periode_effet = new Date(Date.UTC(event.date_proc_col.getFullYear(), event.date_proc_col.getUTCMonth(), 1, 0, 0, 0, 0))
-      var time_til_last = Object.keys(output_indexed).filter(val => {return (val >= periode_effet)})
-      time_til_last.forEach(time => {
-        if (time in output_indexed) {
-          output_indexed[time].etat_proc_collective = event.etat
-          output_indexed[time].date_proc_collective = event.date_proc_col
-        }
-      })
-    }
-  )
-
-  output_array.forEach(periode => {
-    if ((periode.date_proc_collective || new Date(0)).getTime() == 0){
-      delete periode.date_proc_collective
-    }
-  })
-  // Object.keys(v.altares).forEach(
-  //     function (hash) {
-  //         var altares = v.altares[hash]
-  //         var periode_effet = new Date(Date.UTC(altares.date_effet.getUTCFullYear(), altares.date_effet.getUTCMonth(), 1, 0, 0, 0, 0))
-  //         var periode_outcome = new Date(Date.UTC(altares.date_effet.getUTCFullYear() - 1, altares.date_effet.getUTCMonth(), 1, 0, 0, 0, 0))
-  //         var pastYearTimes = generatePeriodSerie(periode_outcome, periode_effet).map(function (date) { return date.getTime() })
-  //         pastYearTimes.map(
-  //             function (time) {
-  //                 if (time in output) {
-  //                     output[time].date_defaillance = altares.date_effet
-  //                     output[time].outcome_0_12 = "default"
-  //                 }
-  //             }
-  //         )
-  //     }
+  //   return(events)
+  // },[{"etat" : "in_bonis", "date_proc_col" : new Date(0)}]).sort(
+  //   function(a,b) {return(a.date_proc_col.getTime() > b.date_proc_col.getTime())}
   // )
+
+  // altares_codes.forEach(
+  //   function (event) {
+  //     var periode_effet = new Date(Date.UTC(event.date_proc_col.getFullYear(), event.date_proc_col.getUTCMonth(), 1, 0, 0, 0, 0))
+  //     var time_til_last = Object.keys(output_indexed).filter(val => {return (val >= periode_effet)})
+  //     time_til_last.forEach(time => {
+  //       if (time in output_indexed) {
+  //         output_indexed[time].etat_proc_collective = event.etat
+  //         output_indexed[time].date_proc_collective = event.date_proc_col
+  //       }
+  //     })
+  //   }
+  // )
+
+  // output_array.forEach(periode => {
+  //   if ((periode.date_proc_collective || new Date(0)).getTime() == 0){
+  //     delete periode.date_proc_collective
+  //   }
+  // })
+
+  // /// Procédures collectives
+  // let procol_codes  =  Object.keys(v.procol).reduce(function(events,hash) {
+  //   var procol_event = v.procol[hash]
+
+  //   var etat = procolToHuman(procol_event.action_procol, procol_event.stade_procol)
+
+  //   if (etat != null)
+  //     events.push({"etat": etat, "date_proc_col": new Date(procol_event.date_effet)})
+
+  //   return(events)
+  // },[]).sort(
+  //   function(a,b) {return(a.date_proc_col.getTime() > b.date_proc_col.getTime())}
+  // )
+
+  // procol_codes.forEach( my_event => {
+  //   let periode_effet = new Date(Date.UTC(my_event.date_proc_col.getFullYear(), my_event.date_proc_col.getUTCMonth(), 1, 0, 0, 0, 0))
+  //   let time_til_last = Object.keys(output_indexed).filter(val => {return (val >= periode_effet)})
+
+  //   time_til_last.forEach(time => {
+  //     if (time in output_indexed) {
+  //       output_indexed[time].etat_proc_collective = my_event.etat
+  //       output_indexed[time].date_proc_collective = my_event.date_proc_col
+  //     }
+  //   })
+  // })
+
 
 
   //
@@ -388,6 +421,41 @@ function finalize(k, v) {
 
   //
   ///
+  ////////////
+  // delais //
+  ////////////
+  ///
+  //
+
+  Object.keys(v.delai).map(
+    function (hash) {
+      var delai = v.delai[hash]
+      var date_creation = new Date(Date.UTC(delai.date_creation.getUTCFullYear(), delai.date_creation.getUTCMonth(), 1, 0, 0, 0, 0))
+      var date_echeance = new Date(Date.UTC(delai.date_echeance.getUTCFullYear(), delai.date_echeance.getUTCMonth(), 1, 0, 0, 0, 0))
+      var pastYearTimes = generatePeriodSerie(date_creation, date_echeance).map(function (date) { return date.getTime() })
+      pastYearTimes.map(
+        function(time){
+          if (time in output_indexed) {
+            var remaining_months = (date_echeance.getUTCMonth() - new Date(time).getUTCMonth()) +
+              12*(date_echeance.getUTCFullYear() - new Date(time).getUTCFullYear()) 
+            output_indexed[time].delai = remaining_months
+            output_indexed[time].duree_delai = delai.duree_delai
+            output_indexed[time].montant_echeancier = delai.montant_echeancier
+
+            if (delai.duree_delai > 0){
+              output_indexed[time].ratio_dette_delai = (output_indexed[time].montant_part_patronale + 
+                output_indexed[time].montant_part_ouvriere - delai.montant_echeancier * remaining_months * 30 / 
+                (delai.duree_delai)) /
+                delai.montant_echeancier
+            }
+          }
+        }
+      )
+    }
+  ) 
+
+  //
+  ///
   /////////
   // CCSF// 
   /////////
@@ -440,9 +508,9 @@ function finalize(k, v) {
     val.raison_sociale = (sirene || {"raisonsociale": null}).raisonsociale
     val.activite_saisonniere = (sirene || {"activitesaisoniere": null}).activitesaisoniere
     val.productif = (sirene || {"productif": null}).productif
-    val.debut_activite = (sirene || {"debut_activite":null})
-    val.debut_activite = val.debut_acivite !== null ? val.debut_activite.getFullYear : val.debut_activite
-    val.age = val.periode.getFullYear() - val.debut_activite
+    val.date_creation = (sirene || {"creation": null}).creation
+    val.date_creation = val.date_creation !== null ? val.date_creation.getFullYear() : val.date_creation
+    val.age = val.periode.getFullYear() - val.date_creation
     val.tranche_ca = (sirene || {"trancheca":null}).trancheca
     val.indice_monoactivite = (sirene || {"indicemonoactivite": null}).indicemonoactivite  
 
@@ -509,6 +577,43 @@ function finalize(k, v) {
     delete val.montant_pp_array
     delete val.montant_po_array
   })
+
+  // Calcul des défauts URSSAF prolongés
+  let counter = 0
+  Object.keys(output_indexed).sort().forEach(k => {
+    if (output_indexed[k].ratio_dette > 1){
+      counter = counter + 1
+      if (counter >= 3) 
+        output_indexed[k].tag_outcome = "default"
+    } else 
+      counter = 0
+  })
+
+  //
+  ///
+  ///////////////////////////
+  // Cible d'apprentissage //
+  // ///////////////////////
+  ///
+  //
+  counter = -1
+  Object.keys(output_indexed).sort((a,b)=> a<=b).forEach( k => {
+    if (counter >=0) counter = counter + 1 
+    if (output_indexed[k].tag_outcome == "default" || output_indexed[k].tag_outcome == "failure"){
+      counter = 0 
+    }
+    if (counter >= 0){
+      output_indexed[k].time_til_outcome = counter
+    }
+  })
+
+  //
+  ///
+  //////////////////////
+  // Echantillon test //
+  //////////////////////
+  ///
+  //
 
 
   var return_value = {"siren": k.substring(0, 9)}

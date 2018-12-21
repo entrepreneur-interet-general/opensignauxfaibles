@@ -106,274 +106,296 @@ func parseDiane(paths []string) chan *Diane {
     for _, path := range paths {
       full_paths = append(full_paths, viper.GetString("APP_DATA")+path)
     }
-    full_paths = append([]string{viper.GetString("APP_DATA") + "/../script/convert_diane.sh"}, full_paths...)
 
-    cmd := exec.Command("/bin/bash", full_paths...)
-    stdout, err := cmd.StdoutPipe()
+    if (len(full_paths) != 0){
+      full_paths = append([]string{viper.GetString("APP_DATA") + "/../script/convert_diane.sh"}, full_paths...)
 
-    if err != nil {
-      fmt.Println("Error", err)
-      log(critical, "importDiane", "Erreur à l'ouverture des fichiers Dianes, abandon.")
-    } else {
-      log(debug, "importDiane", "Ouverture du fichier Diane.")
-    }
-    reader := csv.NewReader(stdout)
-    reader.Comma = ';'
-    reader.LazyQuotes = true
-    cmd.Start()
+      cmd := exec.Command("/bin/bash", full_paths...)
+      stdout, err := cmd.StdoutPipe()
 
-    for {
-      row, err := reader.Read()
-      if err == io.EOF {
-        log(debug, "importDiane", "Traitement des fichiers diane terminé: "+fmt.Sprint(n)+" lignes traitées")
-        break
-      } else if err != nil {
-        log(critical, "importDiane", "Erreur lors de la lecture du fichier diane: "+err.Error()+". Abandon !")
-        break
+      if err != nil {
+        fmt.Println("Error", err)
+        log(critical, "importDiane", "Erreur à l'ouverture des fichiers Dianes, abandon.")
+      } else {
+        log(debug, "importDiane", "Ouverture du fichier Diane.")
       }
-      n++
-      diane := Diane{}
+      reader := csv.NewReader(stdout)
+      reader.Comma = ';'
+      reader.LazyQuotes = true
+      cmd.Start()
 
-      if i, err := strconv.Atoi(row[0]); err == nil {
-        diane.Annee = &i
-      }
+      for {
+        row, err := reader.Read()
+        if err == io.EOF {
+          log(debug, "importDiane", "Traitement des fichiers diane terminé: "+fmt.Sprint(n)+" lignes traitées")
+          break
+        } else if err != nil {
+          log(critical, "importDiane", "Erreur lors de la lecture du fichier diane: "+err.Error()+". Abandon !")
+          break
+        }
+        n++
+        diane := Diane{}
 
-      diane.NomEntreprise = row[2]
-      diane.NumeroSiren = row[3]
-      diane.StatutJuridique = row[4]
-      diane.ProcedureCollective = (row[5] == "Oui")
+        if i, err := strconv.Atoi(row[0]); err == nil {
+          diane.Annee = &i
+        }
+        if 2 < len(row){
+          diane.NomEntreprise = row[2]
+        } else {
+          log(critical, "importDiane", "Ligne invalide. Abandon !")
+          break
+        }
+        if 3 < len(row){
+          diane.NumeroSiren = row[3]
+        } else {
+          log(critical, "importDiane", "Ligne invalide. Abandon !")
+          break
+        }
+        if 4 < len(row){
+          diane.StatutJuridique = row[4]
+        } else {
+          log(critical, "importDiane", "Ligne invalide. Abandon !")
+          break
+        }
+        if 5 < len(row){
+          diane.ProcedureCollective = (row[5] == "Oui")
+        } else {
+          log(critical, "importDiane", "Ligne invalide. Abandon !")
+          break
+        }
 
-      if i, err := strconv.Atoi(row[6]); err == nil {
-        diane.EffectifConsolide = &i
-      }
-      if i, err := strconv.ParseFloat(row[7], 64); err == nil {
-        diane.DetteFiscaleEtSociale = &i
-      }
-      if i, err := strconv.ParseFloat(row[8], 64); err == nil {
-        diane.FraisDeRetD = &i
-      }
-      if i, err := strconv.ParseFloat(row[9], 64); err == nil {
-        diane.ConcesBrevEtDroitsSim = &i
-      }
-      if i, err := strconv.ParseFloat(row[10], 64); err == nil {
-        diane.NotePreface = &i
-      }
-      if i, err := strconv.Atoi(row[11]); err == nil {
-        diane.NombreEtabSecondaire = &i
-      }
-      if i, err := strconv.Atoi(row[12]); err == nil {
-        diane.NombreFiliale = &i
-      }
-      if i, err := strconv.Atoi(row[13]); err == nil {
-        diane.TailleCompoGroupe = &i
-      }
-      if i, err := time.Parse("02/01/2006", row[15]); err == nil {
-        diane.ArreteBilan = i
-      }
-      if i, err := strconv.Atoi(row[16]); err == nil {
-        diane.NombreMois = &i
-      }
-      if i, err := strconv.ParseFloat(row[17], 64); err == nil {
-        diane.ConcoursBancaireCourant = &i
-      }
-      if i, err := strconv.ParseFloat(row[18], 64); err == nil {
-        diane.EquilibreFinancier = &i
-      }
-      if i, err := strconv.ParseFloat(row[19], 64); err == nil {
-        diane.IndependanceFinanciere = &i
-      }
-      if i, err := strconv.ParseFloat(row[20], 64); err == nil {
-        diane.Endettement = &i
-      }
-      if i, err := strconv.ParseFloat(row[21], 64); err == nil {
-        diane.AutonomieFinanciere = &i
-      }
-      if i, err := strconv.ParseFloat(row[22], 64); err == nil {
-        diane.DegreImmoCorporelle = &i
-      }
-      if i, err := strconv.ParseFloat(row[23], 64); err == nil {
-        diane.FinancementActifCirculant = &i
-      }
-      if i, err := strconv.ParseFloat(row[24], 64); err == nil {
-        diane.LiquiditeGenerale = &i
-      }
-      if i, err := strconv.ParseFloat(row[25], 64); err == nil {
-        diane.LiquiditeReduite = &i
-      }
-      if i, err := strconv.ParseFloat(row[26], 64); err == nil {
-        diane.RotationStocks = &i
-      }
-      if i, err := strconv.ParseFloat(row[27], 64); err == nil {
-        diane.CreditClient = &i
-      }
-      if i, err := strconv.ParseFloat(row[28], 64); err == nil {
-        diane.CreditFournisseur = &i
-      }
-      if i, err := strconv.ParseFloat(row[29], 64); err == nil {
-        diane.CAparEffectif = &i
-      }
-      if i, err := strconv.ParseFloat(row[30], 64); err == nil {
-        diane.TauxInteretFinancier = &i
-      }
-      if i, err := strconv.ParseFloat(row[31], 64); err == nil {
-        diane.TauxInteretSurCA = &i
-      }
-      if i, err := strconv.ParseFloat(row[32], 64); err == nil {
-        diane.EndettementGlobal = &i
-      }
-      if i, err := strconv.ParseFloat(row[33], 64); err == nil {
-        diane.TauxEndettement = &i
-      }
-      if i, err := strconv.ParseFloat(row[34], 64); err == nil {
-        diane.CapaciteRemboursement = &i
-      }
-      if i, err := strconv.ParseFloat(row[35], 64); err == nil {
-        diane.CapaciteAutofinancement = &i
-      }
-      if i, err := strconv.ParseFloat(row[36], 64); err == nil {
-        diane.CouvertureCA_FDR = &i
-      }
-      if i, err := strconv.ParseFloat(row[37], 64); err == nil {
-        diane.CouvertureCA_BesoinFDR = &i
-      }
-      if i, err := strconv.ParseFloat(row[38], 64); err == nil {
-        diane.PoidsBFRExploitation = &i
-      }
-      if i, err := strconv.ParseFloat(row[39], 64); err == nil {
-        diane.Exportation = &i
-      }
-      if i, err := strconv.ParseFloat(row[40], 64); err == nil {
-        diane.EfficaciteEconomique = &i
-      }
-      if i, err := strconv.ParseFloat(row[41], 64); err == nil {
-        diane.ProductivitePotentielProduction = &i
-      }
-      if i, err := strconv.ParseFloat(row[42], 64); err == nil {
-        diane.ProductiviteCapitalFinancier = &i
-      }
-      if i, err := strconv.ParseFloat(row[43], 64); err == nil {
-        diane.ProductiviteCapitalInvesti = &i
-      }
-      if i, err := strconv.ParseFloat(row[44], 64); err == nil {
-        diane.TauxDInvestissementProductif = &i
-      }
-      if i, err := strconv.ParseFloat(row[45], 64); err == nil {
-        diane.RentabiliteEconomique = &i
-      }
-      if i, err := strconv.ParseFloat(row[46], 64); err == nil {
-        diane.Performance = &i
-      }
-      if i, err := strconv.ParseFloat(row[47], 64); err == nil {
-        diane.RendementBrutFondsPropres = &i
-      }
-      if i, err := strconv.ParseFloat(row[48], 64); err == nil {
-        diane.RentabiliteNette = &i
-      }
-      if i, err := strconv.ParseFloat(row[49], 64); err == nil {
-        diane.RendementCapitauxPropres = &i
-      }
-      if i, err := strconv.ParseFloat(row[50], 64); err == nil {
-        diane.RendementRessourcesDurables = &i
-      }
-      if i, err := strconv.ParseFloat(row[51], 64); err == nil {
-        diane.TauxMargeCommerciale = &i
-      }
-      if i, err := strconv.ParseFloat(row[52], 64); err == nil {
-        diane.TauxValeurAjoutee = &i
-      }
-      if i, err := strconv.ParseFloat(row[53], 64); err == nil {
-        diane.PartSalaries = &i
-      }
-      if i, err := strconv.ParseFloat(row[54], 64); err == nil {
-        diane.PartEtat = &i
-      }
-      if i, err := strconv.ParseFloat(row[55], 64); err == nil {
-        diane.PartPreteur = &i
-      }
-      if i, err := strconv.ParseFloat(row[56], 64); err == nil {
-        diane.PartAutofinancement = &i
-      }
-      if i, err := strconv.ParseFloat(row[57], 64); err == nil {
-        diane.CA = &i
-      }
-      if i, err := strconv.ParseFloat(row[58], 64); err == nil {
-        diane.CAExportation = &i
-      }
-      if i, err := strconv.ParseFloat(row[59], 64); err == nil {
-        diane.AchatMarchandises = &i
-      }
-      if i, err := strconv.ParseFloat(row[61], 64); err == nil {
-        diane.AchatMatieresPremieres = &i
-      }
-      if i, err := strconv.ParseFloat(row[62], 64); err == nil {
-        diane.Production = &i
-      }
-      if i, err := strconv.ParseFloat(row[63], 64); err == nil {
-        diane.MargeCommerciale = &i
-      }
-      if i, err := strconv.ParseFloat(row[64], 64); err == nil {
-        diane.Consommation = &i
-      }
-      if i, err := strconv.ParseFloat(row[65], 64); err == nil {
-        diane.AutresAchatsChargesExternes = &i
-      }
-      if i, err := strconv.ParseFloat(row[66], 64); err == nil {
-        diane.ValeurAjoutee = &i
-      }
-      if i, err := strconv.ParseFloat(row[67], 64); err == nil {
-        diane.ChargePersonnel = &i
-      }
-      if i, err := strconv.ParseFloat(row[68], 64); err == nil {
-        diane.ImpotsTaxes = &i
-      }
-      if i, err := strconv.ParseFloat(row[69], 64); err == nil {
-        diane.SubventionsDExploitation = &i
-      }
-      if i, err := strconv.ParseFloat(row[70], 64); err == nil {
-        diane.ExcedentBrutDExploitation = &i
-      }
-      if i, err := strconv.ParseFloat(row[71], 64); err == nil {
-        diane.AutresProduitsChargesReprises = &i
-      }
-      if i, err := strconv.ParseFloat(row[72], 64); err == nil {
-        diane.DotationAmortissement = &i
-      }
-      if i, err := strconv.ParseFloat(row[73], 64); err == nil {
-        diane.ResultatExpl = &i
-      }
-      if i, err := strconv.ParseFloat(row[74], 64); err == nil {
-        diane.OperationsCommun = &i
-      }
-      if i, err := strconv.ParseFloat(row[75], 64); err == nil {
-        diane.ProduitsFinanciers = &i
-      }
-      if i, err := strconv.ParseFloat(row[76], 64); err == nil {
-        diane.ChargesFinancieres = &i
-      }
-      if i, err := strconv.ParseFloat(row[77], 64); err == nil {
-        diane.Interets = &i
-      }
-      if i, err := strconv.ParseFloat(row[78], 64); err == nil {
-        diane.ResultatAvantImpot = &i
-      }
-      if i, err := strconv.ParseFloat(row[79], 64); err == nil {
-        diane.ProduitExceptionnel = &i
-      }
-      if i, err := strconv.ParseFloat(row[80], 64); err == nil {
-        diane.ChargeExceptionnelle = &i
-      }
-      if i, err := strconv.ParseFloat(row[81], 64); err == nil {
-        diane.ParticipationSalaries = &i
-      }
-      if i, err := strconv.ParseFloat(row[82], 64); err == nil {
-        diane.ImpotBenefice = &i
-      }
-      if i, err := strconv.ParseFloat(row[83], 64); err == nil {
-        diane.BeneficeOuPerte = &i
-      }
+        if i, err := strconv.Atoi(row[6]); err == nil {
+          diane.EffectifConsolide = &i
+        }
+        if i, err := strconv.ParseFloat(row[7], 64); err == nil {
+          diane.DetteFiscaleEtSociale = &i
+        }
+        if i, err := strconv.ParseFloat(row[8], 64); err == nil {
+          diane.FraisDeRetD = &i
+        }
+        if i, err := strconv.ParseFloat(row[9], 64); err == nil {
+          diane.ConcesBrevEtDroitsSim = &i
+        }
+        if i, err := strconv.ParseFloat(row[10], 64); err == nil {
+          diane.NotePreface = &i
+        }
+        if i, err := strconv.Atoi(row[11]); err == nil {
+          diane.NombreEtabSecondaire = &i
+        }
+        if i, err := strconv.Atoi(row[12]); err == nil {
+          diane.NombreFiliale = &i
+        }
+        if i, err := strconv.Atoi(row[13]); err == nil {
+          diane.TailleCompoGroupe = &i
+        }
+        if i, err := time.Parse("02/01/2006", row[15]); err == nil {
+          diane.ArreteBilan = i
+        }
+        if i, err := strconv.Atoi(row[16]); err == nil {
+          diane.NombreMois = &i
+        }
+        if i, err := strconv.ParseFloat(row[17], 64); err == nil {
+          diane.ConcoursBancaireCourant = &i
+        }
+        if i, err := strconv.ParseFloat(row[18], 64); err == nil {
+          diane.EquilibreFinancier = &i
+        }
+        if i, err := strconv.ParseFloat(row[19], 64); err == nil {
+          diane.IndependanceFinanciere = &i
+        }
+        if i, err := strconv.ParseFloat(row[20], 64); err == nil {
+          diane.Endettement = &i
+        }
+        if i, err := strconv.ParseFloat(row[21], 64); err == nil {
+          diane.AutonomieFinanciere = &i
+        }
+        if i, err := strconv.ParseFloat(row[22], 64); err == nil {
+          diane.DegreImmoCorporelle = &i
+        }
+        if i, err := strconv.ParseFloat(row[23], 64); err == nil {
+          diane.FinancementActifCirculant = &i
+        }
+        if i, err := strconv.ParseFloat(row[24], 64); err == nil {
+          diane.LiquiditeGenerale = &i
+        }
+        if i, err := strconv.ParseFloat(row[25], 64); err == nil {
+          diane.LiquiditeReduite = &i
+        }
+        if i, err := strconv.ParseFloat(row[26], 64); err == nil {
+          diane.RotationStocks = &i
+        }
+        if i, err := strconv.ParseFloat(row[27], 64); err == nil {
+          diane.CreditClient = &i
+        }
+        if i, err := strconv.ParseFloat(row[28], 64); err == nil {
+          diane.CreditFournisseur = &i
+        }
+        if i, err := strconv.ParseFloat(row[29], 64); err == nil {
+          diane.CAparEffectif = &i
+        }
+        if i, err := strconv.ParseFloat(row[30], 64); err == nil {
+          diane.TauxInteretFinancier = &i
+        }
+        if i, err := strconv.ParseFloat(row[31], 64); err == nil {
+          diane.TauxInteretSurCA = &i
+        }
+        if i, err := strconv.ParseFloat(row[32], 64); err == nil {
+          diane.EndettementGlobal = &i
+        }
+        if i, err := strconv.ParseFloat(row[33], 64); err == nil {
+          diane.TauxEndettement = &i
+        }
+        if i, err := strconv.ParseFloat(row[34], 64); err == nil {
+          diane.CapaciteRemboursement = &i
+        }
+        if i, err := strconv.ParseFloat(row[35], 64); err == nil {
+          diane.CapaciteAutofinancement = &i
+        }
+        if i, err := strconv.ParseFloat(row[36], 64); err == nil {
+          diane.CouvertureCA_FDR = &i
+        }
+        if i, err := strconv.ParseFloat(row[37], 64); err == nil {
+          diane.CouvertureCA_BesoinFDR = &i
+        }
+        if i, err := strconv.ParseFloat(row[38], 64); err == nil {
+          diane.PoidsBFRExploitation = &i
+        }
+        if i, err := strconv.ParseFloat(row[39], 64); err == nil {
+          diane.Exportation = &i
+        }
+        if i, err := strconv.ParseFloat(row[40], 64); err == nil {
+          diane.EfficaciteEconomique = &i
+        }
+        if i, err := strconv.ParseFloat(row[41], 64); err == nil {
+          diane.ProductivitePotentielProduction = &i
+        }
+        if i, err := strconv.ParseFloat(row[42], 64); err == nil {
+          diane.ProductiviteCapitalFinancier = &i
+        }
+        if i, err := strconv.ParseFloat(row[43], 64); err == nil {
+          diane.ProductiviteCapitalInvesti = &i
+        }
+        if i, err := strconv.ParseFloat(row[44], 64); err == nil {
+          diane.TauxDInvestissementProductif = &i
+        }
+        if i, err := strconv.ParseFloat(row[45], 64); err == nil {
+          diane.RentabiliteEconomique = &i
+        }
+        if i, err := strconv.ParseFloat(row[46], 64); err == nil {
+          diane.Performance = &i
+        }
+        if i, err := strconv.ParseFloat(row[47], 64); err == nil {
+          diane.RendementBrutFondsPropres = &i
+        }
+        if i, err := strconv.ParseFloat(row[48], 64); err == nil {
+          diane.RentabiliteNette = &i
+        }
+        if i, err := strconv.ParseFloat(row[49], 64); err == nil {
+          diane.RendementCapitauxPropres = &i
+        }
+        if i, err := strconv.ParseFloat(row[50], 64); err == nil {
+          diane.RendementRessourcesDurables = &i
+        }
+        if i, err := strconv.ParseFloat(row[51], 64); err == nil {
+          diane.TauxMargeCommerciale = &i
+        }
+        if i, err := strconv.ParseFloat(row[52], 64); err == nil {
+          diane.TauxValeurAjoutee = &i
+        }
+        if i, err := strconv.ParseFloat(row[53], 64); err == nil {
+          diane.PartSalaries = &i
+        }
+        if i, err := strconv.ParseFloat(row[54], 64); err == nil {
+          diane.PartEtat = &i
+        }
+        if i, err := strconv.ParseFloat(row[55], 64); err == nil {
+          diane.PartPreteur = &i
+        }
+        if i, err := strconv.ParseFloat(row[56], 64); err == nil {
+          diane.PartAutofinancement = &i
+        }
+        if i, err := strconv.ParseFloat(row[57], 64); err == nil {
+          diane.CA = &i
+        }
+        if i, err := strconv.ParseFloat(row[58], 64); err == nil {
+          diane.CAExportation = &i
+        }
+        if i, err := strconv.ParseFloat(row[59], 64); err == nil {
+          diane.AchatMarchandises = &i
+        }
+        if i, err := strconv.ParseFloat(row[61], 64); err == nil {
+          diane.AchatMatieresPremieres = &i
+        }
+        if i, err := strconv.ParseFloat(row[62], 64); err == nil {
+          diane.Production = &i
+        }
+        if i, err := strconv.ParseFloat(row[63], 64); err == nil {
+          diane.MargeCommerciale = &i
+        }
+        if i, err := strconv.ParseFloat(row[64], 64); err == nil {
+          diane.Consommation = &i
+        }
+        if i, err := strconv.ParseFloat(row[65], 64); err == nil {
+          diane.AutresAchatsChargesExternes = &i
+        }
+        if i, err := strconv.ParseFloat(row[66], 64); err == nil {
+          diane.ValeurAjoutee = &i
+        }
+        if i, err := strconv.ParseFloat(row[67], 64); err == nil {
+          diane.ChargePersonnel = &i
+        }
+        if i, err := strconv.ParseFloat(row[68], 64); err == nil {
+          diane.ImpotsTaxes = &i
+        }
+        if i, err := strconv.ParseFloat(row[69], 64); err == nil {
+          diane.SubventionsDExploitation = &i
+        }
+        if i, err := strconv.ParseFloat(row[70], 64); err == nil {
+          diane.ExcedentBrutDExploitation = &i
+        }
+        if i, err := strconv.ParseFloat(row[71], 64); err == nil {
+          diane.AutresProduitsChargesReprises = &i
+        }
+        if i, err := strconv.ParseFloat(row[72], 64); err == nil {
+          diane.DotationAmortissement = &i
+        }
+        if i, err := strconv.ParseFloat(row[73], 64); err == nil {
+          diane.ResultatExpl = &i
+        }
+        if i, err := strconv.ParseFloat(row[74], 64); err == nil {
+          diane.OperationsCommun = &i
+        }
+        if i, err := strconv.ParseFloat(row[75], 64); err == nil {
+          diane.ProduitsFinanciers = &i
+        }
+        if i, err := strconv.ParseFloat(row[76], 64); err == nil {
+          diane.ChargesFinancieres = &i
+        }
+        if i, err := strconv.ParseFloat(row[77], 64); err == nil {
+          diane.Interets = &i
+        }
+        if i, err := strconv.ParseFloat(row[78], 64); err == nil {
+          diane.ResultatAvantImpot = &i
+        }
+        if i, err := strconv.ParseFloat(row[79], 64); err == nil {
+          diane.ProduitExceptionnel = &i
+        }
+        if i, err := strconv.ParseFloat(row[80], 64); err == nil {
+          diane.ChargeExceptionnelle = &i
+        }
+        if i, err := strconv.ParseFloat(row[81], 64); err == nil {
+          diane.ParticipationSalaries = &i
+        }
+        if i, err := strconv.ParseFloat(row[82], 64); err == nil {
+          diane.ImpotBenefice = &i
+        }
+        if i, err := strconv.ParseFloat(row[83], 64); err == nil {
+          diane.BeneficeOuPerte = &i
+        }
 
-      outputChannel <- &diane
+        outputChannel <- &diane
 
+      }
     }
     close(outputChannel)
   }()
@@ -395,8 +417,8 @@ func importDiane(batch *AdminBatch) error {
               hash: diane,
             }}}}}
             db.ChanEntreprise <- &value
-   }
-   db.ChanEntreprise <- &ValueEntreprise{}
-   log(info, "importDiane", "Import batch "+batch.ID.Key+": fin import Diane")
-   return nil
-}
+          }
+          db.ChanEntreprise <- &ValueEntreprise{}
+          log(info, "importDiane", "Import batch "+batch.ID.Key+": fin import Diane")
+          return nil
+        }

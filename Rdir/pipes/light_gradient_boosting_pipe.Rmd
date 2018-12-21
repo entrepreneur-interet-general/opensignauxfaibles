@@ -36,7 +36,7 @@ database <- "test_signauxfaibles"
 actual_period <- as.Date("2018-11-01")
 last_batch <- '1812'
 algorithm <- 'algo2'
-min_effectif <- 10
+min_effectif <- 15
 ```
 
 ```{r}
@@ -58,5 +58,5 @@ shapley_plot(c("81755759800023" ,"82452612300024" ,"49442016900026" ,"3432368570
 ```
 
 ```{r results="hide"}
-export_fiche_visite(sirets = c("47885488800029", "40237448200014"), database, last_batch, with_urssaf = TRUE)
+export_fiche_visite(sirets = c("39249938000013"), database, last_batch, with_urssaf = TRUE)
 ```

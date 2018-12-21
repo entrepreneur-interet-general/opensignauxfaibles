@@ -6,26 +6,13 @@ feature_engineering_create <- function(
 
   out  <-  list()
   ratios_financiers <- c(
-    "CA",
     "taux_marge",
     "delai_fournisseur",
     "poids_frng",
-    "frais_financier",
     "financier_court_terme",
-    "ratio_CAF",
-    "ratio_marge_operationnelle",
-    "taux_rotation_stocks",
-    "ratio_productivite",
-    "ratio_export",
-    "ratio_delai_client",
-    "ratio_liquidite_reduite",
-    "ratio_rentabilite_nette",
-    "ratio_endettement",
-    "ratio_rend_capitaux_propres",
-    "ratio_rend_des_ress_durables",
-    "ratio_RetD"
-  )
-
+    "frais_financier",
+    "dette_fiscale"
+    )
   #####################
   ## APE COMPARISONS ##
   #####################

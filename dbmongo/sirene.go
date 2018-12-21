@@ -35,12 +35,11 @@ type Sirene struct {
 	NatureJuridique    string    `json,omitempty:"nature_juridique" bson,omitempty:"nature_juridique"`
 	Categorie          string    `json,omitempty:"categorie" bson,omitempty:"categorie"`
 	Creation           time.Time `json,omitempty:"date_creation" bson,omitempty:"date_creation"`
-	IndiceMonoactivite int       `json,omitempty:"indice_monoactivite" bson,omitempty:"indice_monoactivite"`
-	TrancheCA          int       `json,omitempty:"tranche_ca" bson,omitempty:"tranche_ca"`
+	IndiceMonoactivite *int      `json,omitempty:"indice_monoactivite" bson,omitempty:"indice_monoactivite"`
+	TrancheCA          *int      `json,omitempty:"tranche_ca" bson,omitempty:"tranche_ca"`
 	Sigle              string    `json,omitempty:"sigle" bson,omitempty:"sigle"`
-	DebutActivite      time.Time `json:"debut_activite" bson:"debut_activite"`
-	Longitude          float64   `json,omitempty:"longitude" bson:"longitude"`
-	Lattitude          float64   `json,omitempty:"lattitude" bson:"lattitude"`
+	Longitude          *float64  `json,omitempty:"longitude" bson:"longitude"`
+	Lattitude          *float64  `json,omitempty:"lattitude" bson:"lattitude"`
 	Adresse            [7]string `json:"adresse" bson:"adresse"`
 }
 
@@ -49,26 +48,36 @@ func parseSirene(paths []string, mapping map[string]bool) chan *Sirene {
 	//ignoreSirene := stringSlice(viper.GetStringSlice("SIRENE_IGNORE"))
 
 	go func() {
+		// var errorLines []int
+		n := 0
+		// e := 0
 		for _, path := range paths {
 			file, err := os.Open(viper.GetString("APP_DATA") + path)
 			if err != nil {
-				fmt.Println("Error", err)
-			}
+        log(critical, "importSirene", "Erreur à l'ouverture du fichier: "+path+", erreur: "+err.Error())
+        close(outputChannel)
+      }
 
 			reader := csv.NewReader(bufio.NewReader(file))
 			reader.Comma = ','
 
 			for {
-				row, error := reader.Read()
-				if error == io.EOF {
+				row, err := reader.Read()
+				if err == io.EOF {
 					break
-				} else if error != nil {
-					// log.Fatal(error)
+				} else if err != nil {
+					log(critical, "importSirene", "Erreur lors de la lecture du fichier "+path+". Abandon.")
+					close(outputChannel)
 				}
 
-				if _, ok := mapping[row[0]]; ok {
-					sirene := Sirene{}
+
+//				if _, ok := mapping[row[0]]; ok {
+          n++
+
+          sirene := Sirene{}
 					sirene.Siren = row[0]
+
+
 					sirene.Nic = row[1]
 					sirene.NicSiege = row[65]
 					sirene.RaisonSociale = row[2]
@@ -87,45 +96,79 @@ func parseSirene(paths []string, mapping map[string]bool) chan *Sirene {
 					sirene.Productif = row[57]
 					sirene.NatureJuridique = row[71]
 					sirene.Categorie = row[82]
-					sirene.Creation, _ = time.Parse("20060102", row[50])
-					sirene.IndiceMonoactivite, _ = strconv.Atoi(row[85])
-					sirene.TrancheCA, _ = strconv.Atoi(row[89])
-					sirene.Sigle = row[61]
-					sirene.DebutActivite, _ = time.Parse("20060102", row[51])
-					sirene.Longitude, _ = strconv.ParseFloat(row[100], 64)
-					sirene.Lattitude, _ = strconv.ParseFloat(row[101], 64)
-					sirene.Adresse = [7]string{row[2], row[3], row[4], row[5], row[6], row[7], row[8]}
-					outputChannel <- &sirene
-				}
-			}
-			file.Close()
-		}
-		close(outputChannel)
-	}()
 
-	return outputChannel
+          if i, err := time.Parse("20060102", row[50]); err == nil {
+            sirene.Creation = i
+          }
+          if i, err := strconv.Atoi(row[85]); err == nil {
+            sirene.IndiceMonoactivite = &i
+          }
+          if i, err := strconv.Atoi(row[89]); err == nil {
+            sirene.TrancheCA = &i
+          }
+
+          sirene.Sigle = row[61]
+
+          if i , err := strconv.ParseFloat(row[100], 64); err == nil {
+            sirene.Longitude = &i
+          }
+          if i, err := strconv.ParseFloat(row[101], 64); err == nil {
+            sirene.Lattitude = &i
+          }
+          sirene.Adresse = [7]string{row[2], row[3], row[4], row[5], row[6], row[7], row[8]}
+
+          //     for  i:=0; i < len(errors);i++ {
+          //       if (errors[i] != nil){
+          //         log(debug, "importSirene", "Erreur ? "+fmt.Sprint(i)+" - "+errors[i].Error())
+          //       }
+          //     }
+
+          //			if allErrors(errors[:], nil) {
+          //				outputChannel <- &sirene
+          //			} else {
+          //				e++
+          //				errorLines = append(errorLines, n)
+          //			}
+          outputChannel <- &sirene
+          // }
+
+      }
+      file.Close()
+      log(debug, "importSirene", "Import du fichier "+path+" terminé. "+fmt.Sprint(n)+" lignes traitée(s)")//, "+fmt.Sprint(e)+" rejet(s)")
+      // if len(errorLines) > 0 {
+      //   log(warning, "importSirene", "Erreurs de conversion constatées aux lignes suivantes: "+fmt.Sprintf("%v", errorLines))
+      // }
+    }
+    close(outputChannel)
+  }()
+
+  return outputChannel
 }
 
 // hash := fmt.Sprintf("%x", structhash.Md5(sirene, 1))
 
 func importSirene(batch *AdminBatch) error {
 
-	mapping, _ := getSirensFromMapping(batch)
+  mapping, _ := getSirensFromMapping(batch)
 
-	for sirene := range parseSirene(batch.Files["sirene"], mapping) {
-		hash := fmt.Sprintf("%x", structhash.Md5(sirene, 1))
+  for sirene := range parseSirene(batch.Files["sirene"], mapping) {
+    hash := fmt.Sprintf("%x", structhash.Md5(sirene, 1))
 
-		value := ValueEtablissement{
-			Value: Etablissement{
-				Siret: sirene.Siren + sirene.Nic,
-				Batch: map[string]Batch{
-					batch.ID.Key: Batch{
-						Sirene: map[string]*Sirene{
-							hash: sirene,
-						}}}}}
-		db.ChanEtablissement <- &value
-	}
+    value := ValueEtablissement{
+      Value: Etablissement{
+        Siret: sirene.Siren + sirene.Nic,
+        Batch: map[string]Batch{
+          batch.ID.Key: Batch{
+            Sirene: map[string]*Sirene{
+              hash: sirene,
+            },
+          },
+        },
+      },
+    }
+    db.ChanEtablissement <- &value
+  }
 
-	db.ChanEtablissement <- &ValueEtablissement{}
-	return nil
+  db.ChanEtablissement <- &ValueEtablissement{}
+  return nil
 }

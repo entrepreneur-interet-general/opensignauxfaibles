@@ -3,19 +3,398 @@ light_gradient_boosting <- function(
   actual_period,
   last_batch,
   algorithm,
-  min_effectif = 10){
+  min_effectif = 10,
+  code_naf_fractioning = TRUE){
 
-  fields <- c(
-    "siret",
-    "siren",
-    "periode",
+  h2o.init(ip = "localhost", port = 4444, min_mem_size = "3G")
+  train.hex <- list()
+  current.hex <- list()
+
+  #codes = c(11, 13, 16, 17, 19, 20, 22, 23, 25, 26, 29, 31)
+
+  #for (current_code_naf in LETTERS[1:7]){
+current_code_naf = "A"
+      cat(current_code_naf, "\n")
+
+    fields <- c(
+      "siret",
+      "siren",
+      "periode",
+      "age",
+      # URSSAF
+      "montant_part_patronale",
+      "montant_part_ouvriere",
+      "effectif",
+      "effectif_entreprise",
+      "montant_echeancier",
+      "delai",
+      "duree_delai",
+      # URSSAF 12m,
+      "ratio_dette",
+      "ratio_dette_moy12m",
+      "cotisation_moy12m",
+      # URSSAF past
+      "montant_part_patronale_past_1",
+      "montant_part_ouvriere_past_1",
+      "montant_part_patronale_past_2",
+      "montant_part_ouvriere_past_2",
+      "montant_part_patronale_past_3",
+      "montant_part_ouvriere_past_3",
+      "montant_part_patronale_past_6",
+      "montant_part_ouvriere_past_6",
+      "montant_part_patronale_past_12",
+      "montant_part_ouvriere_past_12",
+      "effectif_past_6",
+      "effectif_past_12",
+      "effectif_past_18",
+      "effectif_past_24",
+      # ALTARES
+      "etat_proc_collective",
+      # DIANE
+      "exercice_diane",
+      "dette_fiscale_et_sociale",
+      "effectif_consolide",
+      "frais_de_RetD",
+      "conces_brev_et_droits_sim",
+      "note_preface",
+      "nombre_etab_secondaire",
+      "nombre_filiale",
+      "taille_compo_groupe",
+      "arrete_bilan_diane",
+      "concours_bancaire_courant",
+      "equilibre_financier",
+      "independance_financiere",
+      "endettement",
+      "autonomie_financiere",
+      "degre_immo_corporelle",
+      "financement_actif_circulant",
+      "liquidite_generale",
+      "liquidite_reduite",
+      "rotation_stocks",
+      "credit_client",
+      "credit_fournisseur",
+      "taux_interet_financier",
+      "taux_interet_sur_ca",
+      "endettement_global",
+      "taux_endettement",
+      "capacite_remboursement",
+      "capacite_autofinancement",
+      "couverture_ca_fdr",
+      "couverture_ca_besoin_fdr",
+      "poids_bfr_exploitation",
+      "exportation",
+      "efficacite_economique",
+      "productivite_potentiel_production",
+      "productivite_capital_financier",
+      "productivite_capital_investi",
+      "taux_d_investissement_productif",
+      "rentabilite_economique",
+      "performance",
+      "rendement_brut_fonds_propres",
+      "rentabilite_nette",
+      "rendement_capitaux_propres",
+      "rendement_ressources_durables",
+      "taux_marge_commerciale",
+      "taux_valeur_ajoutee",
+      "part_salaries",
+      "part_etat",
+      "part_preteur",
+      "part_autofinancement",
+      "ca",
+      "ca_exportation",
+      "achat_marchandises",
+      "achat_matieres_premieres",
+      "production",
+      "marge_commerciale",
+      "consommation",
+      "autres_achats_charges_externes",
+      "valeur_ajoutee",
+      "charge_personnel",
+      "impots_taxes",
+      "subventions_d_exploitation",
+      "excedent_brut_d_exploitation",
+      "autres_produits_charges_reprises",
+      "dotation_amortissement",
+      "resultat_expl",
+      "operations_commun",
+      "produits_financiers",
+      "charges_financieres",
+      "interets",
+      "resultat_avant_impot",
+      "produit_exceptionnel",
+      "charge_exceptionnelle",
+      "participation_salaries",
+      "impot_benefice",
+      "benefice_ou_perte",
+      # DIANE PAST 1
+      "effectif_consolide_past_1",
+      "dette_fiscale_et_sociale_past_1",
+      "frais_de_RetD_past_1",
+      "conces_brev_et_droits_sim_past_1",
+      "note_preface_past_1",
+      "nombre_etab_secondaire_past_1",
+      "nombre_filiale_past_1",
+      "taille_compo_groupe_past_1",
+      "concours_bancaire_courant_past_1",
+      "equilibre_financier_past_1",
+      "independance_financiere_past_1",
+      "endettement_past_1",
+      "autonomie_financiere_past_1",
+      "degre_immo_corporelle_past_1",
+      "financement_actif_circulant_past_1",
+      "liquidite_generale_past_1",
+      "liquidite_reduite_past_1",
+      "rotation_stocks_past_1",
+      "credit_client_past_1",
+      "credit_fournisseur_past_1",
+      "taux_interet_financier_past_1",
+      "taux_interet_sur_ca_past_1",
+      "endettement_global_past_1",
+      "taux_endettement_past_1",
+      "capacite_remboursement_past_1",
+      "capacite_autofinancement_past_1",
+      "couverture_ca_fdr_past_1",
+      "couverture_ca_besoin_fdr_past_1",
+      "poids_bfr_exploitation_past_1",
+      "exportation_past_1",
+      "efficacite_economique_past_1",
+      "productivite_potentiel_production_past_1",
+      "productivite_capital_financier_past_1",
+      "productivite_capital_investi_past_1",
+      "taux_d_investissement_productif_past_1",
+      "rentabilite_economique_past_1",
+      "performance_past_1",
+      "rendement_brut_fonds_propres_past_1",
+      "rentabilite_nette_past_1",
+      "rendement_capitaux_propres_past_1",
+      "rendement_ressources_durables_past_1",
+      "taux_marge_commerciale_past_1",
+      "taux_valeur_ajoutee_past_1",
+      "part_salaries_past_1",
+      "part_etat_past_1",
+      "part_preteur_past_1",
+      "part_autofinancement_past_1",
+      "ca_past_1",
+      "ca_exportation_past_1",
+      "achat_marchandises_past_1",
+      "achat_matieres_premieres_past_1",
+      "production_past_1",
+      "marge_commerciale_past_1",
+      "consommation_past_1",
+      "autres_achats_charges_externes_past_1",
+      "valeur_ajoutee_past_1",
+      "charge_personnel_past_1",
+      "impots_taxes_past_1",
+      "subventions_d_exploitation_past_1",
+      "excedent_brut_d_exploitation_past_1",
+      "autres_produits_charges_reprises_past_1",
+      "dotation_amortissement_past_1",
+      "resultat_expl_past_1",
+      "operations_commun_past_1",
+      "produits_financiers_past_1",
+      "charges_financieres_past_1",
+      "interets_past_1",
+      "resultat_avant_impot_past_1",
+      "produit_exceptionnel_past_1",
+      "charge_exceptionnelle_past_1",
+      "participation_salaries_past_1",
+      "impot_benefice_past_1",
+      "benefice_ou_perte_past_1",
+      # DIANE PAST 2
+      "effectif_consolide_past_2",
+      "dette_fiscale_et_sociale_past_2",
+      "frais_de_RetD_past_2",
+      "conces_brev_et_droits_sim_past_2",
+      "note_preface_past_2",
+      "nombre_etab_secondaire_past_2",
+      "nombre_filiale_past_2",
+      "taille_compo_groupe_past_2",
+      "concours_bancaire_courant_past_2",
+      "equilibre_financier_past_2",
+      "independance_financiere_past_2",
+      "endettement_past_2",
+      "autonomie_financiere_past_2",
+      "degre_immo_corporelle_past_2",
+      "financement_actif_circulant_past_2",
+      "liquidite_generale_past_2",
+      "liquidite_reduite_past_2",
+      "rotation_stocks_past_2",
+      "credit_client_past_2",
+      "credit_fournisseur_past_2",
+      "taux_interet_financier_past_2",
+      "taux_interet_sur_ca_past_2",
+      "endettement_global_past_2",
+      "taux_endettement_past_2",
+      "capacite_remboursement_past_2",
+      "capacite_autofinancement_past_2",
+      "couverture_ca_fdr_past_2",
+      "couverture_ca_besoin_fdr_past_2",
+      "poids_bfr_exploitation_past_2",
+      "exportation_past_2",
+      "efficacite_economique_past_2",
+      "productivite_potentiel_production_past_2",
+      "productivite_capital_financier_past_2",
+      "productivite_capital_investi_past_2",
+      "taux_d_investissement_productif_past_2",
+      "rentabilite_economique_past_2",
+      "performance_past_2",
+      "rendement_brut_fonds_propres_past_2",
+      "rentabilite_nette_past_2",
+      "rendement_capitaux_propres_past_2",
+      "rendement_ressources_durables_past_2",
+      "taux_marge_commerciale_past_2",
+      "taux_valeur_ajoutee_past_2",
+      "part_salaries_past_2",
+      "part_etat_past_2",
+      "part_preteur_past_2",
+      "part_autofinancement_past_2",
+      "ca_past_2",
+      "ca_exportation_past_2",
+      "achat_marchandises_past_2",
+      "achat_matieres_premieres_past_2",
+      "production_past_2",
+      "marge_commerciale_past_2",
+      "consommation_past_2",
+      "autres_achats_charges_externes_past_2",
+      "valeur_ajoutee_past_2",
+      "charge_personnel_past_2",
+      "impots_taxes_past_2",
+      "subventions_d_exploitation_past_2",
+      "excedent_brut_d_exploitation_past_2",
+      "autres_produits_charges_reprises_past_2",
+      "dotation_amortissement_past_2",
+      "resultat_expl_past_2",
+      "operations_commun_past_2",
+      "produits_financiers_past_2",
+      "charges_financieres_past_2",
+      "interets_past_2",
+      "resultat_avant_impot_past_2",
+      "produit_exceptionnel_past_2",
+      "charge_exceptionnelle_past_2",
+      "participation_salaries_past_2",
+      "impot_benefice_past_2",
+      "benefice_ou_perte_past_2",
+      #BDF
+      "taux_marge",
+      "delai_fournisseur",
+      "poids_frng",
+      "financier_court_terme",
+      "frais_financier",
+      "dette_fiscale",
+      #BDF PAST 1
+      "taux_marge_past_1",
+      "delai_fournisseur_past_1",
+      "poids_frng_past_1",
+      "financier_court_terme_past_1",
+      "frais_financier_past_1",
+      "dette_fiscale_past_1",
+      #BDF PAST 2
+      "taux_marge_past_2",
+      "delai_fournisseur_past_2",
+      "poids_frng_past_2",
+      "financier_court_terme_past_2",
+      "frais_financier_past_2",
+      "dette_fiscale_past_2",
+      # APART
+      "apart_heures_consommees",
+      "apart_heures_autorisees",
+      # SIRENE
+      "code_ape",
+      "code_naf",
+      "activite_saisonniere",
+      "productif"
+    )
+
+    date_inf <- as.Date("2015-01-01")
+    date_sup <- as.Date("2017-01-01")
+
+    raw_data <- connect_to_database(
+      database,
+      "Features",
+      last_batch,
+      date_inf = date_inf,
+      date_sup = date_sup,
+      algo = algorithm,
+      min_effectif = min_effectif,
+      fields = fields
+      #code_ape = current_code_naf
+      )
+
+    current_data <- connect_to_database(
+      database,
+      "Features",
+      last_batch,
+      date_inf = actual_period %m-% months(1),
+      date_sup = actual_period %m+% months(1),
+      algo = algorithm,
+      min_effectif = min_effectif,
+      fields = fields
+      #code_ape = current_code_naf
+      )
+
+    raw_data <- raw_data %>%
+      objective_default_or_failure(n_months = 3, threshold = 1, lookback = 18) %>%
+      set_objective("default")
+
+    out <- feature_engineering_std(raw_data, current_data)
+    raw_data <- out[[1]]
+    current_data <- out[[2]]
+
+    # ref_f_e <- feature_engineering_create(raw_data)
+
+    # out <- feature_engineering_apply(ref_f_e, raw_data, current_data)
+
+    # raw_data <- out[[1]]
+    # current_data <- out[[2]]
+
+    rm(out)
+
+
+train <- as.h2o(raw_data)
+test <- as.h2o(current_data)
+ #   train.hex[[current_code_naf]] <- as.h2o(raw_data)
+  #  current.hex[[current_code_naf]] <- as.h2o(current_data)
+    rm(raw_data)
+    rm(current_data)
+  #}
+
+#train <- do.call(h2o.rbind, train.hex)
+ #current <- do.call(h2o.rbind, current.hex)
+
+
+  train["outcome"] <- h2o.relevel(x = train["outcome"], y = "non_default")
+
+  te_map <- h2o.target_encode_create(
+    train,
+    x = list(c("code_naf"), c("code_ape_niveau2"), c("code_ape_niveau3"), c("code_ape_niveau4"), c("code_ape")),
+    y = "outcome")
+
+  train <- h2o.target_encode_apply(
+    train,
+    x = list(c("code_naf"), c("code_ape_niveau2"), c("code_ape_niveau3"), c("code_ape_niveau4"), c("code_ape")),
+    y = "outcome",
+    target_encode_map = te_map,
+    holdout_type = "LeaveOneOut",
+    blended_avg = TRUE,
+    seed = 1234)
+
+  current <- h2o.target_encode_apply(
+    current,
+    x = list(c("code_naf"), c("code_ape_niveau2"), c("code_ape_niveau3"), c("code_ape_niveau4"), c("code_ape")),
+    y = "outcome",
+    target_encode_map = te_map,
+    holdout_type = "None",
+    blended_avg = FALSE,
+    fold_column = "fold_column",
+    noise_level = 0)
+
+  x_medium <- c(
     "age",
     # URSSAF
     "montant_part_patronale",
     "montant_part_ouvriere",
     "effectif",
     "effectif_entreprise",
-    "effectif_consolide",
     "montant_echeancier",
     "delai",
     "duree_delai",
@@ -39,21 +418,16 @@ light_gradient_boosting <- function(
     "effectif_past_18",
     "effectif_past_24",
     # ALTARES
-    "etat_proc_collective",
-    "exercice_diane",
-    "nom_entreprise",
-    "numero_siren",
-    "statut_juridique",
-    "effectif_consolide",
+    "etat_proc_collective_num",
+    # DIANE
     "dette_fiscale_et_sociale",
+    "effectif_consolide",
     "frais_de_RetD",
     "conces_brev_et_droits_sim",
     "note_preface",
     "nombre_etab_secondaire",
     "nombre_filiale",
     "taille_compo_groupe",
-    "arrete_bilan_diane",
-    "nombre_mois",
     "concours_bancaire_courant",
     "equilibre_financier",
     "independance_financiere",
@@ -66,7 +440,6 @@ light_gradient_boosting <- function(
     "rotation_stocks",
     "credit_client",
     "credit_fournisseur",
-    "ca_par_effectif",
     "taux_interet_financier",
     "taux_interet_sur_ca",
     "endettement_global",
@@ -120,131 +493,184 @@ light_gradient_boosting <- function(
     "participation_salaries",
     "impot_benefice",
     "benefice_ou_perte",
+    # DIANE PAST 1
+    "effectif_consolide_past_1",
+    "dette_fiscale_et_sociale_past_1",
+    "frais_de_RetD_past_1",
+    "conces_brev_et_droits_sim_past_1",
+    "note_preface_past_1",
+    "nombre_etab_secondaire_past_1",
+    "nombre_filiale_past_1",
+    "taille_compo_groupe_past_1",
+    "concours_bancaire_courant_past_1",
+    "equilibre_financier_past_1",
+    "independance_financiere_past_1",
+    "endettement_past_1",
+    "autonomie_financiere_past_1",
+    "degre_immo_corporelle_past_1",
+    "financement_actif_circulant_past_1",
+    "liquidite_generale_past_1",
+    "liquidite_reduite_past_1",
+    "rotation_stocks_past_1",
+    "credit_client_past_1",
+    "credit_fournisseur_past_1",
+    "taux_interet_financier_past_1",
+    "taux_interet_sur_ca_past_1",
+    "endettement_global_past_1",
+    "taux_endettement_past_1",
+    "capacite_remboursement_past_1",
+    "capacite_autofinancement_past_1",
+    "couverture_ca_fdr_past_1",
+    "couverture_ca_besoin_fdr_past_1",
+    "poids_bfr_exploitation_past_1",
+    "exportation_past_1",
+    "efficacite_economique_past_1",
+    "productivite_potentiel_production_past_1",
+    "productivite_capital_financier_past_1",
+    "productivite_capital_investi_past_1",
+    "taux_d_investissement_productif_past_1",
+    "rentabilite_economique_past_1",
+    "performance_past_1",
+    "rendement_brut_fonds_propres_past_1",
+    "rentabilite_nette_past_1",
+    "rendement_capitaux_propres_past_1",
+    "rendement_ressources_durables_past_1",
+    "taux_marge_commerciale_past_1",
+    "taux_valeur_ajoutee_past_1",
+    "part_salaries_past_1",
+    "part_etat_past_1",
+    "part_preteur_past_1",
+    "part_autofinancement_past_1",
+    "ca_past_1",
+    "ca_exportation_past_1",
+    "achat_marchandises_past_1",
+    "achat_matieres_premieres_past_1",
+    "production_past_1",
+    "marge_commerciale_past_1",
+    "consommation_past_1",
+    "autres_achats_charges_externes_past_1",
+    "valeur_ajoutee_past_1",
+    "charge_personnel_past_1",
+    "impots_taxes_past_1",
+    "subventions_d_exploitation_past_1",
+    "excedent_brut_d_exploitation_past_1",
+    "autres_produits_charges_reprises_past_1",
+    "dotation_amortissement_past_1",
+    "resultat_expl_past_1",
+    "operations_commun_past_1",
+    "produits_financiers_past_1",
+    "charges_financieres_past_1",
+    "interets_past_1",
+    "resultat_avant_impot_past_1",
+    "produit_exceptionnel_past_1",
+    "charge_exceptionnelle_past_1",
+    "participation_salaries_past_1",
+    "impot_benefice_past_1",
+    "benefice_ou_perte_past_1",
+    # DIANE PAST 2
+    "effectif_consolide_past_2",
+    "dette_fiscale_et_sociale_past_2",
+    "frais_de_RetD_past_2",
+    "conces_brev_et_droits_sim_past_2",
+    "note_preface_past_2",
+    "nombre_etab_secondaire_past_2",
+    "nombre_filiale_past_2",
+    "taille_compo_groupe_past_2",
+    "concours_bancaire_courant_past_2",
+    "equilibre_financier_past_2",
+    "independance_financiere_past_2",
+    "endettement_past_2",
+    "autonomie_financiere_past_2",
+    "degre_immo_corporelle_past_2",
+    "financement_actif_circulant_past_2",
+    "liquidite_generale_past_2",
+    "liquidite_reduite_past_2",
+    "rotation_stocks_past_2",
+    "credit_client_past_2",
+    "credit_fournisseur_past_2",
+    "taux_interet_financier_past_2",
+    "taux_interet_sur_ca_past_2",
+    "endettement_global_past_2",
+    "taux_endettement_past_2",
+    "capacite_remboursement_past_2",
+    "capacite_autofinancement_past_2",
+    "couverture_ca_fdr_past_2",
+    "couverture_ca_besoin_fdr_past_2",
+    "poids_bfr_exploitation_past_2",
+    "exportation_past_2",
+    "efficacite_economique_past_2",
+    "productivite_potentiel_production_past_2",
+    "productivite_capital_financier_past_2",
+    "productivite_capital_investi_past_2",
+    "taux_d_investissement_productif_past_2",
+    "rentabilite_economique_past_2",
+    "performance_past_2",
+    "rendement_brut_fonds_propres_past_2",
+    "rentabilite_nette_past_2",
+    "rendement_capitaux_propres_past_2",
+    "rendement_ressources_durables_past_2",
+    "taux_marge_commerciale_past_2",
+    "taux_valeur_ajoutee_past_2",
+    "part_salaries_past_2",
+    "part_etat_past_2",
+    "part_preteur_past_2",
+    "part_autofinancement_past_2",
+    "ca_past_2",
+    "ca_exportation_past_2",
+    "achat_marchandises_past_2",
+    "achat_matieres_premieres_past_2",
+    "production_past_2",
+    "marge_commerciale_past_2",
+    "consommation_past_2",
+    "autres_achats_charges_externes_past_2",
+    "valeur_ajoutee_past_2",
+    "charge_personnel_past_2",
+    "impots_taxes_past_2",
+    "subventions_d_exploitation_past_2",
+    "excedent_brut_d_exploitation_past_2",
+    "autres_produits_charges_reprises_past_2",
+    "dotation_amortissement_past_2",
+    "resultat_expl_past_2",
+    "operations_commun_past_2",
+    "produits_financiers_past_2",
+    "charges_financieres_past_2",
+    "interets_past_2",
+    "resultat_avant_impot_past_2",
+    "produit_exceptionnel_past_2",
+    "charge_exceptionnelle_past_2",
+    "participation_salaries_past_2",
+    "impot_benefice_past_2",
+    "benefice_ou_perte_past_2",
+    #BDF
+    "taux_marge",
+    "delai_fournisseur",
+    "poids_frng",
+    "financier_court_terme",
+    "frais_financier",
+    "dette_fiscale",
+    #BDF PAST 1
+    "taux_marge_past_1",
+    "delai_fournisseur_past_1",
+    "poids_frng_past_1",
+    "financier_court_terme_past_1",
+    "frais_financier_past_1",
+    "dette_fiscale_past_1",
+    #BDF PAST 2
+    "taux_marge_past_2",
+    "delai_fournisseur_past_2",
+    "poids_frng_past_2",
+    "financier_court_terme_past_2",
+    "frais_financier_past_2",
+    "dette_fiscale_past_2",
     # APART
     "apart_heures_consommees",
     "apart_heures_autorisees",
     # SIRENE
-    "code_ape",
-    "code_naf",
-    "debut_activite",
+    "TargetEncode_code_ape_niveau2",
+    "TargetEncode_code_ape_niveau3",
     "activite_saisonniere",
     "productif"
-    )
-
-  date_inf <- as.Date("2015-01-01")
-  date_sup <- as.Date("2017-01-01")
-
-  raw_data <- connect_to_database(
-    database,
-    "Features",
-    last_batch,
-    date_inf = date_inf,
-    date_sup = date_sup,
-    algo = algorithm,
-    min_effectif = min_effectif,
-    fields = fields)
-
-  current_data <- connect_to_database(
-    database,
-    "Features",
-    last_batch,
-    date_inf = actual_period %m-% months(1),
-    date_sup = actual_period %m+% months(1),
-    algo = algorithm,
-    min_effectif = min_effectif,
-    fields = fields)
-
-  raw_data <- raw_data %>%
-    objective_default_or_failure(n_months = 3, threshold = 1, lookback = 18) %>%
-    set_objective("default")
-
-  out <- feature_engineering_std(raw_data, current_data)
-  raw_data <- out[[1]]
-  current_data <- out[[2]]
-
-  ref_f_e <- feature_engineering_create(raw_data)
-
-  out <- feature_engineering_apply(ref_f_e, raw_data, current_data)
-
-  raw_data <- out[[1]]
-  current_data <- out[[2]]
-
-  rm(out)
-
-  h2o.init(ip = "localhost", port = 4444, min_mem_size = "2G")
-
-  train <- as.h2o(raw_data)
-  current <- as.h2o(current_data)
-
-  train["outcome"] <- h2o.relevel(x = train["outcome"], y = "non_default")
-
-  te_map <- h2o.target_encode_create(
-    train,
-    x = list(c("code_naf"), c("code_ape_niveau2"), c("code_ape_niveau3"), c("code_ape_niveau4"), c("code_ape")),
-    y = "outcome")
-
-  train <- h2o.target_encode_apply(
-    train,
-    x = list(c("code_naf"), c("code_ape_niveau2"), c("code_ape_niveau3"), c("code_ape_niveau4"), c("code_ape")),
-    y = "outcome",
-    target_encode_map = te_map,
-    holdout_type = "LeaveOneOut",
-    blended_avg = TRUE,
-    seed = 1234)
-
-  current <- h2o.target_encode_apply(
-    current,
-    x = list(c("code_naf"), c("code_ape_niveau2"), c("code_ape_niveau3"), c("code_ape_niveau4"), c("code_ape")),
-    y = "outcome",
-    target_encode_map = te_map,
-    holdout_type = "None",
-    blended_avg = FALSE,
-    fold_column = "fold_column",
-    noise_level = 0)
-
-  x_medium <- c("montant_part_patronale",
-    "ratio_dette",
-    "ratio_dette_moy12m",
-    "etat_proc_collective_num",
-    "TargetEncode_code_ape_niveau3",
-    "cotisation_moy12m",
-    "frais_financier_distrib_APE1",
-    "taux_marge_distrib_APE1",
-    "montant_part_patronale_past_3",
-    "ratio_liquidite_reduite_distrib_APE1",
-    "dette_fiscale",
-    "ratio_delai_client_distrib_APE1",
-    "montant_part_patronale_past_1",
-    "montant_part_patronale_past_2",
-    "ratio_rend_capitaux_propres",
-    "taux_marge",
-    "poids_frng_distrib_APE1",
-    "delai_fournisseur_distrib_APE1",
-    "taux_rotation_stocks_distrib_APE1",
-    "effectif",
-    "ratio_rentabilite_nette_distrib_APE1",
-    "ratio_export_distrib_APE1",
-    "TargetEncode_code_ape_niveau2",
-    "effectif_past_12",
-    "montant_part_ouvriere",
-    "financier_court_terme_distrib_APE1",
-    #"effectif_entreprise",
-    "age",
-    "ratio_liquidite_reduite",
-    "ratio_productivite_distrib_APE1",
-    "frais_financier",
-    "financier_court_terme",
-    "ratio_delai_client",
-    "TargetEncode_code_naf",
-    "resultat_net_consolide",
-    "taux_rotation_stocks",
-    "nombre_etab_secondaire",
-    "nbr_etablissements_connus",
-    "CA",
-    "chiffre_affaires_net_lie_aux_exportations",
-    "ratio_dette_delai",
-    "ratio_marge_operationnelle_distrib_APE1",
-    "poids_frng")
+  )
 
   y <- "outcome"
 
@@ -259,72 +685,72 @@ light_gradient_boosting <- function(
     max_depth = 4,
     ntrees = 60,
     seed = 123
-    )
+  )
   prediction <- as.tibble(h2o.cbind(current, h2o.predict(model, current)))
 
   prediction <- prediction %>% mutate(
     # H2O bug ??
     periode =  as.Date(structure(periode / 1000,
-        class = c("POSIXct", "POSIXt")))
-    ) %>%
-  rename(prob = default) %>%
-  select(predict, prob, siret, periode)
+                                 class = c("POSIXct", "POSIXt")))
+  ) %>%
+    rename(prob = default) %>%
+    select(predict, prob, siret, periode)
 
-pred_data <- prediction %>%
-  group_by(siret) %>%
-  arrange(siret,periode) %>%
-  mutate(last_prob = lag(prob)) %>%
-  ungroup() %>%
-  mutate(diff = prob - last_prob)
+  pred_data <- prediction %>%
+    group_by(siret) %>%
+    arrange(siret,periode) %>%
+    mutate(last_prob = lag(prob)) %>%
+    ungroup() %>%
+    mutate(diff = prob - last_prob)
 
 
-export_fields <-  c(
-  "siret",
-  "periode",
-  "raison_sociale",
-  "departement",
-  "region",
-  "prob",
-  "diff",
-  "connu",
-  "date_ccsf",
-  "etat_proc_collective",
-  "date_proc_collective",
-  "interessante_urssaf",
-  #"default_urssaf",
-  "effectif",
-  "libelle_naf",
-  "libelle_ape5",
-  "code_ape",
-  "montant_part_ouvriere",
-  "montant_part_patronale",
-  "CA",
-  "CA_past_1",
-  "resultat_net_consolide",
-  "resultat_net_consolide_past_1",
-  "resultat_expl",
-  "resultat_expl_past_1",
-  "poids_frng",
-  "taux_marge",
-  "frais_financier",
-  "financier_court_terme",
-  "delai_fournisseur",
-  "dette_fiscale",
-  "apart_heures_consommees",
-  "apart_heures_autorisees",
-  "cotisation_moy12m",
-  "montant_majorations",
-  "numero_compte_urssaf",
-  "exercice_bdf",
-  "exercice_diane"
+  export_fields <-  c(
+    "siret",
+    "periode",
+    "raison_sociale",
+    "departement",
+    "region",
+    "prob",
+    "diff",
+    "connu",
+    "date_ccsf",
+    "etat_proc_collective",
+    "date_proc_collective",
+    "interessante_urssaf",
+    #"default_urssaf",
+    "effectif",
+    "libelle_naf",
+    "libelle_ape5",
+    "code_ape",
+    "montant_part_ouvriere",
+    "montant_part_patronale",
+    "ca",
+    "ca_past_1",
+    "benefice_ou_perte",
+    "benefice_ou_perte_past_1",
+    "resultat_expl",
+    "resultat_expl_past_1",
+    "poids_frng",
+    "taux_marge",
+    "frais_financier",
+    "financier_court_terme",
+    "delai_fournisseur",
+    "dette_fiscale",
+    "apart_heures_consommees",
+    "apart_heures_autorisees",
+    "cotisation_moy12m",
+    "montant_majorations",
+    "numero_compte_urssaf",
+    "exercice_bdf",
+    "exercice_diane"
   )
 
-# Export
-pred_data %>%
-  filter(periode == actual_period) %>%
-  prepare_for_export(export_fields = export_fields, database = database, last_batch = last_batch, algorithm = algorithm) %>%
-  export(batch = last_batch)
+  # Export
+  pred_data %>%
+    filter(periode == actual_period) %>%
+    prepare_for_export(export_fields = export_fields, database = database, last_batch = last_batch, algorithm = algorithm) %>%
+    export(batch = last_batch)
 
-# Returns H2O frames and model
-return(list(train_data = train, current_data = current, model = model))
+  # Returns H2O frames and model
+  return(list(train_data = train, current_data = current, model = model))
 }

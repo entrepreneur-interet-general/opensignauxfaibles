@@ -10,7 +10,7 @@ params:
   siret: '48137217500028'
   raison_sociale: 'DECOMETAL'
   batch: '1810'
-  database: 'signauxfaibles'
+  database: 'test_signauxfaibles'
   with_urssaf: 'FALSE'
 ---
 
