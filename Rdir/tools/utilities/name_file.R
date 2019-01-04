@@ -27,7 +27,7 @@ name_file <- function(
     ".",
     file_extension)
 
-  full_file_path <- file.path(dirname, filename)
+  full_file_path <- file.path(full_dir_path, filename)
 
   return(full_file_path)
 

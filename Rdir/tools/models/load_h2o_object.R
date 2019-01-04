@@ -10,7 +10,7 @@ load_h2o_object <- function(
   assertthat::assert_that(extension %in% c("model", "temap"),
     msg = 'Unsupported extension. Supported extensions are "model" and "temap"')
 
-  if (extenstion == "model") {
+  if (extension == "model") {
     load_function <- h2o.loadModel
   } else if (extension == "temap") {
     load_function <- h2o.importFile
@@ -25,16 +25,19 @@ load_h2o_object <- function(
       grep(pattern = paste0(name, ".", extension), value = TRUE)
 
     assertthat::assert_that(length(file_candidates) > 0,
-      msg("No such file, please check name and extension"))
+      msg = "No such file, please check name and extension")
 
-    full_file_name <-  file_candidates %>%
+    file_name <-  file_candidates %>%
       sort(decreasing = TRUE) %>%
       .[1]
-  } else {
-    full_file_name <- file.path(full_dir_path, file_name)
-    assert_that::assert_that(file.exists(full_file_name),
-      msg = "No such file, please check file_name")
+
   }
+
+  full_file_name <- file.path(full_dir_path, file_name)
+
+  assertthat::assert_that(file.exists(full_file_name),
+      msg = "No such file, please check file_name")
+
 
   res <- load_function(full_file_name)
 

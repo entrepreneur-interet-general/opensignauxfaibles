@@ -24,7 +24,7 @@ train_light_gradient_boosting <- function(
   rm(raw_data)
 
   train["outcome"] <- h2o.relevel(x = train["outcome"], y = "non_default")
-  
+
   #
   # Target Encoding de differents groupes sectoriels
   #
@@ -33,7 +33,7 @@ train_light_gradient_boosting <- function(
     train,
     x = list(c("code_naf"), c("code_ape_niveau2"), c("code_ape_niveau3"), c("code_ape_niveau4"), c("code_ape")),
     y = "outcome")
-  
+
   train <- h2o_target_encode(
     te_map,
     train,
@@ -59,8 +59,8 @@ train_light_gradient_boosting <- function(
     seed = 123
     )
 
-  # FIX ME save model
-  # FIX ME save te_map
+  save_h2o_object(model, "lgb", "model") #lgb like Light Gradient Boosting
+  save_h2o_object(te_map, "te_map", "temap")
 
-  return(TRUE)
+  return(list(model = model, te_map = te_map))
 }

@@ -584,7 +584,7 @@ light_gradient_boosting <- function(
     )
 
   if (retrain_model) {
-    train_light_gradient_boosting(
+    out <- train_light_gradient_boosting(
       database,
       last_batch,
       training_date_inf,
@@ -592,10 +592,14 @@ light_gradient_boosting <- function(
       algo,
       min_effectif,
       fields)
+    model <- out[["model"]]
+    te_map <- out[["te_map"]]
+  } else {
+    model <- load_h2o_object("lgb", "model", last = TRUE)
+    te_map <- load_h2o_object("te_map", "temap", last = TRUE)
   }
 
-  #FIX ME: load model
-  #FIX ME: load te_map
+
 
   pred_data <- predict_model(
     model,
