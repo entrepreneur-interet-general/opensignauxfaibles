@@ -15,10 +15,7 @@ library(h2o)
 library(lubridate)
 library(assertthat)
 library(mongolite)
-library(mice)
-library(caret)
 library(broom)
-library(randomForest)
 library(MLmetrics)
 library(tibbletime)
 library(PRROC)
@@ -36,12 +33,13 @@ database <- "test_signauxfaibles"
 actual_period <- as.Date("2018-11-01")
 last_batch <- '1812'
 algorithm <- 'algo2'
-min_effectif <- 200
+min_effectif <- 300
 retrain_model <- TRUE
+reexport_csv <- FALSE
 ```
 
 ```{r}
-res <- light_gradient_boosting(database, actual_period, last_batch, algorithm, min_effectif, retrain_model = retrain_model)
+res <- light_gradient_boosting(database, actual_period, last_batch, algorithm, min_effectif, retrain_model = retrain_model, reexport_csv = reexport_csv)
 my_data <- res[["current_data"]]
 my_model <- res[["model"]]
 ```

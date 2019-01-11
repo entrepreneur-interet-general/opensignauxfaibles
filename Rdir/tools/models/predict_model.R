@@ -9,7 +9,6 @@ predict_model <- function(
     fields
   ){
 
-
   current_data <- connect_to_database(
     database,
     "Features",
@@ -21,9 +20,13 @@ predict_model <- function(
     fields = fields
     )
 
+  current_data <- as.h2o(current_data)
+  # FIX ME !
+  current_data[["etat_proc_collective"]] <- h2o.asfactor(current_data[["etat_proc_collective"]])
+
   current <- h2o_target_encode(
     te_map,
-    as.h2o(current_data),
+    current_data,
     "test")
 
   prediction <- h2o.cbind(current, h2o.predict(model, current)) %>%
@@ -35,8 +38,10 @@ predict_model <- function(
     periode =  as.Date(structure(periode / 1000,
         class = c("POSIXct", "POSIXt")))
     ) %>%
-  rename(prob = default) %>%
+  rename(prob = TRUE.) %>% # Name automatically given to default probability
   select(predict, prob, siret, periode)
+
+
 
   pred_data <- prediction %>%
     group_by(siret) %>%

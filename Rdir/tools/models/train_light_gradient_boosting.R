@@ -6,8 +6,11 @@ train_light_gradient_boosting <- function(
   algo,
   min_effectif,
   fields,
-  x_fields_model
+  x_fields_model,
+  reexport_csv
   ){
+
+  browser()
 
   raw_data <- connect_to_database(
     database,
@@ -17,13 +20,21 @@ train_light_gradient_boosting <- function(
     date_sup = training_date_sup,
     algo = algorithm,
     min_effectif = min_effectif,
-    fields = fields
+    fields = fields,
+    type = "csv",
+    reexport_csv = reexport_csv
     )
 
-  train <- as.h2o(raw_data)
+
+
+
+  # train <- as.h2o(raw_data)
+  train <- raw_data
+  # FIX ME !
+  train["etat_proc_collective"] <- h2o.asfactor(train["etat_proc_collective"])
   rm(raw_data)
 
-  train["outcome"] <- h2o.relevel(x = train["outcome"], y = "non_default")
+  # train["outcome"] <- h2o.relevel(x = train["outcome"], y = "false")
 
   #
   # Target Encoding de differents groupes sectoriels

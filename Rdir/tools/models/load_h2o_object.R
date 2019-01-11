@@ -11,9 +11,9 @@ load_h2o_object <- function(
     msg = 'Unsupported extension. Supported extensions are "model" and "temap"')
 
   if (extension == "model") {
-    load_function <- h2o.loadModel
+    load_function <- load_H2OModel
   } else if (extension == "temap") {
-    load_function <- h2o.importFile
+    load_function <- load_H2OFrame_list
   }
 
   full_dir_path <- rprojroot::find_rstudio_root_file(relative_path)
@@ -30,16 +30,15 @@ load_h2o_object <- function(
     file_name <-  file_candidates %>%
       sort(decreasing = TRUE) %>%
       .[1]
-
   }
 
-  full_file_name <- file.path(full_dir_path, file_name)
 
-  assertthat::assert_that(file.exists(full_file_name),
+  full_path <- file.path(full_dir_path, file_name)
+
+  assertthat::assert_that(file.exists(full_path),
       msg = "No such file, please check file_name")
 
-
-  res <- load_function(full_file_name)
+  res <- load_function(full_dir_path, file_name)
 
   return(res)
 }

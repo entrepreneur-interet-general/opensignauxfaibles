@@ -15,7 +15,8 @@ export <- function(
     fullpath <- name_file(
       relative_path,
       file_detail = paste0("detection", batch),
-      file_extension = "csv"
+      file_extension = "csv",
+      full_name = TRUE
       )
 
     write.table(donnees,

@@ -6,9 +6,11 @@ light_gradient_boosting <- function(
   min_effectif = 10,
   retrain_model = FALSE,
   training_date_inf = as.Date("2015-01-01"),
-  training_date_sup = as.Date("2017-01-01")) {
+  training_date_sup = as.Date("2017-01-01"),
+  reexport_csv = TRUE) {
 
-  h2o.init(ip = "localhost", port = 4444, min_mem_size = "3G")
+  h2o.init(ip = "localhost", port = 4444, min_mem_size = "5G")
+
 
   fields <- c(
     "siret",
@@ -295,8 +297,8 @@ light_gradient_boosting <- function(
     # SIRENE
     "code_ape",
     "code_naf",
-    "activite_saisonniere",
-    "productif"
+    # PROCOL
+    "outcome"
     )
 
   x_fields_model <- c(
@@ -329,7 +331,7 @@ light_gradient_boosting <- function(
     "effectif_past_18",
     "effectif_past_24",
     # ALTARES
-    "etat_proc_collective_num",
+    "etat_proc_collective",
     # DIANE
     "dette_fiscale_et_sociale",
     "effectif_consolide",
@@ -578,9 +580,7 @@ light_gradient_boosting <- function(
     "apart_heures_autorisees",
     # SIRENE
     "TargetEncode_code_ape_niveau2",
-    "TargetEncode_code_ape_niveau3",
-    "activite_saisonniere",
-    "productif"
+    "TargetEncode_code_ape_niveau3"
     )
 
   if (retrain_model) {
@@ -591,7 +591,10 @@ light_gradient_boosting <- function(
       training_date_sup,
       algo,
       min_effectif,
-      fields)
+      fields,
+      x_fields_model = x_fields_model,
+      reexport_csv = reexport_csv)
+
     model <- out[["model"]]
     te_map <- out[["te_map"]]
   } else {
@@ -606,8 +609,7 @@ light_gradient_boosting <- function(
     te_map,
     database,
     last_batch,
-    date_inf = actual_period %m-% months(1),
-    date_sup = actual_period %m+% months(1),
+    actual_period,
     algo = algorithm,
     min_effectif = min_effectif,
     fields = fields)
@@ -665,5 +667,5 @@ light_gradient_boosting <- function(
   export(batch = last_batch)
 
 # Returns H2O frames and model
-return(list(train_data = train, current_data = current, model = model))
+return(TRUE)
 }
