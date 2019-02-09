@@ -130,14 +130,14 @@ func reportErrors(tracker gournal.Tracker) interface{} {
 
 func reportInvalidData(tracker gournal.Tracker) interface{} {
 	if errs, ok := tracker.Errors[tracker.Count]; ok {
-		return tracker.Context["path"] + ": cycle " + strconv.Itoa(tracker.Count) + " ignoré: " + errs[len(errs)-1]
+		return tracker.Context["path"] + ": cycle " + strconv.Itoa(tracker.Count) + " ignoré: " + errs[len(errs)-1].Error()
 	}
 	return nil
 }
 
 func reportFatalError(tracker gournal.Tracker) interface{} {
 	if errs, ok := tracker.Errors[tracker.Count]; ok {
-		return "Erreur fatale, abandon: " + errs[len(errs)-1]
+		return "Erreur fatale, abandon: " + errs[len(errs)-1].Error()
 	}
 	return nil
 }

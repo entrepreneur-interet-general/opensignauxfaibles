@@ -14,11 +14,11 @@ import (
 
 // Altares Extrait du récapitulatif altarès
 type Altares struct {
-	DateEffet     time.Time `json:"date_effet" bson:"date_effet"`
-	DateParution  time.Time `json:"date_parution" bson:"date_parution"`
-	CodeJournal   string    `json:"code_journal" bson:"code_journal"`
-	CodeEvenement string    `json:"code_evenement" bson:"code_evenement"`
-	Siret         string    `json:"-" bson:"-"`
+	DateEffet     time.Time  `json:"date_effet" bson:"date_effet"`
+	DateParution  *time.Time `json:"date_parution" bson:"date_parution"`
+	CodeJournal   string     `json:"code_journal" bson:"code_journal"`
+	CodeEvenement string     `json:"code_evenement" bson:"code_evenement"`
+	Siret         string     `json:"-" bson:"-"`
 }
 
 // Key id de l'objet
@@ -90,16 +90,16 @@ func Parser(batch engine.AdminBatch) (chan engine.Tuple, chan engine.Event) {
 				if err == io.EOF {
 					file.Close()
 					break
-				} else if err != nil {
-					file.Close()
-					event.Critical(path + ": abandon suite à un problème de lecture du fichier: " + err.Error())
-					break
 				}
 
 				dateEffet, err := time.Parse("2006-01-02", row[dateEffetIndex])
 				tracker.Error(err)
-				dateParution, err := time.Parse("2006-01-02", row[dateParutionIndex])
-				tracker.Error(err)
+
+				// si erreur, pointeur nil.
+				var dateParution *time.Time
+				if d, err := time.Parse("2006-01-02", row[dateParutionIndex]); err != nil {
+					dateParution = &d
+				}
 
 				altares := Altares{
 					Siret:         row[siretIndex],
@@ -117,7 +117,7 @@ func Parser(batch engine.AdminBatch) (chan engine.Tuple, chan engine.Event) {
 			}
 			event.Info(tracker.Report("abstract"))
 		}
-
+		close(eventChannel)
 		close(outputChannel)
 	}()
 	return outputChannel, eventChannel
