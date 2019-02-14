@@ -1,717 +1,1211 @@
 {
-    "swagger": "2.0",
-    "info": {
-        "description": "Cette API centralise toutes les fonctionnalités du module de traitement de données OpenSignauxFaibles\nPour plus de renseignements: https://beta.gouv.fr/startups/signaux-faibles.html",
-        "title": "API openSignauxFaibles",
-        "contact": {},
-        "license": {
-            "name": "Licence MIT",
-            "url": "https://raw.githubusercontent.com/entrepreneur-interet-general/opensignauxfaibles/master/LICENSE"
-        },
-        "version": "1.1"
-    },
-    "host": "{{.Host}}",
-    "basePath": "/",
-    "paths": {
-        "/api/admin/batch": {
-            "get": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Produit une extraction des objets batch de la collection Admin",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Administration"
-                ],
-                "summary": "Liste des batches",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "type": "string"
-                            }
-                        }
-                    }
+  "components": {
+    "schemas": {
+      "Login": {
+        "properties": {
+          "email": {
+            "type": "string"
+          },
+          "password": {
+            "type": "string"
+          },
+          "browserToken": {
+            "type": "string"
+          }
+        }
+      },
+      "LoginResponse": {
+        "properties": {
+          "code": {
+            "type": "integer"
+          },
+          "expire": {
+            "type": "string"
+          },
+          "token": {
+            "type": "string"
+          }
+        }
+      },
+      "LoginCheck": {
+        "properties": {
+          "email": {
+            "type": "string"
+          },
+          "password": {
+            "type": "string"
+          },
+          "checkCode": {
+            "type": "string"
+          }
+        }
+      },
+      "LoginCheckResponse": {
+        "properties": {
+          "browserToken": {
+            "type": "string"
+          }
+        }
+      },
+      "LoginGet": {
+        "properties": {
+          "email": {
+            "type": "string"
+          },
+          "password": {
+            "type": "string"
+          }
+        }
+      },
+      "LoginRecoveryGet": {
+        "properties": {
+          "email": {
+            "type": "string"
+          },
+          "browsertoken": {
+            "type": "string"
+          }
+        }
+      },
+      "LoginRecoveryGetResponse": {
+        "type": "string"
+      },
+      "AdminBatch": {
+        "items": {
+          "properties": {
+            "id": {
+              "properties": {
+                "key": {
+                  "type": "string"
+                },
+                "type": {
+                  "type": "string"
                 }
-            }
-        },
-        "/api/admin/batch/next": {
-            "get": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Exécute l'import, le compactage et la réduction du dernier batch",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Administration"
-                ],
-                "summary": "Traitement du dernier batch",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/admin/epoch": {
-            "get": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Ce numéro s'incrémente à chaque action",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Administration"
-                ],
-                "summary": "Numéro du statut du serveur",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/admin/features": {
-            "get": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Correspond aux mapReduces qui produisent les variables dans la collection Features",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Administration"
-                ],
-                "summary": "Identifiants des traitements de réduction",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/admin/files": {
-            "get": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Tous ces fichiers sont contenu dans APP_DATA (voir config.toml)",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Administration"
-                ],
-                "summary": "Liste les fichiers disponibles dans le dépot",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
+              }
             },
-            "post": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Réalise l'upload d'un fichier dans un batch/type. Une fois l'upload effectué, le fichier est automatiquement attaché au batch.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Administration"
-                ],
-                "summary": "Upload d'un fichier",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
+            "files": {
+              "properties": {
+                "type1": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "type2": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "...": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
                 }
+              }
+            },
+            "readonly": {
+              "type": "boolean"
+            },
+            "complete_types": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "param": {
+              "type": "object",
+              "properties": {
+                "param1": {
+                  "type": "string"
+                },
+                "param2": {
+                  "type": "string"
+                },
+                "...": {
+                  "type": "string"
+                }
+              }
             }
+          }
         },
-        "/api/admin/getLogs": {
-            "get": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Liste les 100 derniers évènements du journal",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Administration"
-                ],
-                "summary": "Journal d'évènements",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/admin/status": {
-            "get": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Permet de connaître l'opération en cours",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Administration"
-                ],
-                "summary": "Disponibilité de la base de données",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/admin/types": {
-            "get": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Correspond aux types disponibles dans les traitements d'importation",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Administration"
-                ],
-                "summary": "Liste des types",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/data/batch/purge": {
-            "get": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Exécute l'import, le compactage et la réduction du dernier batch",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Administration"
-                ],
-                "summary": "Traitement du dernier batch",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/data/compact": {
-            "get": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Alimente la collection Features",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Traitements"
-                ],
-                "summary": "Lance un traitement de compactage",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Identifiant du traitement",
-                        "name": "algo",
-                        "in": "query",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Identifier du batch",
-                        "name": "batch",
-                        "in": "query",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/data/import/{batch}": {
-            "get": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Effectue l'import de tous les fichiers du batch donné en paramètre",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Traitements"
-                ],
-                "summary": "Import de fichiers pour un batch",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Clé du batch",
-                        "name": "batch",
-                        "in": "query",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/data/purge": {
-            "get": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Suppression de tous les objets de données brutes contenus dans la collection RawData (irréversible)",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Traitements"
-                ],
-                "summary": "Purge la collection RawData",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/data/reduce/{algo}/{batch}": {
-            "get": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Alimente la collection Features",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Traitements"
-                ],
-                "summary": "Lance un traitement de réduction",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Identifiant du traitement",
-                        "name": "algo",
-                        "in": "query",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Identifier du batch",
-                        "name": "batch",
-                        "in": "query",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/data/search": {
-            "post": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Effectue une recherche texte sur la collection Public et retourne les 15 premiers objets correspondants",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Traitements"
-                ],
-                "summary": "Rechercher une entreprise",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Chaine à chercher",
-                        "name": "guessRaisonSociale",
-                        "in": "query",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/reduce/{algo}/{batch}": {
-            "get": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Alimente la collection Features",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Traitements"
-                ],
-                "summary": "Remplace un batch",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Identifiant du traitement",
-                        "name": "algo",
-                        "in": "query",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Identifier du batch",
-                        "name": "batch",
-                        "in": "query",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/refreshToken": {
-            "get": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Fournit un jeton avec nouvelle date de validité en échange d'un jeton encore valide",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Session"
-                ],
-                "summary": "Obtenir un jeton d'identification",
-                "responses": {
-                    "200": {
-                        "description": "{\u003cbr/\u003e'code': 200,\u003cbr/\u003e   'expire': '2019-01-21T12:16:50+01:00',\u003cbr/\u003e'token': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9…'\u003cbr/\u003e}",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "401": {
-                        "description": "{\u003cbr/\u003e'code': 401,\u003cbr/\u003e'message': 'cookie token is empty'\u003cbr/\u003e}",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
-        },
-        "/login": {
-            "post": {
-                "description": "Nécessite 3 informations: email, mot de passe et jeton de navigateur\nLe jeton de navigateur n'a pas de limite de validité et peut être conservé",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Session"
-                ],
-                "summary": "Rafraichir le jeton d'identification",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Adresse Email",
-                        "name": "email",
-                        "in": "query",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Mot de Passe",
-                        "name": "password",
-                        "in": "query",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Token navigateur",
-                        "name": "browserToken",
-                        "in": "query",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "{\u003cbr/\u003e'code': 200,\u003cbr/\u003e'expire':'2019-01-21T11:16:15+01:00',\u003cbr/\u003e'token':'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9…'\u003cbr/\u003e}",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "401": {
-                        "description": "{\u003cbr/\u003e'code': 401,\u003cbr/\u003e'message': 'incorrect Username or Password'\u003cbr/\u003e}",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
-        },
-        "/login/check": {
-            "post": {
-                "description": "Fournit en retour un jeton de navigateur",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Session"
-                ],
-                "summary": "Vérification du code temporaire renvoyé à l'utilisateur",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Adresse EMail",
-                        "name": "email",
-                        "in": "query",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Mot de passe",
-                        "name": "password",
-                        "in": "query",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Code de vérification",
-                        "name": "checkCode",
-                        "in": "query",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
-        },
-        "/login/recovery/get": {
-            "post": {
-                "description": "Dans le cas d'un oubli du mot de passe, on peut fixer un nouveau mot de passe à partir d'un navigateur identifié\nIl faut dans ce cas pouvoir recevoir un code de vérification par mail\nVoir /login/recovery/get",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Session"
-                ],
-                "summary": "Récupération du mot de passe",
-                "responses": {
-                    "200": {
-                        "description": "ok",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
-        },
-        "/login/recovery/setPassword": {
-            "post": {
-                "description": "Dans le cas d'un oubli du mot de passe, on peut fixer un nouveau mot de passe à partir d'un navigateur identifié\nIl faut dans ce cas pouvoir recevoir un code de vérification par mail\nVoir /login/recovery/get",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Session"
-                ],
-                "summary": "Récupération du mot de passe",
-                "responses": {
-                    "200": {
-                        "description": "ok",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
+        "type": "array"
+      },
+      "Public": {
+        "properties": {
+          "batch": {
+            "type": "string"
+          },
+          "siret": {
+            "type": "string"
+          }
         }
+      },
+      "Event": {
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "date": {
+            "type": "string"
+          },
+          "event": {
+            "type": "object"
+          },
+          "priority": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "FileSummary": {
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "size": {
+            "type": "number"
+          },
+          "date": {
+            "type": "string"
+          }
+        }
+      },
+      "Type": {
+        "properties": {
+          "filter": {
+            "type": "string"
+          },
+          "text": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "LoginFail": {
+        "properties": {
+          "code": {
+            "type": "integer"
+          },
+          "message": {
+            "type": "string"
+          }
+        }
+      },
+      "Import": {
+        "properties": {
+          "batch": {
+            "type": "string"
+          },
+          "parsers": {
+            "type": "string"
+          }
+        }
+      },
+      "Purge": {
+        "properties": {
+          "RawData": {
+            "properties": {
+              "info": {
+                "type": "string"
+              },
+              "error": {
+                "type": "string"
+              }
+            }
+          },
+          "Journal": {
+            "properties": {
+              "info": {
+                "type": "string"
+              },
+              "error": {
+                "type": "string"
+              }
+            }
+          },
+          "Features": {
+            "properties": {
+              "info": {
+                "type": "string"
+              },
+              "error": {
+                "type": "string"
+              }
+            }
+          },
+          "Public": {
+            "properties": {
+              "info": {
+                "type": "string"
+              },
+              "error": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      },
+      "Browse": {
+        "properties": {
+          "batch": {
+            "type": "string"
+          },
+          "siret": {
+            "type": "string"
+          },
+          "sort": {
+            "type": "string"
+          },
+          "offset": {
+            "type": "integer"
+          },
+          "length": {
+            "type": "integer"
+          }
+        }
+      },
+      "Browseable": {
+        "properties": {
+          "id": {
+            "properties": {
+              "key": {
+                "type": "string"
+              },
+              "scope": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "value": {
+            "properties": {
+              "field1": {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "integer"
+                  }
+                ]
+              },
+              "field2": {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "integer"
+                  }
+                ]
+              },
+              "...": {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "integer"
+                  }
+                ]
+              }
+            }
+          }
+        }
+      },
+      "Reduce": {
+        "properties": {
+          "batch": {
+            "type": "string"
+          },
+          "key": {
+            "type": "string"
+          },
+          "features": {
+            "type": "string"
+          }
+        }
+      }
     },
-    "securityDefinitions": {
-        "ApiKeyAuth": {
-            "type": "apiKey",
-            "name": "Authorization",
-            "in": "header"
-        }
+    "securitySchemes": {
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer"
+      }
     }
+  },
+  "info": {
+    "contact": {
+      "name": "contact support",
+      "email": "contact@signaux-faibles.beta.gouv.fr"
+    },
+    "description": "Cette API centralise toutes les fonctionnalités du module de traitement de données [openSignauxFaibles](https://github.com/entrepreneur-interet-general/opensignauxfaibles)  \nCe [projet](https://beta.gouv.fr/startups/signaux-faibles.html) fournit une plateforme technique à l'exploitation des signaux faibles pour anticiper les difficultés des entreprises  \n\nLa plateforme fournit les services suivants    \n- Authentification  \n- Gestion des batches d'intégration  \n- Lancement/ordonnancement des traitements  \n- Consultation des données  \n\nToutes les erreurs rencontrées lors du traitement seront signalées par le statut `HTTP 500` assorti du message d'erreur ayant provoqué le défaut du traitement.  \nPar ailleurs, tous les services authentifiés sont succeptibles de renvoyer le statut `HTTP 401` dans le cas où l'authentification est erronée.  Le code `HTTP 403` est également communiqué lorsque les attributions sont insuffisantes pour traiter la requête.  \nDans le cas où une requête est malformée, le code `HTTP 400` sera renvoyé assorti d'un message indiquant l'erreur rencontrée dans l'analyse du corps de la requête  ",
+    "license": {
+      "name": "Licence MIT",
+      "url": "https://raw.githubusercontent.com/entrepreneur-interet-general/opensignauxfaibles/master/LICENSE"
+    },
+    "title": "API openSignauxFaibles",
+    "version": "1.1"
+  },
+  "paths": {
+    "/login": {
+      "post": {
+        "description": "L'authentification se base sur la fourniture de 3 champs\n- email\n- mot de passe \n- jeton du navigateur\n\nLe service retourne un jeton temporaire valide pour une durée déterminée.  \nCette validité peut être prolongée avec le service /api/refreshToken  \n\nCe token doit être utilisé dans l'entête `Authorization`",
+        "requestBody": {
+          "description": "Les informations d'identification",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Login"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "retourne un token et une date de validité",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoginResponse"
+                },
+                "example": {
+                  "code": 200,
+                  "expire": "2018-12-31 23:30:12",
+                  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9…"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "retourne la raison de l'échec",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoginFail"
+                },
+                "example": {
+                  "code": 401,
+                  "message": "Please provide good credentials sir."
+                }
+              }
+            }
+          }
+        },
+        "summary": "obtenir un jeton temporaire de session",
+        "tags": [
+          "Authentification"
+        ]
+      }
+    },
+    "/login/get": {
+      "post": {
+        "summary": "demander l'envoi d'un code de vérification",
+        "description": "Renvoie un code de vérification sur la base d'un email et d'un mot de passe  \nLe code n'est envoyé que si le mot de passe est valide, le cas échéant, un email avertissant d'une tentative est envoyé.  \nPour éviter les tentatives de forçage de mot de passe, ce service ne renvoie jamais d'échec.  ",
+        "requestBody": {
+          "description": "Email et mot de passe",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginGet"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "ok"
+          }
+        },
+        "tags": [
+          "Authentification"
+        ]
+      }
+    },
+    "/login/check": {
+      "post": {
+        "description": "Le service permet de valider le code de vérification envoyé à l'utilisateur  \nIl donne en retour un jeton de navigateur qui pourra être réutilisé comme facteur d'authentification (browserToken)  ",
+        "requestBody": {
+          "description": "Les informations d'identification",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginCheck"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "retourne un browserToken",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoginCheckResponse"
+                },
+                "example": {
+                  "browserToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9…"
+                }
+              }
+            }
+          }
+        },
+        "summary": "valider un code de vérification",
+        "tags": [
+          "Authentification"
+        ]
+      }
+    },
+    "/login/recovery/get": {
+      "post": {
+        "description": "Dans le cas d'un oubli du mot de passe, on peut fixer un nouveau mot de passe à partir d'un navigateur identifié  \nIl faut dans ce cas pouvoir recevoir un code de vérification par mail  \nCe schéma d'authentification se base sur la fourniture d'un browserToken valide associé à l'utilisateur avec lequel il a été obtenu ainsi qu'un code de vérification transmis par email",
+        "requestBody": {
+          "description": "Les informations d'identification",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginRecoveryGet"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "retourne un browserToken",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoginRecoveryGetResponse"
+                },
+                "example": {
+                  "email": "test@domain.com",
+                  "browserToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9…"
+                }
+              }
+            }
+          }
+        },
+        "summary": "demander une récupération de mot de passe",
+        "tags": [
+          "Authentification"
+        ]
+      }
+    },
+    "/login/recovery/setPassword": {
+      "post": {
+        "summary": "changer un mot de passe",
+        "description": "Permet de fixer un nouveau de passe en étant muni d'un browserToken et d'un code de vérification fourni par email\nCe code est validé en utilisant le hash (bcrypt) stocké en base lors de son envoi par le service /login/recovery/get",
+        "responses": {
+          "200": {
+            "description": "ok"
+          }
+        },
+        "tags": [
+          "Authentification"
+        ]
+      }
+    },
+    "/api/refreshToken": {
+      "get": {
+        "summary": "renouveler le jeton de session",
+        "description": "Fournit un nouveau jeton temporaire de session en échange d'un jeton encore valide.  \nCe service demande d'être authentifié mais ne nécessite aucun paramètre.  \nL'authentification est réalisée avec l'entête HTTP Authorization.  \nExemple:  \n```Authorization:Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9…```",
+        "responses": {
+          "200": {
+            "description": "Renouvellement autorisé",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoginResponse"
+                },
+                "example": {
+                  "code": 200,
+                  "expire": "2019-02-01 12:00:05",
+                  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9…"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Renouvellement refusé",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoginFail"
+                },
+                "example": {
+                  "code": 401,
+                  "message": "cookie token is empty"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "tags": [
+          "Authentification"
+        ]
+      }
+    },
+    "/api/admin/batch": {
+      "get": {
+        "description": "Retourne tous les objets de type AdminBatch de la collection Admin trié par ordre de clé de batch.",
+        "responses": {
+          "200": {
+            "description": "liste des batches",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminBatch"
+                },
+                "example": [
+                  {
+                    "id": {
+                      "key": 1805,
+                      "type": "batch"
+                    },
+                    "files": {
+                      "altares": [
+                        "/files/1805/altares.csv"
+                      ],
+                      "cotisation": [
+                        "/files/1805/cotisation.csv"
+                      ]
+                    },
+                    "complete_types": [
+                      "altares"
+                    ],
+                    "params": {
+                      "date_debut": "2014-01-01 00:00:00",
+                      "date_fin": "2018-05-01 00:00:00"
+                    }
+                  },
+                  {
+                    "id": {
+                      "key": 1806,
+                      "type": "batch"
+                    },
+                    "files": {
+                      "altares": [
+                        "/files/1806/altares.csv"
+                      ],
+                      "cotisation": [
+                        "/files/1806/cotisation.csv"
+                      ]
+                    },
+                    "complete_types": [
+                      "altares",
+                      "cotisation"
+                    ],
+                    "params": {
+                      "date_debut": "2014-01-01 00:00:00",
+                      "date_fin": "2018-06-01 00:00:00"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "summary": "obtenir les objets AdminBatch",
+        "tags": [
+          "Administration"
+        ]
+      },
+      "post": {
+        "summary": "mettre à jour un objet AdminBatch",
+        "description": "Permet d'envoyer un objet AdminBatch pour création ou mise à jour. Le champ `id` de l'objet est la clé permettant d'identifier ces objets, l'update sera décidé sur cette base. Les modifications de l'objet sont acceptées sur la base du schéma de l'objet, toute clé sortant de ce schéma sera exclue, l'analyse de l'objet transmis se faisant au mieux-disant.",
+        "requestBody": {
+          "description": "Prend un objet AdminBatch en entrée",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdminBatch"
+              },
+              "example": {
+                "id": {
+                  "key": 1805,
+                  "type": "batch"
+                },
+                "files": {
+                  "altares": [
+                    "/files/1805/altares.csv"
+                  ],
+                  "cotisation": [
+                    "/files/1805/cotisation.csv"
+                  ]
+                },
+                "complete_types": [
+                  "altares"
+                ],
+                "params": {
+                  "date_debut": "2014-01-01 00:00:00",
+                  "date_fin": "2018-05-01 00:00:00"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "liste des batches",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminBatch"
+                },
+                "example": [
+                  {
+                    "id": {
+                      "key": 1805,
+                      "type": "batch"
+                    },
+                    "files": {
+                      "altares": [
+                        "/files/1805/altares.csv"
+                      ],
+                      "cotisation": [
+                        "/files/1805/cotisation.csv"
+                      ]
+                    },
+                    "complete_types": [
+                      "altares"
+                    ],
+                    "params": {
+                      "date_debut": "2014-01-01 00:00:00",
+                      "date_fin": "2018-05-01 00:00:00"
+                    }
+                  },
+                  {
+                    "id": {
+                      "key": 1806,
+                      "type": "batch"
+                    },
+                    "files": {
+                      "altares": [
+                        "/files/1806/altares.csv"
+                      ],
+                      "cotisation": [
+                        "/files/1806/cotisation.csv"
+                      ]
+                    },
+                    "complete_types": [
+                      "altares",
+                      "cotisation"
+                    ],
+                    "params": {
+                      "date_debut": "2014-01-01 00:00:00",
+                      "date_fin": "2018-06-01 00:00:00"
+                    }
+                  },
+                  {
+                    "id": {
+                      "key": 1807,
+                      "type": "batch"
+                    },
+                    "files": {
+                      "debit": [
+                        "/files/1807/debit.csv"
+                      ]
+                    },
+                    "complete_types": [
+                      "debit"
+                    ],
+                    "params": {
+                      "date_debut": "2014-01-01 00:00:00",
+                      "date_fin": "2018-07-01 00:00:00"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "tags": [
+          "Administration"
+        ]
+      }
+    },
+    "/api/admin/batch/next": {
+      "get": {
+        "description": "Clôture le dernier batch et crée la référence de batch suivante dans la collection admin  \nL'ordre des batches est alphanumérique, la numérotation est effectuée en mois année (YYMM)\nPar exemple, le batch suivant 1812 est 1901.  \nIl est possible de créer des batches intermédiaires (par exemple 1812-correction), cela ne perturbe pas la création du batch 1901.  \nLe nouveau batch créé est vide, le service renvoie la liste des objets AdminBatch ainsi nouvellement constituée.  \nCette liste est également communiquée à tous les clients connectés via le connecteur webservice avec l'attribution admin (WIP).  ",
+        "responses": {
+          "200": {
+            "description": "Traitement effectué avec succès",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminBatch"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "summary": "créer le batch suivant",
+        "tags": [
+          "Administration"
+        ]
+      }
+    },
+    "/api/admin/batch/revert": {
+      "get": {
+        "description": "Ce traitement permet de supprime les données et la référence du dernier batch et de le réouvrir pour une nouvelle intégration.  \nCela est utile si des modifications sont à apporter au niveau du batch.",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "ok"
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "summary": "supprimer le dernier batch",
+        "tags": [
+          "Administration"
+        ]
+      }
+    },
+    "/api/admin/events": {
+      "get": {
+        "description": "Liste les 250 derniers évènements du journal  ",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Event"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "summary": "consulter le journal d'évènements",
+        "tags": [
+          "Administration"
+        ]
+      }
+    },
+    "/api/admin/files": {
+      "get": {
+        "description": "Les fichiers sources sont disposés dans le répertoire APP_DATA (voir config.toml), cette fonction permet de les lister avec quelques propriétés utiles (taille et âge)",
+        "responses": {
+          "200": {
+            "description": "liste des fichiers",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/FileSummary"
+                  }
+                },
+                "example": {
+                  "name": "/1802/altares.csv",
+                  "date": "2018-02-20 18:42:32",
+                  "size": 12523214
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "summary": "lister les fichiers disponibles",
+        "tags": [
+          "Administration"
+        ]
+      },
+      "post": {
+        "description": "Réalise l'upload d'un fichier dans un batch/type  \nUne fois l'upload effectué, le fichier est automatiquement attaché au batch  \nL'upload est effectué via les formData",
+        "responses": {
+          "200": {
+            "description": "fichier enregistré avec succès",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "ok"
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "summary": "ajouter un fichier dans un batch",
+        "tags": [
+          "Administration"
+        ]
+      }
+    },
+    "/api/admin/types": {
+      "get": {
+        "description": "Liste des types connus de dbmongo  \nCes types correspondent aux types que l'on rencontre dans le sous-objet files d'un objet AdminBatch. Par ailleurs ces types sont également référencés pour le stockage dans les objets de la collection de données.",
+        "responses": {
+          "200": {
+            "description": "liste des types",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Type"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "summary": "lister les types",
+        "tags": [
+          "Administration"
+        ]
+      }
+    },
+    "/api/admin/features": {
+      "get": {
+        "description": "Liste des traitements de production de variables connus de dbmongo  \nCes références sont à utiliser auprès du service `/data/reduce`  ",
+        "responses": {
+          "200": {
+            "description": "liste des traitements",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "summary": "lister les traitements de données",
+        "tags": [
+          "Administration"
+        ]
+      }
+    },
+    "/api/data/compact": {
+      "get": {
+        "summary": "compacter la base de données",
+        "description": "Ce traitement permet le compactage de la base de données.  \nCe compactage a pour effet de réduire tous les objets en clé uniques comportant dans la même arborescence toutes les données en rapport avec ces clés.  \nCe traitement est nécessaire pour rendre disponible les données à /api/data/reduce les nouvelles données importées.",
+        "responses": {
+          "200": {
+            "description": "Le traitement s'est bien déroulé",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "ok"
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "tags": [
+          "Traitements"
+        ]
+      }
+    },
+    "/api/data/import": {
+      "post": {
+        "description": "Effectue l'import de tous les fichiers du batch donné en paramètre Pour exécuter tous les parsers, il faut ne pas spécifier la propriété parsers ou lui donner la valeur null.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Import"
+              },
+              "example": {
+                "batch": 1802,
+                "parsers": [
+                  "altares",
+                  "cotisation"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Le traitement s'est bien déroulé",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "ok"
+              }
+            }
+          },
+          "404": {
+            "description": "Un des parsers demandé n'est pas reconnu",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "justAnExampleParser n'est pas un parser reconnu"
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "summary": "importer des fichiers",
+        "tags": [
+          "Traitements"
+        ]
+      }
+    },
+    "/api/data/public": {
+      "post": {
+        "description": "Alimente la collection Public avec les objets calculés pour le batch cité en paramètre.  \nLe traitement prend en paramètre la clé du batch (obligatoire) et un siret (optionnel). Lorsque le siret n'est pas précisé tous les objets lié au batch sont traités.\nCette collection sera ensuite accédée par les utilisateurs pour consulter les données des entreprises.  \nDes niveaux d'accéditation fins (ligne ou colonne) pour la consultation de ces données peuvent être mis en oeuvre.  \nCes filtrages sont effectués grace à la notion de scope. Les objets et les utilisateurs disposent d'un ensemble de tags et les objets partageant au moins un tag avec les utilisateurs peuvent être consultés par ceux-ci.  \nCes tags sont exploités pour traiter la notion de région (ligne) mais aussi les permissions (colonne).",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Public"
+              },
+              "example": {
+                "batch": "1805",
+                "siret": "012345678901234"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Le traitement s'est bien déroulé",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "ok"
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "summary": "publier les données",
+        "tags": [
+          "Traitements"
+        ]
+      }
+    },
+    "/api/data/browse": {
+      "post": {
+        "description": "Ce service permet d'accéder à la collection Public en appliquant les filtrages sécuritaires nécessaires.\nLe scope de l'utilisateur est automatiquement déduit de son jeton de session et ainsi ne sont retournés que les objets qui satisfont les critères de sécurités demandés dans le traitement Public",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Browse"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Liste d'objets de type Browseable renvoyée au client",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Browseable"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "summary": "consulter les données",
+        "tags": [
+          "Traitements"
+        ]
+      }
+    },
+    "/api/data/purge": {
+      "get": {
+        "description": "Suppression de tous les objets de données brutes contenus dans les collections RawData, Features, Journal et Public  \n**Ceci est une opération de remise à zéro de la base de données**  \n**Seule la configuration des batches est conservée**  \n**Cette opération est irréversible et dangereuse et ne devrait être utilisée qu'à des fins de développement**  \n\n**!!! SI VOUS NE SAVEZ PAS CE QUE VOUS FAITES ICI, PASSEZ VOTRE CHEMIN !!!**",
+        "responses": {
+          "200": {
+            "description": "statistiques de suppression",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Purge"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "summary": "remettre à zéro les données /!\\",
+        "tags": [
+          "Traitements"
+        ]
+      }
+    },
+    "/api/data/reduce": {
+      "post": {
+        "description": "Alimente la collection Features en calculant les variables avec le traitement mapreduce demandé dans la propriété `features`  \nLe traitement remplace les objets similaires en sortie du calcul dans la collection Features, les objets non concernés par le traitement ne seront ainsi pas remplacés, de sorte que si un seul siret est demandé le calcul ne remplacera qu'un seul objet.  \nCes traitements ne prennent en compte que les objets déjà compactés.  ",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Reduce"
+              },
+              "example": {
+                "batch": "1805",
+                "features": "algo2",
+                "key": "012345678901234"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Le traitement s'est bien déroulé",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "ok"
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "summary": "calculer les variables",
+        "tags": [
+          "Traitements"
+        ]
+      }
+    },
+    "/api/data/search": {
+      "post": {
+        "description": "Effectue une recherche fulltext sur la collection Public et retourne les 15 premiers objets correspondants",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "summary": "rechercher une entreprise",
+        "tags": [
+          "Traitements"
+        ]
+      }
+    }
+  },
+  "openapi": "3.0.0"
 }

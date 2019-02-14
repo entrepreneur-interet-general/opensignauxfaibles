@@ -1,469 +1,814 @@
-basePath: /
-host: '{{.Host}}'
+components:
+  schemas:
+    Login:
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+        browserToken: 
+          type: string
+    LoginResponse:
+      properties:
+        code:
+          type: integer
+        expire:
+          type: string
+        token:
+          type: string
+    LoginCheck:
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+        checkCode: 
+          type: string
+    LoginCheckResponse:
+      properties:
+        browserToken:
+          type: string
+    LoginGet:
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+    LoginRecoveryGet:
+      properties:
+        email:
+          type: string
+        browsertoken:
+          type: string
+    LoginRecoveryGetResponse: 
+      type: string
+    AdminBatch:
+      items:
+        properties:
+          id: 
+            properties:
+              key:
+                type: string
+              type:
+                type: string
+          files:
+            properties:
+              type1:
+                type: array
+                items: 
+                  type: string
+              type2:
+                type: array
+                items: 
+                  type: string
+              ...:
+                type: array
+                items: 
+                  type: string
+          readonly:
+            type:
+              boolean
+          complete_types:
+            type: array
+            items:
+              type: string
+          param:
+            type: object
+            properties:
+              param1:
+                type:
+                  string
+              param2:
+                type:
+                  string
+              ...:
+                type:
+                  string
+      type: array
+    Public:
+      properties:
+        batch: 
+          type: string
+        siret:
+          type: string
+    Event:
+      properties:
+        code:
+          type: string
+        date:
+          type: string
+        event:
+          type: object
+        priority:
+          type: string
+      type: object
+    FileSummary:
+      properties:
+        name:
+          type: string
+        size:
+          type: number
+        date:
+          type: string
+    Type:
+      properties:
+        filter:
+          type: string
+        text:
+          type: string
+        type:
+          type: string
+      type: object
+    LoginFail:
+      properties:
+        code:
+          type: integer
+        message:
+          type: string
+    Import:
+      properties:
+        batch:
+          type: string
+        parsers:
+          type: string
+    Purge:
+      properties:
+        RawData:
+          properties:
+            info:
+              type: string
+            error:
+              type: string
+        Journal:
+          properties:
+            info:
+              type: string
+            error:
+              type: string
+        Features:
+          properties:
+            info:
+              type: string
+            error:
+              type: string
+        Public:
+          properties:
+            info:
+              type: string
+            error:
+              type: string
+    Browse:
+      properties:
+        batch: 
+          type: string
+        siret:
+          type: string
+        sort:
+          type: string
+        offset:
+          type: integer
+        length:
+          type: integer
+    Browseable:
+      properties:
+        id:
+          properties:
+            key:
+              type: string
+            scope:
+              type: array
+              items:
+                type: string
+        value:
+          properties:
+            field1:
+              oneOf:
+              - type: string
+              - type: number
+              - type: integer
+            field2:
+              oneOf:
+              - type: string
+              - type: number
+              - type: integer
+            ...:
+              oneOf:
+              - type: string
+              - type: number
+              - type: integer
+    Reduce:
+      properties:
+        batch:
+          type: string
+        key:
+          type: string
+        features:
+          type: string
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
 info:
-  contact: {}
+  contact: 
+    name: "contact support"
+    email: "contact@signaux-faibles.beta.gouv.fr"
   description: |-
-    Cette API centralise toutes les fonctionnalités du module de traitement de données OpenSignauxFaibles
-    Pour plus de renseignements: https://beta.gouv.fr/startups/signaux-faibles.html
+    Cette API centralise toutes les fonctionnalités du module de traitement de données [openSignauxFaibles](https://github.com/entrepreneur-interet-general/opensignauxfaibles)  
+    Ce [projet](https://beta.gouv.fr/startups/signaux-faibles.html) fournit une plateforme technique à l'exploitation des signaux faibles pour anticiper les difficultés des entreprises  
+  
+    La plateforme fournit les services suivants    
+    - Authentification  
+    - Gestion des batches d'intégration  
+    - Lancement/ordonnancement des traitements  
+    - Consultation des données  
+    
+    Toutes les erreurs rencontrées lors du traitement seront signalées par le statut `HTTP 500` assorti du message d'erreur ayant provoqué le défaut du traitement.  
+    Par ailleurs, tous les services authentifiés sont succeptibles de renvoyer le statut `HTTP 401` dans le cas où l'authentification est erronée.  Le code `HTTP 403` est également communiqué lorsque les attributions sont insuffisantes pour traiter la requête.  
+    Dans le cas où une requête est malformée, le code `HTTP 400` sera renvoyé assorti d'un message indiquant l'erreur rencontrée dans l'analyse du corps de la requête  
   license:
     name: Licence MIT
     url: https://raw.githubusercontent.com/entrepreneur-interet-general/opensignauxfaibles/master/LICENSE
   title: API openSignauxFaibles
   version: "1.1"
 paths:
-  /api/admin/batch:
-    get:
-      consumes:
-      - application/json
-      description: Produit une extraction des objets batch de la collection Admin
-      produces:
-      - application/json
+  /login:
+    post:
+      description: |-
+        L'authentification se base sur la fourniture de 3 champs
+        - email
+        - mot de passe 
+        - jeton du navigateur
+
+        Le service retourne un jeton temporaire valide pour une durée déterminée.  
+        Cette validité peut être prolongée avec le service /api/refreshToken  
+        
+        Ce token doit être utilisé dans l'entête `Authorization`
+      requestBody:
+        description: Les informations d'identification
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Login'
       responses:
         "200":
-          description: OK
-          schema:
-            items:
-              type: string
-            type: array
+          description: retourne un token et une date de validité
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+              example:
+                code: 200
+                expire: "2018-12-31 23:30:12"
+                token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9…"
+        "401":
+          description: retourne la raison de l'échec
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginFail'
+              example:
+                code: 401
+                message: "Please provide good credentials sir."
+      summary: obtenir un jeton temporaire de session
+      tags:
+      - Authentification
+  /login/get:
+    post:
+      summary: "demander l'envoi d'un code de vérification"
+      description: |-
+        Renvoie un code de vérification sur la base d'un email et d'un mot de passe  
+        Le code n'est envoyé que si le mot de passe est valide, le cas échéant, un email avertissant d'une tentative est envoyé.  
+        Pour éviter les tentatives de forçage de mot de passe, ce service ne renvoie jamais d'échec.  
+      requestBody:
+        description: Email et mot de passe
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginGet'
+      responses:
+        "200":
+          description: "ok"
+      tags:
+      - Authentification
+  /login/check:
+    post:
+      description: |-
+        Le service permet de valider le code de vérification envoyé à l'utilisateur  
+        Il donne en retour un jeton de navigateur qui pourra être réutilisé comme facteur d'authentification (browserToken)  
+      requestBody:
+        description: Les informations d'identification
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginCheck'
+      responses:
+        "200":
+          description: retourne un browserToken
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginCheckResponse'
+              example:
+                browserToken: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9…"
+      summary: valider un code de vérification
+      tags:
+      - Authentification
+  /login/recovery/get:
+    post:
+      description: |-
+        Dans le cas d'un oubli du mot de passe, on peut fixer un nouveau mot de passe à partir d'un navigateur identifié  
+        Il faut dans ce cas pouvoir recevoir un code de vérification par mail  
+        Ce schéma d'authentification se base sur la fourniture d'un browserToken valide associé à l'utilisateur avec lequel il a été obtenu ainsi qu'un code de vérification transmis par email
+      requestBody:
+        description: Les informations d'identification
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRecoveryGet'
+      responses:
+        "200":
+          description: retourne un browserToken
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginRecoveryGetResponse'
+              example:
+                email: "test@domain.com"
+                browserToken: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9…"
+      summary: demander une récupération de mot de passe
+      tags:
+      - Authentification
+  /login/recovery/setPassword:
+    post:
+      summary: changer un mot de passe
+      description: |-
+        Permet de fixer un nouveau de passe en étant muni d'un browserToken et d'un code de vérification fourni par email
+        Ce code est validé en utilisant le hash (bcrypt) stocké en base lors de son envoi par le service /login/recovery/get
+      responses:
+        "200":
+          description: ok
+
+
+      tags:
+      - Authentification
+  /api/refreshToken:
+    get:
+      summary: renouveler le jeton de session
+      description: |-
+        Fournit un nouveau jeton temporaire de session en échange d'un jeton encore valide.  
+        Ce service demande d'être authentifié mais ne nécessite aucun paramètre.  
+        L'authentification est réalisée avec l'entête HTTP Authorization.  
+        Exemple:  
+        ```Authorization:Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9…```
+      responses:
+        "200":
+          description: Renouvellement autorisé
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+              example:
+                code: 200
+                expire: "2019-02-01 12:00:05"
+                token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9…"
+        "401":
+          description: Renouvellement refusé
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginFail'
+              example:
+                code: 401
+                message: "cookie token is empty"
       security:
-      - ApiKeyAuth: []
-      summary: Liste des batches
+      - BearerAuth: []
+      tags:
+      - Authentification
+  /api/admin/batch:
+    get:
+      description: |-
+        Retourne tous les objets de type AdminBatch de la collection Admin trié par ordre de clé de batch.
+      responses:
+        "200":
+          description: liste des batches
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminBatch"
+              example:
+                - id:
+                    key: 1805
+                    type: batch
+                  files:
+                    altares:
+                      - /files/1805/altares.csv
+                    cotisation:
+                      - /files/1805/cotisation.csv
+                  complete_types:
+                    - altares
+                  params:
+                    date_debut: "2014-01-01 00:00:00"
+                    date_fin: "2018-05-01 00:00:00"
+                - id:
+                    key: 1806
+                    type: batch
+                  files:
+                    altares:
+                      - /files/1806/altares.csv
+                    cotisation:
+                      - /files/1806/cotisation.csv
+                  complete_types:
+                    - altares
+                    - cotisation
+                  params:
+                    date_debut: "2014-01-01 00:00:00"
+                    date_fin: "2018-06-01 00:00:00"
+      security:
+      - BearerAuth: []
+      summary: obtenir les objets AdminBatch
+      tags:
+      - Administration
+    post:
+      summary: mettre à jour un objet AdminBatch
+      description: Permet d'envoyer un objet AdminBatch pour création ou mise à jour.  
+        Le champ `id` de l'objet est la clé permettant d'identifier ces objets, l'update sera décidé sur cette base. Les modifications de l'objet sont acceptées sur la base du schéma de l'objet, toute clé sortant de ce schéma sera exclue, l'analyse de l'objet transmis se faisant au mieux-disant.
+      requestBody:
+        description: Prend un objet AdminBatch en entrée
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AdminBatch'
+            example:
+              id:
+                key: 1805
+                type: batch
+              files:
+                altares:
+                  - /files/1805/altares.csv
+                cotisation:
+                  - /files/1805/cotisation.csv
+              complete_types:
+                - altares
+              params:
+                date_debut: "2014-01-01 00:00:00"
+                date_fin: "2018-05-01 00:00:00"
+      responses:
+        "200":
+          description: liste des batches
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminBatch"
+              example:
+                - id:
+                    key: 1805
+                    type: batch
+                  files:
+                    altares:
+                      - /files/1805/altares.csv
+                    cotisation:
+                      - /files/1805/cotisation.csv
+                  complete_types:
+                    - altares
+                  params:
+                    date_debut: "2014-01-01 00:00:00"
+                    date_fin: "2018-05-01 00:00:00"
+                - id:
+                    key: 1806
+                    type: batch
+                  files:
+                    altares:
+                      - /files/1806/altares.csv
+                    cotisation:
+                      - /files/1806/cotisation.csv
+                  complete_types:
+                    - altares
+                    - cotisation
+                  params:
+                    date_debut: "2014-01-01 00:00:00"
+                    date_fin: "2018-06-01 00:00:00"
+                - id:
+                    key: 1807
+                    type: batch
+                  files:
+                    debit:
+                      - /files/1807/debit.csv
+                  complete_types:
+                    - debit
+                  params:
+                    date_debut: "2014-01-01 00:00:00"
+                    date_fin: "2018-07-01 00:00:00"
+      security:
+      - BearerAuth: []
       tags:
       - Administration
   /api/admin/batch/next:
     get:
-      consumes:
-      - application/json
-      description: Exécute l'import, le compactage et la réduction du dernier batch
-      produces:
-      - application/json
+      description: |-
+        Clôture le dernier batch et crée la référence de batch suivante dans la collection admin  
+        L'ordre des batches est alphanumérique, la numérotation est effectuée en mois année (YYMM)
+        Par exemple, le batch suivant 1812 est 1901.  
+        Il est possible de créer des batches intermédiaires (par exemple 1812-correction), cela ne perturbe pas la création du batch 1901.  
+        Le nouveau batch créé est vide, le service renvoie la liste des objets AdminBatch ainsi nouvellement constituée.  
+        Cette liste est également communiquée à tous les clients connectés via le connecteur webservice avec l'attribution admin (WIP).  
       responses:
         "200":
-          description: OK
-          schema:
-            type: string
+          description: Traitement effectué avec succès
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminBatch"
       security:
-      - ApiKeyAuth: []
-      summary: Traitement du dernier batch
+      - BearerAuth: []
+      summary: créer le batch suivant
       tags:
       - Administration
-  /api/admin/epoch:
+  /api/admin/batch/revert:
     get:
-      consumes:
-      - application/json
-      description: Ce numéro s'incrémente à chaque action
-      produces:
-      - application/json
+      description: |-
+        Ce traitement permet de supprime les données et la référence du dernier batch et de le réouvrir pour une nouvelle intégration.  
+        Cela est utile si des modifications sont à apporter au niveau du batch.
       responses:
         "200":
           description: OK
-          schema:
-            type: string
+          content:
+            application/json:
+              schema:
+                type: string
+              example: "ok"
       security:
-      - ApiKeyAuth: []
-      summary: Numéro du statut du serveur
+      - BearerAuth: []
+      summary: supprimer le dernier batch
       tags:
       - Administration
-  /api/admin/features:
+  /api/admin/events:
     get:
-      consumes:
-      - application/json
-      description: Correspond aux mapReduces qui produisent les variables dans la
-        collection Features
-      produces:
-      - application/json
+      description: |-
+        Liste les 250 derniers évènements du journal  
       responses:
         "200":
           description: OK
-          schema:
-            type: string
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Event'
       security:
-      - ApiKeyAuth: []
-      summary: Identifiants des traitements de réduction
+      - BearerAuth: []
+      summary: consulter le journal d'évènements
       tags:
       - Administration
   /api/admin/files:
     get:
-      consumes:
-      - application/json
-      description: Tous ces fichiers sont contenu dans APP_DATA (voir config.toml)
-      produces:
-      - application/json
+      description: Les fichiers sources sont disposés dans le répertoire APP_DATA (voir config.toml), cette fonction permet de les lister avec quelques propriétés utiles (taille et âge)
       responses:
         "200":
-          description: OK
-          schema:
-            type: string
+          description: liste des fichiers
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/FileSummary'
+              example:
+                name: "/1802/altares.csv"
+                date: "2018-02-20 18:42:32"
+                size: 12523214
       security:
-      - ApiKeyAuth: []
-      summary: Liste les fichiers disponibles dans le dépot
+      - BearerAuth: []
+      summary: lister les fichiers disponibles
       tags:
       - Administration
     post:
-      consumes:
-      - application/json
-      description: Réalise l'upload d'un fichier dans un batch/type. Une fois l'upload
-        effectué, le fichier est automatiquement attaché au batch.
-      produces:
-      - application/json
+      description: |-
+        Réalise l'upload d'un fichier dans un batch/type  
+        Une fois l'upload effectué, le fichier est automatiquement attaché au batch  
+        L'upload est effectué via les formData
       responses:
         "200":
-          description: OK
-          schema:
-            type: string
+          description: fichier enregistré avec succès
+          content:
+            application/json:
+              schema: 
+                type: string
+              example:
+                "ok"
       security:
-      - ApiKeyAuth: []
-      summary: Upload d'un fichier
-      tags:
-      - Administration
-  /api/admin/getLogs:
-    get:
-      consumes:
-      - application/json
-      description: Liste les 100 derniers évènements du journal
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            type: string
-      security:
-      - ApiKeyAuth: []
-      summary: Journal d'évènements
-      tags:
-      - Administration
-  /api/admin/status:
-    get:
-      consumes:
-      - application/json
-      description: Permet de connaître l'opération en cours
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            type: string
-      security:
-      - ApiKeyAuth: []
-      summary: Disponibilité de la base de données
+      - BearerAuth: []
+      summary: ajouter un fichier dans un batch
       tags:
       - Administration
   /api/admin/types:
     get:
-      consumes:
-      - application/json
-      description: Correspond aux types disponibles dans les traitements d'importation
-      produces:
-      - application/json
+      description: |-
+        Liste des types connus de dbmongo  
+        Ces types correspondent aux types que l'on rencontre dans le sous-objet files d'un objet AdminBatch. Par ailleurs ces types sont également référencés pour le stockage dans les objets de la collection de données.
       responses:
         "200":
-          description: OK
-          schema:
-            type: string
+          description: liste des types
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Type'
       security:
-      - ApiKeyAuth: []
-      summary: Liste des types
+      - BearerAuth: []
+      summary: lister les types
       tags:
       - Administration
-  /api/data/batch/purge:
+  /api/admin/features:
     get:
-      consumes:
-      - application/json
-      description: Exécute l'import, le compactage et la réduction du dernier batch
-      produces:
-      - application/json
+      description: |-
+        Liste des traitements de production de variables connus de dbmongo  
+        Ces références sont à utiliser auprès du service `/data/reduce`  
       responses:
         "200":
-          description: OK
-          schema:
-            type: string
+          description: liste des traitements
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type:
+                    string
       security:
-      - ApiKeyAuth: []
-      summary: Traitement du dernier batch
+      - BearerAuth: []
+      summary: lister les traitements de données
       tags:
       - Administration
   /api/data/compact:
     get:
-      consumes:
-      - application/json
-      description: Alimente la collection Features
-      parameters:
-      - description: Identifiant du traitement
-        in: query
-        name: algo
-        required: true
-        type: string
-      - description: Identifier du batch
-        in: query
-        name: batch
-        required: true
-        type: string
-      produces:
-      - application/json
+      summary: compacter la base de données
+      description: |-
+        Ce traitement permet le compactage de la base de données.  
+        Ce compactage a pour effet de réduire tous les objets en clé uniques comportant dans la même arborescence toutes les données en rapport avec ces clés.  
+        Ce traitement est nécessaire pour rendre disponible les données à /api/data/reduce les nouvelles données importées.
       responses:
         "200":
-          description: OK
-          schema:
-            type: string
+          description: Le traitement s'est bien déroulé
+          content: 
+            application/json:
+              schema:
+                type: string
+              example: "ok"
       security:
-      - ApiKeyAuth: []
-      summary: Lance un traitement de compactage
+      - BearerAuth: []
       tags:
       - Traitements
-  /api/data/import/{batch}:
-    get:
-      consumes:
-      - application/json
-      description: Effectue l'import de tous les fichiers du batch donné en paramètre
-      parameters:
-      - description: Clé du batch
-        in: query
-        name: batch
-        required: true
-        type: string
-      produces:
-      - application/json
+  /api/data/import:
+    post:
+      description: Effectue l'import de tous les fichiers du batch donné en paramètre  
+        Pour exécuter tous les parsers, il faut ne pas spécifier la propriété parsers ou lui donner la valeur null.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Import"
+            example:
+              batch: 1802
+              parsers:
+              - altares
+              - cotisation
       responses:
         "200":
-          description: OK
-          schema:
-            type: string
+          description: Le traitement s'est bien déroulé
+          content:
+            application/json:
+              schema:
+                type: string
+              example: ok
+        "404":
+          description: Un des parsers demandé n'est pas reconnu
+          content:
+            application/json:
+              schema:
+                type: string
+              example: justAnExampleParser n'est pas un parser reconnu
       security:
-      - ApiKeyAuth: []
-      summary: Import de fichiers pour un batch
+      - BearerAuth: []
+      summary: importer des fichiers
+      tags:
+      - Traitements
+  /api/data/public:
+    post:
+      description: |- 
+        Alimente la collection Public avec les objets calculés pour le batch cité en paramètre.  
+        Le traitement prend en paramètre la clé du batch (obligatoire) et un siret (optionnel). Lorsque le siret n'est pas précisé tous les objets lié au batch sont traités.
+        Cette collection sera ensuite accédée par les utilisateurs pour consulter les données des entreprises.  
+        Des niveaux d'accéditation fins (ligne ou colonne) pour la consultation de ces données peuvent être mis en oeuvre.  
+        Ces filtrages sont effectués grace à la notion de scope. Les objets et les utilisateurs disposent d'un ensemble de tags et les objets partageant au moins un tag avec les utilisateurs peuvent être consultés par ceux-ci.  
+        Ces tags sont exploités pour traiter la notion de région (ligne) mais aussi les permissions (colonne).
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Public"
+            example:
+              batch: "1805"
+              siret: "012345678901234"
+      responses:
+        "200":
+          description: Le traitement s'est bien déroulé
+          content:
+            application/json:
+              schema:
+                type: string
+              example: ok
+      security:
+      - BearerAuth: []
+      summary: publier les données
+      tags:
+      - Traitements
+  /api/data/browse:
+    post:
+      description: |-
+        Ce service permet d'accéder à la collection Public en appliquant les filtrages sécuritaires nécessaires.
+        Le scope de l'utilisateur est automatiquement déduit de son jeton de session et ainsi ne sont retournés que les objets qui satisfont les critères de sécurités demandés dans le traitement Public
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Browse"
+      responses:
+        "200":
+          description: Liste d'objets de type Browseable renvoyée au client
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Browseable"
+      security:
+      - BearerAuth: []
+      summary: consulter les données
       tags:
       - Traitements
   /api/data/purge:
     get:
-      consumes:
-      - application/json
-      description: Suppression de tous les objets de données brutes contenus dans
-        la collection RawData (irréversible)
-      produces:
-      - application/json
+      description: |-
+        Suppression de tous les objets de données brutes contenus dans les collections RawData, Features, Journal et Public  
+        **Ceci est une opération de remise à zéro de la base de données**  
+        **Seule la configuration des batches est conservée**  
+        **Cette opération est irréversible et dangereuse et ne devrait être utilisée qu'à des fins de développement**  
+        
+        **!!! SI VOUS NE SAVEZ PAS CE QUE VOUS FAITES ICI, PASSEZ VOTRE CHEMIN !!!**
       responses:
         "200":
-          description: OK
-          schema:
-            type: string
+          description: statistiques de suppression
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Purge"
       security:
-      - ApiKeyAuth: []
-      summary: Purge la collection RawData
+      - BearerAuth: []
+      summary: remettre à zéro les données /!\
       tags:
       - Traitements
-  /api/data/reduce/{algo}/{batch}:
-    get:
-      consumes:
-      - application/json
-      description: Alimente la collection Features
-      parameters:
-      - description: Identifiant du traitement
-        in: query
-        name: algo
-        required: true
-        type: string
-      - description: Identifier du batch
-        in: query
-        name: batch
-        required: true
-        type: string
-      produces:
-      - application/json
+  /api/data/reduce:
+    post:
+      description: |-
+        Alimente la collection Features en calculant les variables avec le traitement mapreduce demandé dans la propriété `features`  
+        Le traitement remplace les objets similaires en sortie du calcul dans la collection Features, les objets non concernés par le traitement ne seront ainsi pas remplacés, de sorte que si un seul siret est demandé le calcul ne remplacera qu'un seul objet.  
+        Ces traitements ne prennent en compte que les objets déjà compactés.  
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Reduce"
+            example:
+              batch: "1805"
+              features: "algo2"
+              key: "012345678901234"
       responses:
         "200":
-          description: OK
-          schema:
-            type: string
+          description: Le traitement s'est bien déroulé
+          content:
+            application/json:
+              schema:
+                type: string
+              example: ok
       security:
-      - ApiKeyAuth: []
-      summary: Lance un traitement de réduction
+      - BearerAuth: []
+      summary: calculer les variables
       tags:
       - Traitements
   /api/data/search:
     post:
-      consumes:
-      - application/json
-      description: Effectue une recherche texte sur la collection Public et retourne
+      description: Effectue une recherche fulltext sur la collection Public et retourne
         les 15 premiers objets correspondants
-      parameters:
-      - description: Chaine à chercher
-        in: query
-        name: guessRaisonSociale
-        required: true
-        type: string
-      produces:
-      - application/json
       responses:
         "200":
           description: OK
-          schema:
-            type: string
+          content:
+            application/json:
+              schema:
+                type: string
       security:
-      - ApiKeyAuth: []
-      summary: Rechercher une entreprise
+      - BearerAuth: []
+      summary: rechercher une entreprise
       tags:
       - Traitements
-  /api/reduce/{algo}/{batch}:
-    get:
-      consumes:
-      - application/json
-      description: Alimente la collection Features
-      parameters:
-      - description: Identifiant du traitement
-        in: query
-        name: algo
-        required: true
-        type: string
-      - description: Identifier du batch
-        in: query
-        name: batch
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            type: string
-      security:
-      - ApiKeyAuth: []
-      summary: Remplace un batch
-      tags:
-      - Traitements
-  /api/refreshToken:
-    get:
-      consumes:
-      - application/json
-      description: Fournit un jeton avec nouvelle date de validité en échange d'un
-        jeton encore valide
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: '{<br/>''code'': 200,<br/>   ''expire'': ''2019-01-21T12:16:50+01:00'',<br/>''token'':
-            ''eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9…''<br/>}'
-          schema:
-            type: string
-        "401":
-          description: '{<br/>''code'': 401,<br/>''message'': ''cookie token is empty''<br/>}'
-          schema:
-            type: string
-      security:
-      - ApiKeyAuth: []
-      summary: Obtenir un jeton d'identification
-      tags:
-      - Session
-  /login:
-    post:
-      consumes:
-      - application/json
-      description: |-
-        Nécessite 3 informations: email, mot de passe et jeton de navigateur
-        Le jeton de navigateur n'a pas de limite de validité et peut être conservé
-      parameters:
-      - description: Adresse Email
-        in: query
-        name: email
-        required: true
-        type: string
-      - description: Mot de Passe
-        in: query
-        name: password
-        required: true
-        type: string
-      - description: Token navigateur
-        in: query
-        name: browserToken
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: '{<br/>''code'': 200,<br/>''expire'':''2019-01-21T11:16:15+01:00'',<br/>''token'':''eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9…''<br/>}'
-          schema:
-            type: string
-        "401":
-          description: '{<br/>''code'': 401,<br/>''message'': ''incorrect Username
-            or Password''<br/>}'
-          schema:
-            type: string
-      summary: Rafraichir le jeton d'identification
-      tags:
-      - Session
-  /login/check:
-    post:
-      consumes:
-      - application/json
-      description: Fournit en retour un jeton de navigateur
-      parameters:
-      - description: Adresse EMail
-        in: query
-        name: email
-        required: true
-        type: string
-      - description: Mot de passe
-        in: query
-        name: password
-        required: true
-        type: string
-      - description: Code de vérification
-        in: query
-        name: checkCode
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            type: string
-      summary: Vérification du code temporaire renvoyé à l'utilisateur
-      tags:
-      - Session
-  /login/recovery/get:
-    post:
-      consumes:
-      - application/json
-      description: |-
-        Dans le cas d'un oubli du mot de passe, on peut fixer un nouveau mot de passe à partir d'un navigateur identifié
-        Il faut dans ce cas pouvoir recevoir un code de vérification par mail
-        Voir /login/recovery/get
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: ok
-          schema:
-            type: string
-      summary: Récupération du mot de passe
-      tags:
-      - Session
-  /login/recovery/setPassword:
-    post:
-      consumes:
-      - application/json
-      description: |-
-        Dans le cas d'un oubli du mot de passe, on peut fixer un nouveau mot de passe à partir d'un navigateur identifié
-        Il faut dans ce cas pouvoir recevoir un code de vérification par mail
-        Voir /login/recovery/get
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: ok
-          schema:
-            type: string
-      summary: Récupération du mot de passe
-      tags:
-      - Session
-securityDefinitions:
-  ApiKeyAuth:
-    in: header
-    name: Authorization
-    type: apiKey
-swagger: "2.0"
+openapi: "3.0.0"
+

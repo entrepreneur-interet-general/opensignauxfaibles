@@ -4,8 +4,6 @@ import (
 	"dbmongo/lib/engine"
 	"fmt"
 
-	"github.com/globalsign/mgo/bson"
-
 	"net/http"
 	"time"
 
@@ -32,6 +30,7 @@ func checkOrigin(r *http.Request) bool {
 	return true
 }
 
+// wshandler connecteur WebSocket
 func wshandler(w http.ResponseWriter, r *http.Request, jwt string) {
 	conn, err := wsupgrader.Upgrade(w, r, nil)
 	if err != nil {
@@ -47,16 +46,6 @@ func wshandler(w http.ResponseWriter, r *http.Request, jwt string) {
 }
 
 // main Fonction Principale
-// @title API openSignauxFaibles
-// @version 1.1
-// @description Cette API centralise toutes les fonctionnalités du module de traitement de données OpenSignauxFaibles
-// @description Pour plus de renseignements: https://beta.gouv.fr/startups/signaux-faibles.html
-// @license.name Licence MIT
-// @license.url https://raw.githubusercontent.com/entrepreneur-interet-general/opensignauxfaibles/master/LICENSE
-// @BasePath /
-// @securityDefinitions.apikey ApiKeyAuth
-// @in header
-// @name Authorization
 func main() {
 	// Lancer Rserve en background
 
@@ -124,18 +113,16 @@ func main() {
 
 		api.POST("/admin/batch", upsertBatchHandler)
 		api.GET("/admin/batch", listBatchHandler)
-		api.GET("/admin/files", adminFilesHandler)
-		api.GET("/admin/types", listTypesHandler)
-
-		api.GET("/admin/features", adminFeature)
-
-		api.GET("/admin/getLogs", getLogsHandler)
-
 		api.GET("/admin/batch/next", nextBatchHandler)
 		api.GET("/admin/batch/process", processBatchHandler)
+		api.GET("/admin/batch/revert", revertBatchHandler)
+
+		api.GET("/admin/files", adminFilesHandler)
 		api.POST("/admin/files", addFile)
 
-		api.GET("/admin/batch/revert", revertBatchHandler)
+		api.GET("/admin/types", listTypesHandler)
+		api.GET("/admin/features", adminFeature)
+		api.GET("/admin/events", eventsHandler)
 
 		api.GET("/data/naf", nafHandler)
 		api.GET("/data/batch/purge", purgeBatchHandler)
@@ -145,21 +132,15 @@ func main() {
 		api.POST("/data/search", searchRaisonSocialeHandler)
 		api.GET("/data/purge", purgeHandler)
 		api.GET("/data/purgeNotCompacted", deleteHandler)
-		api.GET("/data/public/:batch", publicHandler)
-
+		api.POST("/data/publish", publicHandler)
+		// TODO: adapter le handler pour traiter la requête en post
+		api.POST("/data/browse", browsePublicHandler)
+		// TODO: mapreduce pour traiter le scope, modification des objets utilisateurs
+		// TODO: écrire l'aggrégation qui va bien
+		api.POST("/data/")
 		api.GET("/dashboard/tasks", getTasksHandler)
 	}
 
 	bind := viper.GetString("APP_BIND")
 	r.Run(bind)
-}
-
-func deleteHandler(c *gin.Context) {
-	var result []interface{}
-	engine.Db.DB.C("RawData").RemoveAll(bson.M{"_id": bson.M{"$type": "objectId"}})
-	c.JSON(200, result)
-}
-
-func getTasksHandler(c *gin.Context) {
-
 }

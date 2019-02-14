@@ -6,16 +6,6 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-//
-// @summary Extraction des données publiques
-// @description Lance le traitement mapReduce public pour alimenter la collection Public
-// @Tags Traitements
-// @accept  json
-// @produce  json
-// @Param batch query string true "Identifiant du batch"
-// @Security ApiKeyAuth
-// @Success 200 {string} string ""
-// @Router /api/data/public/{batch} [get]
 func publicHandler(c *gin.Context) {
 	batchKey := c.Params.ByName("batch")
 	batch := engine.AdminBatch{}
@@ -55,16 +45,6 @@ func predictionBrowseHandler(c *gin.Context) {
 	c.JSON(200, result)
 }
 
-//
-// @summary Rechercher une entreprise
-// @description Effectue une recherche texte sur la collection Public et retourne les 15 premiers objets correspondants
-// @Tags Traitements
-// @accept  json
-// @produce  json
-// @Security ApiKeyAuth
-// @Param guessRaisonSociale query string true "Chaine à chercher"
-// @Success 200 {string} string ""
-// @Router /api/data/search [post]
 func searchRaisonSocialeHandler(c *gin.Context) {
 	var params engine.SearchCriteria
 	err := c.ShouldBind(&params)

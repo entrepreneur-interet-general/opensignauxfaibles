@@ -31,3 +31,13 @@ type Type struct {
 
 // Parser fonction de traitement de données en entrée
 type Parser func(AdminBatch) (chan Tuple, chan Event)
+
+// Browseable est le type qui permet d'envoyer les objets vers le frontend
+// Voir la fonction Browse
+type Browseable struct {
+	ID struct {
+		Key   string   `json:"key" bson:"key"`
+		Scope []string `json:"scope" bson:"scope"`
+	}
+	Value map[string]interface{} `json:"value" bson:"value"`
+}

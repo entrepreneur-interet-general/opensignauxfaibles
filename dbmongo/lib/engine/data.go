@@ -137,7 +137,7 @@ func Reduce(batchKey string, algo string, query interface{}) error {
 	return err
 }
 
-// Public alimente la collection Public
+// Publish alimente la collection Public avec les objets destinés à la diffusion
 func Public(batch AdminBatch) error {
 	functions, err := loadJSFunctions("js/public/")
 
@@ -170,6 +170,25 @@ func Public(batch AdminBatch) error {
 		return errors.New("Erreur dans l'exécution des jobs MapReduce" + err.Error())
 	}
 	return nil
+}
+
+// BrowsePublic selectionne et retourne les objets de la collection Public
+// Cette selection tient compte du scope et des tris demandés pour aggréger le résultat
+func BrowsePublic(query interface{}) []Browseable {
+	return []Browseable{
+		Browseable{
+			ID: struct {
+				Key   string   `json:"key" bson:"key"`
+				Scope []string `json:"scope" bson:"scope"`
+			}{
+				Key:   "test",
+				Scope: []string{"test", "test2"},
+			},
+			Value: map[string]interface{}{
+				"test": "test",
+			},
+		},
+	}
 }
 
 // GetBatches retourne tous les objets AdminBatch de la base triés par ID

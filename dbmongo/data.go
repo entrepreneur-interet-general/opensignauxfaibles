@@ -21,9 +21,9 @@ import (
 // @Router /api/data/reduce/{algo}/{batch}/{siret} [get]
 func reduceHandler(c *gin.Context) {
 	var params struct {
-		BatchKey string
-		Algo     string
-		Key      string
+		BatchKey string `json:"batch"`
+		Algo     string `json:"features"`
+		Key      string `json:"key"`
 	}
 	err := c.ShouldBind(&params)
 	if err != nil {

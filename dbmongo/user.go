@@ -155,7 +155,7 @@ func getCode() int {
 // @description Dans le cas d'un oubli du mot de passe, on peut fixer un nouveau mot de passe à partir d'un navigateur identifié
 // @description Il faut dans ce cas pouvoir recevoir un code de vérification par mail
 // @description Voir /login/recovery/get
-// @Tags Session
+// @Tags Authentification
 // @accept  json
 // @produce  json
 // @Params email query string true "Adresse e-mail"
@@ -270,16 +270,18 @@ func getRegions() map[string]string {
 //
 // @summary Récupération du mot de passe
 // @description Dans le cas d'un oubli du mot de passe, on peut fixer un nouveau mot de passe à partir d'un navigateur identifié
-// @description Il faut dans ce cas pouvoir recevoir un code de vérification par mail
-// @description Voir /login/recovery/get
-// @Tags Session
+// @description L'utilisation de ce service permet de vérifier le code envoyé à l'utilisateur sur sa messagerie
+// @description Ce code est validé en utilisant le hash (bcrypt) stocké en base par le service /login/recovery/get
+// @Tags Authentification
 // @accept  json
 // @produce  json
 // @Params email query string true "Adresse e-mail"
 // @Params code query string true "Code de vérification"
 // @Params password query string true "Nouveau mot de passe"
 // @Params browserToken query string true "Jeton du navigateur"
-// @Success 200 {string} string "ok"
+// @Success 200 {string} string "Le serveur a accepté la vérification, le mot de passe est changé"
+// @Failure 400 {string} string "Les paramètres sont incorrects"
+// @Failure 500 {string} string "La vérification du code a échoué (raison non spécifiée)"
 // @Router /login/recovery/setPassword [post]
 func checkRecoverySetPassword(c *gin.Context) {
 	var request struct {
@@ -328,7 +330,6 @@ func checkRecoverySetPassword(c *gin.Context) {
 	if err != nil {
 		c.JSON(500, "Server side error")
 	}
-
 }
 
 //
@@ -336,14 +337,13 @@ func checkRecoverySetPassword(c *gin.Context) {
 // @description Le code n'est envoyé que si le mot de passe est valide.
 // @description Le cas échéant, un email avertissant d'une tentative est envoyé.
 // @description Pour éviter les tentatives de forçage de mot de passe, ce service ne renvoie jamais d'échec.
-// @Tags Session
+// @Tags Authentification
 // @accept  json
 // @produce  json
 // @Param email query string true "Adresse EMail"
 // @Param password query string true "Mot de passe"
 // @Success 200 {string} string "ok"
 // @Router /login/get [post]
-
 func sendMail(sender string, recipient string, title string, body string) error {
 	smtpAddress := viper.GetString("smtpAddress")
 	smtpConnection, err := smtp.Dial(smtpAddress)
@@ -382,7 +382,7 @@ func loginGet(login login) error {
 	user, err := loginUserWithCredentials(email, password)
 
 	mailTemplate, _ := template.New("loginMail").Parse(`
-	Subject: Authentification: votre code de vérification.
+	Subject: Signaux-Faibles – votre code de vérification
 	Content-Type: text/plain; charset=us-ascii; format=flowed
 	Content-Transfer-Encoding: 7bit
 	
@@ -440,13 +440,13 @@ func loginGet(login login) error {
 //
 // @summary Vérification du code temporaire renvoyé à l'utilisateur
 // @description Fournit en retour un jeton de navigateur
-// @Tags Session
+// @Tags Authentification
 // @accept  json
 // @produce  json
 // @Param email query string true "Adresse EMail"
 // @Param password query string true "Mot de passe"
 // @Param checkCode query string true "Code de vérification"
-// @Success 200 {string} string ""
+// @Success 200 {string} string "Le mot de passe et le code de vérification correspondent aux valeurs hashées en base"
 // @Router /login/check [post]
 func loginCheckHandler(c *gin.Context) {
 	var loginVals login
@@ -465,7 +465,7 @@ func loginCheckHandler(c *gin.Context) {
 			IP:      c.ClientIP(),
 			Created: time.Now(),
 			Email:   email,
-			// TODO: nommer les navigateurs
+			// TODO: identifier les navigateurs
 			Name: "",
 		}
 		browserToken, _ := forgeBrowserToken(browser)
@@ -494,7 +494,7 @@ func loginCheck(email string, password string, checkCode string) error {
 // @summary Rafraichir le jeton d'identification
 // @description Nécessite 3 informations: email, mot de passe et jeton de navigateur
 // @description Le jeton de navigateur n'a pas de limite de validité et peut être conservé
-// @Tags Session
+// @Tags Authentification
 // @accept  application/json
 // @produce  application/json
 // @Param email query string true "Adresse Email" "gnigni"
@@ -508,7 +508,7 @@ func dummyLogin() {}
 //
 // @summary Obtenir un jeton d'identification
 // @description Fournit un jeton avec nouvelle date de validité en échange d'un jeton encore valide
-// @Tags Session
+// @Tags Authentification
 // @accept  application/json
 // @produce  application/json
 // @Security ApiKeyAuth

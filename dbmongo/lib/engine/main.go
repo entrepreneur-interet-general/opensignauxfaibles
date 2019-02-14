@@ -17,14 +17,24 @@ type Priority string
 // Code test
 type Code string
 
-// Event test
+// Event est un objet de journal
+// swagger:ignore
 type Event struct {
-	ID       bson.ObjectId `json:"id" bson:"_id"`
+	ID       bson.ObjectId `json:"-" bson:"_id"`
 	Date     time.Time     `json:"date" bson:"date"`
 	Comment  interface{}   `json:"event" bson:"event"`
 	Priority Priority      `json:"priority" bson:"priority"`
 	Code     Code          `json:"code" bson:"code"`
 	Channel  chan Event    `json:"-"`
+}
+
+// Events Event serialisable pour swaggo (TODO: fix this !)
+type Events []struct {
+	ID       bson.ObjectId `json:"-" bson:"_id"`
+	Date     time.Time     `json:"date" bson:"date"`
+	Comment  interface{}   `json:"event" bson:"event"`
+	Priority Priority      `json:"priority" bson:"priority"`
+	Code     Code          `json:"code" bson:"code"`
 }
 
 // GetBSON retourne l'objet Event sous une forme sérialisable
