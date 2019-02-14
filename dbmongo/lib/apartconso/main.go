@@ -48,9 +48,6 @@ func Parser(batch engine.AdminBatch) (chan engine.Tuple, chan engine.Event) {
 	}
 
 	go func() {
-		defer close(outputChannel)
-		defer close(eventChannel)
-
 		for _, path := range batch.Files["apconso"] {
 			tracker := gournal.NewTracker(
 				map[string]string{"path": path},
@@ -106,6 +103,8 @@ func Parser(batch engine.AdminBatch) (chan engine.Tuple, chan engine.Event) {
 			}
 			event.Info(tracker.Report("abstract"))
 		}
+		close(outputChannel)
+		close(eventChannel)
 	}()
 
 	return outputChannel, eventChannel

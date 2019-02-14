@@ -2,36 +2,11 @@ package altares
 
 import (
 	"dbmongo/lib/engine"
+	"dbmongo/lib/testtools"
 	"testing"
 
 	"github.com/spf13/viper"
 )
-
-func discardOutputChannel(outputChannel chan engine.Tuple) {
-	for range outputChannel {
-	}
-}
-
-func discardEventChannel(eventChannel chan engine.Event) {
-	for range eventChannel {
-	}
-}
-
-func eventChannelToSlice(eventChannel chan engine.Event) []engine.Event {
-	var events []engine.Event
-	for e := range eventChannel {
-		events = append(events, e)
-	}
-	return events
-}
-
-func outputChannelToSlice(outputChannel chan engine.Tuple) []engine.Tuple {
-	var data []engine.Tuple
-	for d := range outputChannel {
-		data = append(data, d)
-	}
-	return data
-}
 
 func Test_ParserEventsNoFile(t *testing.T) {
 	viper.SetDefault("APP_DATA", ".")
@@ -42,8 +17,8 @@ func Test_ParserEventsNoFile(t *testing.T) {
 		},
 	}
 	outputChannel, eventChannel := Parser(batch)
-	go discardOutputChannel(outputChannel)
-	events := eventChannelToSlice(eventChannel)
+	go testtools.DiscardOutputChannel(outputChannel)
+	events := testtools.EventChannelToSlice(eventChannel)
 
 	if len(events) == 1 {
 		t.Log("No file should return 1 event: Ok")
@@ -73,8 +48,8 @@ func Test_ParserDatasNoFile(t *testing.T) {
 		},
 	}
 	outputChannel, eventChannel := Parser(batch)
-	go discardEventChannel(eventChannel)
-	datas := outputChannelToSlice(outputChannel)
+	go testtools.DiscardEventChannel(eventChannel)
+	datas := testtools.OutputChannelToSlice(outputChannel)
 
 	if len(datas) == 0 {
 		t.Log("No file should return no data: Ok")
@@ -92,8 +67,8 @@ func Test_ParserEventsBadHeaders(t *testing.T) {
 		},
 	}
 	outputChannel, eventChannel := Parser(batch)
-	go discardOutputChannel(outputChannel)
-	events := eventChannelToSlice(eventChannel)
+	go testtools.DiscardOutputChannel(outputChannel)
+	events := testtools.EventChannelToSlice(eventChannel)
 	if len(events) == 2 {
 		t.Log("Bad headers file should return 2 events: Ok")
 	} else {
@@ -116,8 +91,8 @@ func Test_ParserDatasBadHeaders(t *testing.T) {
 		},
 	}
 	outputChannel, eventChannel := Parser(batch)
-	go discardEventChannel(eventChannel)
-	datas := outputChannelToSlice(outputChannel)
+	go testtools.DiscardEventChannel(eventChannel)
+	datas := testtools.OutputChannelToSlice(outputChannel)
 
 	if len(datas) == 0 {
 		t.Log("Bad headers file file should return no data: Ok")
@@ -135,8 +110,8 @@ func Test_ParserEventsWithGoodFile(t *testing.T) {
 		},
 	}
 	outputChannel, eventChannel := Parser(batch)
-	go discardOutputChannel(outputChannel)
-	events := eventChannelToSlice(eventChannel)
+	go testtools.DiscardOutputChannel(outputChannel)
+	events := testtools.EventChannelToSlice(eventChannel)
 
 	if len(events) == 2 {
 		t.Log("Good file should return 2 events: Ok")
@@ -173,8 +148,8 @@ func Test_ParserEventsWithBadFile(t *testing.T) {
 		},
 	}
 	outputChannel, eventChannel := Parser(batch)
-	go discardOutputChannel(outputChannel)
-	events := eventChannelToSlice(eventChannel)
+	go testtools.DiscardOutputChannel(outputChannel)
+	events := testtools.EventChannelToSlice(eventChannel)
 
 	if len(events) == 3 {
 		t.Log("Bad file should return 3 events: Ok")
