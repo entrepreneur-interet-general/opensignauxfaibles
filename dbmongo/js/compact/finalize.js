@@ -32,8 +32,12 @@ function finalize(k, o) {
         return m
     }, {})
 
-    o.index = {"algo1": false,
+    // Filtrage
+    // Utilisé dans Reduce Handler actuellement
+    // TODO
+    o.index = {"algo1":false,
                "algo2":false}
+
     Object.keys(o.batch).forEach(batch => {
         Object.keys((o.batch[batch].effectif||{})).forEach(effectif => {
             o.index.algo1 = true

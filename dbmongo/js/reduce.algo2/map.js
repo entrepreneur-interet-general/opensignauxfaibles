@@ -7,14 +7,19 @@ function map () {
     let output_indexed = o[1]
 
     if (v.debit) { f.debits(v) }
-    if (v.effectif) {f.effectifs(v, output_array, output_indexed)}
-
-    if (v.interim) {
-      let output_interim = f.interim(v.interim, output_indexed)
-      Object.keys(output_interim).forEach(periode => {
-        output_indexed[periode] = Object.assign(output_indexed[periode], output_interim[periode])
-      }) 
+    if (v.effectif) {
+      let output_effectif = f.effectifs(v, output_indexed)
+      f.add(output_effectif, output_indexed)
     }
+
+    if (v.interim){
+      let output_interim = f.interim(v.interim, output_indexed)
+      f.add(output_interim, output_indexed)
+    }
+    //  Object.keys(output_interim).forEach(periode => {
+    //    output_indexed[periode] = Object.assign(output_indexed[periode], output_interim[periode])
+    //  }) 
+    //}
     
     if (v.apconso && v.apdemande) {f.apart(v, output_indexed, output_array)}
     if (v.delai) {f.delais(v, output_indexed)}
@@ -32,7 +37,9 @@ function map () {
 
     f.cotisation(output_indexed, output_array)
 
-    f.cibleApprentissage(output_indexed)
+    let output_cible = f.cibleApprentissage(output_indexed)
+    f.add(output_cible, output_indexed)
+
 
     output_array.forEach(val => {
       let data = {}

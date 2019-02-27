@@ -38,7 +38,7 @@ function cotisation(output_indexed, output_array) {
     if (output_indexed[k].ratio_dette > 1){
       counter = counter + 1
       if (counter >= 3) 
-        output_indexed[k].tag_outcome = "default"
+        output_indexed[k].tag_default = true 
     } else 
       counter = 0
   })
