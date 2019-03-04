@@ -19,7 +19,7 @@ function cotisationsdettes(v, output_array, output_indexed) {
     var debit = v.debit[h]
 
     var debit_suivant = (v.debit[debit.debit_suivant] || {"date_traitement" : date_fin})
-    let date_limite = date_fin//new Date(new Date(debit.periode.start).setFullYear(debit.periode.start.getFullYear() + 1))
+    let date_limite = date_fin //new Date(new Date(debit.periode.start).setFullYear(debit.periode.start.getFullYear() + 1))
     date_traitement_debut = new Date(
       Date.UTC(debit.date_traitement.getFullYear(), debit.date_traitement.getUTCMonth())
     )

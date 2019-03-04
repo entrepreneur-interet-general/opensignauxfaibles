@@ -19,7 +19,7 @@ function sirene (v, output_array) {
     val.date_creation = (sirene || {"creation": null}).creation
     val.date_creation = val.date_creation !== null ? val.date_creation.getFullYear() : val.date_creation
     val.age = val.periode.getFullYear() - val.date_creation
-    val.tranche_ca = (sirene || {"trancheca":null}).trancheca
+    val.tranche_ca = (sirene || {"tranche_ca":null}).tranche_ca
     val.indice_monoactivite = (sirene || {"indicemonoactivite": null}).indicemonoactivite  
   })
 }

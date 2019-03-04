@@ -5,7 +5,7 @@ function map () {
     let o = f.outputs(v, serie_periode)
     let output_array = o[0]
     let output_indexed = o[1]
-
+    let periodes = Object.keys(output_indexed) 
     if (v.debit) { f.debits(v) }
     if (v.effectif) {
       let output_effectif = f.effectifs(v, output_indexed)

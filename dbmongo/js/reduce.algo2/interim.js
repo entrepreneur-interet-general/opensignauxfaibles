@@ -6,7 +6,7 @@ function interim (interim, output_indexed) {
 
   let output_interim = {}
 
-//  var offset_interim = 3
+  //  var offset_interim = 3
 
   Object.keys(interim).forEach(hash =>{
     var one_interim = interim[hash]
