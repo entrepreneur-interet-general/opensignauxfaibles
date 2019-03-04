@@ -65,7 +65,6 @@ func getCompteSiretMapping(batch *engine.AdminBatch) (Comptes, error) {
     reader.Read()
 
     compteIndex := 0
-    // etatCompte := 2
     siretIndex := 3
     fermetureIndex := 5
 
@@ -84,7 +83,7 @@ func getCompteSiretMapping(batch *engine.AdminBatch) (Comptes, error) {
 
       fermeture, err := urssafToDate(row[fermetureIndex])
       if  err != nil {
-        return map[string][]SiretDate{}, err // fermeture n'a pas pu être lue ou convertie en date 
+        return map[string][]SiretDate{}, err // fermeture n'a pas pu être lue ou convertie en date
       }
 
       compte := row[compteIndex]
