@@ -4,7 +4,7 @@ sample   <- get_last_batch(
   database = "test_signauxfaibles",
   collection = "used_in_tests",
   last_batch = "1901_interim",
-  actual_period = as.Date("2019-01-01"),
+  periods = as.Date("2019-01-01"),
   fields = c("siret", "periode", "code_naf", "code_ape_niveau2", "code_ape_niveau3"),
   min_effectif = 10,
   rollback_months = 1)
@@ -104,7 +104,7 @@ test_that("predict_on_last_batch works",{
          collection = "used_in_tests",
          te_map = res[["te_map"]],
          last_batch = "1901_interim",
-         actual_period = as.Date("2019-01-01"),
+         periods = as.Date("2019-01-01"),
          min_effectif = 10,
          fields = c("siret", "periode", "code_naf", "code_ape_niveau2", "code_ape_niveau3")),
        NA)
@@ -118,7 +118,7 @@ test_that("train_light_gradient_boosting works", {
       full_light_gradient_boosting(
         database = "test_signauxfaibles",
         collection = "used_in_tests",
-        actual_period = as.Date("2019-01-01"),
+        periods = as.Date("2019-01-01"),
         last_batch = "1901_interim",
         min_effectif = 10,
         retrain_model = TRUE,

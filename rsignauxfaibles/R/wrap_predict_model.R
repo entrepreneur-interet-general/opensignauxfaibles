@@ -5,7 +5,7 @@
 #' @param collection
 #' @param te_map
 #' @param last_batch
-#' @param actual_period
+#' @param periods Date, or vector of two Dates defining lower and upper time limit
 #' @param min_effectif
 #' @param fields
 #'
@@ -19,7 +19,7 @@ predict_on_last_batch <- function(
     collection,
     te_map,
     last_batch,
-    actual_period,
+    periods,
     min_effectif,
     fields
   ){
@@ -28,7 +28,7 @@ predict_on_last_batch <- function(
     database,
     collection,
     last_batch,
-    actual_period,
+    periods,
     fields,
     min_effectif
     )
@@ -49,7 +49,7 @@ predict_on_last_batch <- function(
     mutate(last_prob = lag(prob)) %>%
     ungroup() %>%
     mutate(diff = prob - last_prob) %>%
-    filter(periode == actual_period)
+    filter(periode >= min(periods), periode <= max(periods))
 
   return(pred_data)
 }

@@ -1,7 +1,7 @@
 full_light_gradient_boosting <- function(
   database,
   collection,
-  actual_period,
+  periods,
   last_batch,
   min_effectif = 10,
   retrain_model = FALSE,
@@ -56,7 +56,7 @@ full_light_gradient_boosting <- function(
     collection,
     te_map,
     last_batch,
-    actual_period,
+    periods,
     min_effectif = min_effectif,
     fields = fields
     )

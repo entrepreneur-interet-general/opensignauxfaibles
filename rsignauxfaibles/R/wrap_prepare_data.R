@@ -70,7 +70,7 @@ get_last_batch <- function(
   database,
   collection,
   last_batch,
-  actual_period,
+  periods,
   fields,
   min_effectif,
   rollback_months = 1){
@@ -79,13 +79,13 @@ get_last_batch <- function(
     database,
     collection,
     last_batch,
-    date_inf = actual_period %m-% months(rollback_months),
-    date_sup = actual_period %m+% months(1),
+    date_inf = min(periods) %m-% months(rollback_months),
+    date_sup = max(periods) %m+% months(1),
     min_effectif = min_effectif,
     fields = fields
     )
 
-  if ("periode" %in% fields && max(current_data$periode) != actual_period)
+  if ("periode" %in% fields && max(current_data$periode) != max(periods))
     warning("Data is missing at actual period !!")
 
   return(current_data)
